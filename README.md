@@ -1,7 +1,7 @@
 # SIPEKA
 
-SIPEKA adalah Sistem Presensi SMANSA Pamekasan. Repository ini mencakup Phase 1: fondasi database,
-Supabase Auth server-side, authorization, RLS, dan placeholder guard. UI produk belum dibuat.
+SIPEKA adalah Sistem Presensi SMANSA Pamekasan. Repository ini mencakup Phase 2: landing page,
+fondasi UI, layout role-aware, dan portal akun Super Admin di atas fondasi Auth/RLS Phase 1.
 
 ## Mulai
 
@@ -13,8 +13,11 @@ cp .env.example .env.local
 npx supabase start
 npm run db:reset
 npm run seed:test-users
-npm run dev
+  npm run dev
 ```
+
+Turunan asset publik dibuat dari sumber lokal read-only dan diverifikasi dengan `npm run test:assets`.
+Fitur presensi, siswa, kelas, import, laporan, grade, alumni, audit operasional, dan PWA belum dibuka.
 
 Jangan mengganti placeholder dengan kredensial produksi. File data siswa lokal bersifat read-only
 dan harus tetap di lokasi yang diabaikan Git.

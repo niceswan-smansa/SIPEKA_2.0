@@ -14,6 +14,7 @@ export interface AuthenticationGateway {
   resolveEmail(username: string): Promise<string | null>;
   signInWithPassword(email: string, password: string): Promise<string | null>;
   getProfile(userId: string): Promise<AccountProfile | null>;
+  recordLogin(userId: string): Promise<void>;
   signOut(): Promise<void>;
   updatePassword(password: string): Promise<boolean>;
   completePasswordChange(profile: AccountProfile): Promise<boolean>;

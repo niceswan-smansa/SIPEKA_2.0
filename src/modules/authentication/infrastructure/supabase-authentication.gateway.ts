@@ -56,6 +56,13 @@ export async function createSupabaseAuthenticationGateway(): Promise<Authenticat
 
       return error ? null : (data?.email ?? null);
     },
+    async recordLogin(userId) {
+      const adminClient = createAdminSupabaseClient();
+      await adminClient
+        .from("profiles")
+        .update({ last_login_at: new Date().toISOString() })
+        .eq("id", userId);
+    },
     async signInWithPassword(email, password) {
       const { data, error } = await serverClient.auth.signInWithPassword({ email, password });
       return error ? null : data.user.id;

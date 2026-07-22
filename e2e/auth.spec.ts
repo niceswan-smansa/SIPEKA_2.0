@@ -112,3 +112,12 @@ test("external redirect target is rejected after login", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/dashboard$/);
 });
+
+test("mobile operational navigation opens for USER without mutation menu", async ({ page }) => {
+  const credentials = loadCredentials();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page, credentials.users.user.username, credentials.password);
+  await page.getByRole("button", { name: "Buka navigasi" }).click();
+  await expect(page.getByRole("navigation", { name: "Navigasi utama" })).toBeVisible();
+  await expect(page.getByText("Input Presensi", { exact: true })).toHaveCount(0);
+});

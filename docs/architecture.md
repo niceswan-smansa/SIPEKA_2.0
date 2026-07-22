@@ -28,5 +28,10 @@ server-only. Admin client tidak pernah diimpor `src/app` atau Client Component. 
 me-refresh session; keputusan akses dibuat server-side oleh `requirePageAccess`/`authorizeRequest`.
 Direct database access tetap dibatasi RLS.
 
-Phase 1 tidak membuat dashboard, student/attendance CRUD, import, report, promotion, alumni, atau
-account-management UI final.
+Phase 2 menambahkan landing page, shared UI primitives, dua application shell yang terpisah, dan
+`account-management` dengan batas `domain -> application -> infrastructure`. `profiles` menjadi
+sumber daftar akun yang efisien; Supabase Auth Admin hanya dipakai untuk operasi credential.
+Mutasi profile memakai RPC server-only agar profile dan audit ACCOUNT atomik; operasi Auth
+diorkestrasi dengan compensation. Server Actions tetap tipis dan actor selalu berasal dari session
+server. Route yang belum masuk fase
+tidak dibuat sebagai halaman palsu; menu roadmap ditampilkan disabled “Segera”.

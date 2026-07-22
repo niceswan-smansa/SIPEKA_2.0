@@ -28,6 +28,8 @@ export async function authenticateUser(
       return { message: GENERIC_LOGIN_ERROR, ok: false };
     }
 
+    await gateway.recordLogin(userId).catch(() => undefined);
+
     return { ok: true, profile };
   } catch {
     await gateway.signOut().catch(() => undefined);

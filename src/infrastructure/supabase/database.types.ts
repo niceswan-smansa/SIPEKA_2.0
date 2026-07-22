@@ -748,6 +748,47 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_create_account_profile: {
+        Args: {
+          p_actor_id: string;
+          p_email: string;
+          p_full_name: string;
+          p_is_active: boolean;
+          p_must_change_password: boolean;
+          p_request_id?: string;
+          p_role: Database["public"]["Enums"]["app_role"];
+          p_target_id: string;
+          p_username: string;
+        };
+        Returns: Json;
+      };
+      admin_mark_account_password_reset: {
+        Args: { p_actor_id: string; p_request_id?: string; p_target_id: string };
+        Returns: Json;
+      };
+      admin_tombstone_account: {
+        Args: {
+          p_actor_id: string;
+          p_request_id?: string;
+          p_target_id: string;
+          p_tombstone_username: string;
+        };
+        Returns: Json;
+      };
+      admin_update_account_profile: {
+        Args: {
+          p_action: string;
+          p_actor_id: string;
+          p_email: string;
+          p_full_name: string;
+          p_is_active: boolean;
+          p_request_id?: string;
+          p_role: Database["public"]["Enums"]["app_role"];
+          p_target_id: string;
+          p_username: string;
+        };
+        Returns: Json;
+      };
       complete_password_change: { Args: never; Returns: undefined };
     };
     Enums: {

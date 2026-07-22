@@ -21,6 +21,7 @@ function createGateway(overrides: Partial<AuthenticationGateway> = {}): Authenti
   return {
     completePasswordChange: vi.fn().mockResolvedValue(true),
     getProfile: vi.fn().mockResolvedValue(activeUser),
+    recordLogin: vi.fn().mockResolvedValue(undefined),
     resolveEmail: vi.fn().mockResolvedValue(activeUser.email),
     signInWithPassword: vi.fn().mockResolvedValue(activeUser.id),
     signOut: vi.fn().mockResolvedValue(undefined),

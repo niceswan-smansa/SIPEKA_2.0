@@ -1,4 +1,4 @@
-# Keamanan Phase 1
+# Keamanan Phase 1 dan Phase 2
 
 - `.env.example` hanya placeholder. `SUPABASE_SERVICE_ROLE_KEY` hanya dibaca module `server-only`
   dan tidak diekspor melalui barrel yang dapat masuk client bundle.
@@ -9,6 +9,42 @@
   hanya untuk module admin server-side.
 - Tidak ada route registrasi. Provisioning akun test dan bootstrap Super Admin memakai service-role
   client server-only serta credential dari environment lokal.
+- Portal Super Admin memakai repository service-only. Daftar akun dipaginasi dan difilter di server;
+  browser tidak menerima service-role key, actor id, password, token, atau cookie.
+- Seluruh mutasi akun mengembalikan result terstruktur dan hanya sukses setelah audit ACCOUNT
+  berhasil. Create, update identity/role/status, reset marker, dan tombstone memakai RPC
+  profile+audit atomik; create menghapus Auth user sebagai compensation bila RPC gagal.
+- Penghapusan akun memakai access tombstone pada profile dan identity Auth: email Auth menjadi
+  `deleted+<uuid>@invalid.local`, password diacak, profile username menjadi `deleted_<32 hex>`,
+  email null, dan inactive. Foreign key profile tetap dipertahankan, snapshot audit tidak hilang,
+  dan email lama dapat digunakan kembali setelah Auth update sukses.
+- Supabase Admin API membutuhkan JWT target untuk revokasi sesi. Karena portal tidak memiliki JWT
+  tersebut, force logout saat ini menghasilkan `SESSION_REVOCATION_UNSUPPORTED` dan audit
+  `FORCE_LOGOUT_FAILED`; UI tidak menampilkan sukses. Reset/nonaktif memakai profile guard pada
+  setiap request sebagai defense-in-depth, bukan simulasi revocation.
+
+## Mutasi akun dan recovery
+
+Actor selalu berasal dari session SUPER_ADMIN server-side. Browser tidak mengirim actor, credential,
+token, atau audit action yang dipercaya. Auth dan database tidak satu transaksi; structured log hanya
+memuat operation, request id, target id, status, dan error code. Jika Auth berhasil tetapi RPC/audit
+gagal, hasil `PARTIAL_OPERATION` memerlukan recovery runbook dan tidak boleh diberi toast sukses.
+
+## Katalog hasil dan audit akun
+
+| Operasi               | Audit sukses              | Audit gagal           | Result gagal/khusus                                  |
+| --------------------- | ------------------------- | --------------------- | ---------------------------------------------------- |
+| CREATE                | `CREATE`                  | — (RPC rollback)      | `DATABASE_FAILURE`, `PARTIAL_OPERATION`              |
+| UPDATE / ROLE_CHANGE  | `UPDATE` / `ROLE_CHANGE`  | — (RPC rollback)      | `AUDIT_FAILURE`, `PARTIAL_OPERATION`                 |
+| ACTIVATE / DEACTIVATE | `ACTIVATE` / `DEACTIVATE` | — (RPC rollback)      | `AUDIT_FAILURE`                                      |
+| RESET_PASSWORD        | `RESET_PASSWORD`          | — (RPC rollback)      | `AUTH_PROVIDER_FAILURE`, `PARTIAL_OPERATION`         |
+| FORCE_LOGOUT          | `FORCE_LOGOUT`            | `FORCE_LOGOUT_FAILED` | `SESSIONS_REVOKED`, `SESSION_REVOCATION_UNSUPPORTED` |
+| DELETE                | `DELETE`                  | — (RPC rollback)      | `AUTH_PROVIDER_FAILURE`, `PARTIAL_OPERATION`         |
+
+`AUDIT_FAILURE` berarti perubahan tidak dianggap berhasil. `PARTIAL_OPERATION` berarti Auth dan
+database mungkin tidak sinkron dan harus dipulihkan melalui server-only runbook. Audit snapshot hanya
+memuat identitas akun dan status; password, token, cookie, session id, serta service key selalu
+dihilangkan.
 
 ## Matriks RLS
 
@@ -29,4 +65,5 @@ oleh constraint/trigger database.
 
 Semua sumber siswa, report migrasi ber-PII, dump, credential lokal, dan session output di-ignore
 Git. Workbook existing tetap read-only dan tidak pernah disalin ke aplikasi, fixture, snapshot,
-log, artifact CI, atau `public/`. Logo/hero belum diintegrasikan.
+log, artifact CI, atau `public/`. Logo dan hero memakai turunan WebP yang metadata non-esensialnya
+di-strip; izin publikasi hero tetap tanggung jawab pemilik deployment.

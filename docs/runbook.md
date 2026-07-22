@@ -36,6 +36,30 @@ aplikasi.
 
 `npm run db:types` menghasilkan tipe dari schema lokal; `npm run db:types:check` mendeteksi drift.
 `npm run test:bundle` memindai output `.next` agar service-role key tidak masuk client bundle.
+`npm run test:assets` memverifikasi `public/assets/smansa-logo.webp` dan
+`public/assets/smansa-hero.webp`.
+
+## Pemulihan operasi akun
+
+Jika pembuatan akun gagal setelah Auth user dibuat, service melakukan `deleteUser` compensation.
+Jika compensation gagal, gunakan server-only admin service untuk cleanup; jangan menyalin password
+atau token ke tiket/commit.
+
+Penghapusan akun Phase 2 adalah tombstone akses: Auth email dianonimkan ke
+`deleted+<account-id>@invalid.local`, password diacak, `profiles.is_active=false`, username menjadi
+`deleted_<32 hex>`, dan email profile null. Auth user tidak dihapus agar FK profile dan histori tetap
+tersedia; email lama dapat dipakai kembali setelah update Auth. Audit menyimpan snapshot sebelum
+perubahan, tanpa credential. Retry pada tombstone yang sudah ada idempotent.
+
+Jika Auth berhasil tetapi RPC tombstone/audit gagal, service mengembalikan `PARTIAL_OPERATION`; jangan
+melaporkan berhasil. Gunakan server-only recovery untuk memeriksa identity tombstone dan profile,
+kemudian ulangi langkah database yang aman. Jangan menyalin password atau token ke tiket/log.
+
+Supabase Admin API membutuhkan JWT target untuk revokasi sesi global. Karena JWT target tidak pernah
+diteruskan ke portal, force logout hanya sukses bila gateway mengonfirmasi revocation. Saat ini hasil
+normal adalah `SESSION_REVOCATION_UNSUPPORTED`, audit memakai `FORCE_LOGOUT_FAILED`, dan UI memberi
+pesan bahwa sesi belum dapat dicabut langsung. Jangan mengubah `is_active` atau password untuk
+mensimulasikan force logout; profile guard tetap berjalan pada setiap request.
 
 ## Data sensitif
 

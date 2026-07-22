@@ -32,6 +32,14 @@ anti-escalation, constraint unik, grade/class validation, dan audit append-only.
 - Jangan commit secret, data siswa, dump, export, atau report ber-PII.
 - User-facing text menggunakan Bahasa Indonesia; identifier internal konsisten dalam bahasa Inggris.
 
+## Phase 2 routes
+
+Route aktif: `/`, `/login`, `/change-password`, `/dashboard`, `/super-admin/accounts`,
+`/super-admin/accounts/new`, `/super-admin/accounts/[id]`, dan `/super-admin/account-audit`.
+SUPER_ADMIN hanya melihat portal akun; ADMIN/USER memakai shell operasional. Menu roadmap yang belum
+diimplementasikan tetap disabled sampai phase fiturnya tersedia. Account mutation hanya dipanggil dari
+server action setelah guard SUPER_ADMIN; daftar akun berasal dari `profiles` dengan pagination server.
+
 ## Branch protection yang disarankan
 
 Lindungi `main`, wajibkan pull request dan satu approval, larang force-push, wajibkan branch up to
