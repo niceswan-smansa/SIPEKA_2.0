@@ -19,5 +19,14 @@ Presentation -> Application -> Domain <- Repository interface
 Setiap modul harus mempunyai `index.ts` sebagai public API. Impor lintas modul tidak boleh memakai
 deep import. `eslint.config.mjs` menegakkan aturan ini serta isolasi domain dan presentation.
 
-Phase 0 sengaja tidak membuat modul fitur kosong. Modul dibuat pada phase pemiliknya agar tidak ada
-API spekulatif.
+`authentication` dan `authorization` adalah modul Phase 1. Domain-nya tidak mengimpor React,
+Next.js, Supabase, atau browser API. Gateway Supabase berada di infrastructure; server action dan
+route guard tetap tipis. Route placeholder hanya membuktikan guard, bukan UI produk.
+
+Client Supabase dipisah menjadi browser, server cookie, middleware/request boundary, dan admin
+server-only. Admin client tidak pernah diimpor `src/app` atau Client Component. `proxy.ts` hanya
+me-refresh session; keputusan akses dibuat server-side oleh `requirePageAccess`/`authorizeRequest`.
+Direct database access tetap dibatasi RLS.
+
+Phase 1 tidak membuat dashboard, student/attendance CRUD, import, report, promotion, alumni, atau
+account-management UI final.

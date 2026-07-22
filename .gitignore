@@ -5,6 +5,7 @@
 /coverage/
 /playwright-report/
 /test-results/
+/.local/
 *.tsbuildinfo
 
 # Local environment and secrets; keep only the placeholder file
