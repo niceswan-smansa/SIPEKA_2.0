@@ -1,0 +1,49 @@
+# Dependencies and generated application output
+/node_modules/
+/.next/
+/out/
+/coverage/
+/playwright-report/
+/test-results/
+*.tsbuildinfo
+
+# Local environment and secrets; keep only the placeholder file
+.env*
+!.env.example
+
+# Local Supabase state
+/supabase/.branches/
+/supabase/.temp/
+
+# Sensitive student-data sources (read-only, local only)
+/data_siswa/
+/student-data/
+/private-data/
+/private-assets/
+/BG_landingpage.png
+/**/*student-data*.csv
+/**/*student-data*.xlsx
+/**/*student-data*.xls
+/**/*student-data*.ods
+
+# Generated migration/import reports may contain PII
+/migration-reports/
+/reports/migration/
+/**/*migration-report*.csv
+/**/*migration-report*.xlsx
+/**/*migration-report*.json
+/**/*pii-report*
+
+# Database dumps and backups
+*.dump
+*.backup
+*.bak
+*.sql.gz
+*.sql.bz2
+*.sql.xz
+/supabase/dumps/
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
