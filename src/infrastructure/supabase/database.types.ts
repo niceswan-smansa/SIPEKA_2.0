@@ -954,6 +954,24 @@ export type Database = {
         Returns: Json;
       };
       phase5_get_dashboard: { Args: { p_selected_date: string }; Returns: Json };
+      phase6_get_student_attendance: {
+        Args: { p_month: string; p_selected_date: string; p_student_id: string };
+        Returns: Json;
+      };
+      phase6_get_student_report: {
+        Args: { p_end_date: string; p_start_date: string; p_student_id: string };
+        Returns: Json;
+      };
+      phase6_record_student_export: {
+        Args: {
+          p_end_date: string;
+          p_request_id?: string;
+          p_row_count: number;
+          p_start_date: string;
+          p_student_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "USER";

@@ -1,8 +1,8 @@
 # SIPEKA
 
-SIPEKA adalah Sistem Presensi SMANSA Pamekasan. Repository ini mencakup Phase 3: tahun ajaran,
-slot kelas tetap, manajemen siswa, dan pencarian siswa di atas fondasi Auth/RLS serta portal akun
-Phase 2.
+SIPEKA adalah Sistem Presensi SMANSA Pamekasan. Repository ini mencakup detail presensi dan laporan
+individual Phase 6 di atas fondasi Auth/RLS, portal akun, manajemen siswa, input presensi, dan
+dashboard Phase 1–5.
 
 ## Mulai
 
@@ -14,12 +14,12 @@ cp .env.example .env.local
 npx supabase start
 npm run db:reset
 npm run seed:test-users
-  npm run dev
+npm run dev
 ```
 
 Turunan asset publik dibuat dari sumber lokal read-only dan diverifikasi dengan `npm run test:assets`.
-Fitur presensi, dashboard statistik, import, laporan presensi, promotion massal, alumni, audit
-operasional UI, dan PWA belum dibuka. Workbook siswa existing tidak dibaca atau diimpor.
+Import, promotion massal, alumni, audit operasional UI, dan PWA belum dibuka. Workbook siswa
+existing tidak dibaca atau diimpor.
 
 Jangan mengganti placeholder dengan kredensial produksi. File data siswa lokal bersifat read-only
 dan harus tetap di lokasi yang diabaikan Git.
@@ -42,11 +42,15 @@ npm audit
 Lihat `docs/development.md` untuk setup lengkap dan `docs/implementation-plan.md` untuk source of
 truth produk.
 
-## Route Phase 3
+## Route operasional
 
 - `/manajemen-kelas` — ADMIN: tahun ajaran dan 30 slot X-1 sampai XII-10.
 - `/manajemen-siswa` — ADMIN: mutasi siswa melalui RPC transaksional.
-- `/siswa` dan `/siswa/[id]` — ADMIN/USER: pencarian dan detail dasar read-only untuk USER.
+- `/presensi/input` — ADMIN: preview dan apply presensi transaksional.
+- `/dashboard` — ADMIN/USER: statistik siswa unik berdasarkan tanggal.
+- `/siswa` dan `/siswa/[id]` — ADMIN/USER: pencarian, detail, kalender, statistik, dan histori.
+- `/siswa/[id]/laporan` — ADMIN/USER: laporan individual read-only; export Excel hanya ADMIN.
 
 Direct Data API write tetap ditolak. Mutation memakai RPC `phase3_*` dengan actor dari session,
-validasi database, dan audit OPERATIONAL dalam transaction yang sama.
+validasi database, dan audit OPERATIONAL dalam transaction yang sama. Editor detail siswa memakai
+engine preview/apply Phase 4 yang sama; tidak ada mutation presensi kedua.

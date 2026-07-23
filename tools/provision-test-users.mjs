@@ -78,6 +78,7 @@ for (const definition of definitions) {
 
   credentials.users[definition.key] = {
     email: definition.email,
+    id: user.id,
     username: definition.username,
   };
 }

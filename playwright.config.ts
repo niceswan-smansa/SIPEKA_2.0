@@ -15,6 +15,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev:local",
     url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
+    // Local E2E must not inherit a Next process created before db:reset/provisioning.
+    reuseExistingServer: false,
   },
 });

@@ -62,3 +62,15 @@ Dashboard memakai satu RPC `SECURITY INVOKER` untuk menghasilkan summary serta s
 mingguan, dan bulanan berdasarkan tanggal terpilih. RPC menggunakan session/RLS operasional dan
 agregasi `count(distinct student_id)`; komponen grafik hanya menerima read model dan menyediakan
 tabel alternatif yang dapat dibaca tanpa visualisasi.
+
+## Phase 6 student attendance and reports
+
+Modul `student-attendance` menyediakan read model detail siswa, kalender, statistik hari/jam, tren,
+revision timeline, dan laporan. Read repository berada di infrastructure server-only. Client
+Component mengimpor kontrak dan Server Action melalui `attendance/client.ts`, bukan barrel attendance
+yang juga mengekspor repository server-only.
+
+Editor detail siswa mengubah satu siswa pada satu tanggal melalui preview/apply Phase 4. PostgreSQL
+tetap menjadi sumber diff, stale check, idempotency, revision, batch, dan audit. Laporan print memakai
+read model yang sama; endpoint Excel menjalankan authorization ADMIN, menghasilkan workbook in-memory,
+mencatat audit summary, dan mengirim response `private, no-store`.

@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 
 import { createClient } from "@supabase/supabase-js";
 import WebSocket from "ws";
@@ -22,7 +24,14 @@ export function loadLocalSupabaseEnvironment() {
   const args = ["status", "-o", "env"];
   if (process.env.SUPABASE_WORKDIR) args.push("--workdir", process.env.SUPABASE_WORKDIR);
 
-  const result = spawnSync("supabase", args, { encoding: "utf8" });
+  const localCli = resolve(
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "supabase.cmd" : "supabase",
+  );
+  const result = spawnSync(existsSync(localCli) ? localCli : "supabase", args, {
+    encoding: "utf8",
+  });
   if (result.status !== 0) throw new Error("Supabase lokal tidak dapat dibaca.");
   return parseEnvironment(result.stdout);
 }
@@ -74,6 +83,9 @@ export async function upsertAuthUser(client, { email, password }) {
       password,
     });
     if (error) throw error;
+    if (!data.user || data.user.id !== existing.id || data.user.email !== email) {
+      throw new Error("Auth fixture update tidak menghasilkan identity canonical.");
+    }
     return data.user;
   }
 
@@ -83,5 +95,8 @@ export async function upsertAuthUser(client, { email, password }) {
     password,
   });
   if (error) throw error;
+  if (!data.user || data.user.email !== email) {
+    throw new Error("Auth fixture create tidak menghasilkan identity canonical.");
+  }
   return data.user;
 }

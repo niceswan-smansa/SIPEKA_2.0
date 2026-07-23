@@ -102,3 +102,15 @@ Dashboard tidak mempunyai jalur mutation. Query statistik diberikan hanya kepada
 `authenticated`, tetap memeriksa profile aktif dan role operasional dari database, menggunakan RLS
 session biasa, dan menolak `SUPER_ADMIN` serta anonymous. Service role tidak digunakan untuk read
 dashboard.
+
+## Phase 6 detail dan export
+
+ADMIN dan USER dapat membaca detail/laporan siswa melalui session operasional; SUPER_ADMIN dan
+anonymous ditolak. Hanya ADMIN melihat editor dan endpoint Excel. Editor menggunakan RPC Phase 4,
+sehingga direct write, actor spoofing, stale preview, replay token, revision write, dan audit write
+tetap ditolak.
+
+Workbook Excel dibuat in-memory dan tidak meninggalkan file sementara. NIS/NISN selalu string.
+Seluruh string yang diawali `=`, `+`, `-`, atau `@` diawali apostrof untuk mencegah formula
+injection. Nama file hanya memakai identifier aman. Response report/export memakai
+`Cache-Control: private, no-store`; audit export hanya menyimpan summary, tanpa isi laporan.

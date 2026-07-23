@@ -92,3 +92,25 @@ Preview attendance berlaku sepuluh menit dan sekali pakai. Error `STALE_PREVIEW`
 kelas/tanggal berubah setelah preview; muat ulang roster lalu preview ulang, jangan retry token lama.
 Error audit atau revision me-rollback seluruh record dan batch. Untuk pengujian bersih jalankan
 `npm run db:reset`, `npm run seed:test-users`, E2E, lalu reset lagi sebelum `npm run test:db`.
+
+## Operasi Phase 6
+
+Detail siswa memakai engine Phase 4. Error stale pada editor ditangani dengan reload data dan preview
+baru; jangan membangun ulang perubahan dari browser sebagai sumber kebenaran. Revision dan audit
+rollback bersama attendance.
+
+Export Excel hanya ADMIN, dibuat in-memory, diaudit sebelum response, dan memakai `no-store`. Bila
+audit export gagal, jangan kirim workbook. String spreadsheet yang diawali karakter formula wajib
+tetap diawali apostrof.
+
+Untuk diagnosis fixture Auth lokal:
+
+```bash
+npm run db:reset
+npm run seed:test-users
+npm run test:auth-probe
+```
+
+Probe hanya menampilkan origin lokal, status Auth, error code, dan kecocokan ID. Jika probe berhasil
+tetapi UI gagal, hentikan server Next lama dan jalankan Playwright yang memulai `dev:local` baru.
+Jangan mengubah redirect atau pesan login sebelum credential boundary ini terbukti gagal.

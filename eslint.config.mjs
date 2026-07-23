@@ -5,8 +5,9 @@ import nextTypeScript from "eslint-config-next/typescript";
 const restrictedModuleImports = {
   patterns: [
     {
-      group: ["@/modules/*/*"],
-      message: "Impor lintas modul harus melalui public API index.ts modul tersebut.",
+      group: ["@/modules/*/*", "!@/modules/*/client"],
+      message:
+        "Impor lintas modul harus melalui public API index.ts atau client.ts modul tersebut.",
     },
   ],
 };

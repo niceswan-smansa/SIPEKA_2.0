@@ -68,6 +68,30 @@ Route `/presensi/input` hanya ADMIN. RPC `phase4_get_class_attendance`,
 preview, stale protection, revision, batch, dan audit. Reset database sebelum database test atau E2E
 agar fixture sintetis antarsuite tidak mempengaruhi count assertion.
 
+## Phase 6 detail dan laporan
+
+Route `/siswa/[id]` memuat kalender, detail jam 1–10, statistik hari/jam, tren, revision timeline,
+dan editor ADMIN. Route `/siswa/[id]/laporan` menyediakan tampilan print; endpoint
+`/api/students/[id]/report` mengekspor Excel hanya untuk ADMIN.
+
+RPC tambahan:
+
+| RPC                             | Tanggung jawab                                   |
+| ------------------------------- | ------------------------------------------------ |
+| `phase6_get_student_attendance` | detail, kalender, statistik, tren, dan revisions |
+| `phase6_get_student_report`     | report read model untuk rentang tervalidasi      |
+| `phase6_record_student_export`  | audit OPERATIONAL summary untuk export ADMIN     |
+
+Client Component harus memakai `@/modules/attendance/client`; public barrel attendance memuat
+repository server-only dan hanya boleh dipakai server. Jalankan `npm run test:bundle` setelah
+perubahan import graph.
+
+Provisioning test bersifat canonical dan menyimpan credential hanya di `.local/` yang di-ignore.
+`npm run test:auth-probe` memverifikasi login langsung ke local Auth tanpa mencetak credential.
+Playwright selalu memulai server baru agar proses Next lama tidak mempertahankan environment sebelum
+reset/provisioning. `npm run test:e2e` selalu menjalankan reset dan provisioning sebelum Playwright,
+sehingga suite dapat diulang tanpa mewarisi password, class occupancy, atau attendance fixture.
+
 ## Branch protection yang disarankan
 
 Lindungi `main`, wajibkan pull request dan satu approval, larang force-push, wajibkan branch up to

@@ -21,6 +21,9 @@ dari database kosong dalam urutan berikut:
     okupansi hanya menghitung siswa aktif dengan current enrollment.
 11. `20260723040000_phase4_attendance_core.sql` — token preview, read model attendance, transactional
     apply, revision, batch, dan audit Phase 4.
+12. `20260723050000_phase5_dashboard_statistics.sql` — read model statistik siswa unik.
+13. `20260723060000_phase6_student_attendance_reports.sql` — detail presensi siswa, laporan, revision
+    timeline, dan audit export.
 
 ## Tabel
 
@@ -81,3 +84,14 @@ expiry, dan waktu penggunaan; token mentah hanya dikembalikan kepada actor pemil
 menghasilkan satu `attendance_records` per jam, menaikkan version saat update, membuat
 `attendance_revisions` untuk CREATE/UPDATE/DELETE, satu `attendance_batches`, dan audit summary
 `ATTENDANCE_BATCH_APPLY` dalam transaction yang sama.
+
+## Student detail dan report Phase 6
+
+`phase6_get_student_attendance` mengembalikan identitas, attendance per jam, kategori kalender,
+statistik distinct-day, statistik jam, tren bulanan, dan revisions untuk rentang yang diminta.
+`phase6_get_student_report` menghasilkan read model periode laporan. Jam tanpa record tidak disimpan;
+presentation menyimpulkannya sebagai `Hadir`.
+
+`phase6_record_student_export` hanya dapat dijalankan ADMIN aktif dan mencatat
+`STUDENT_ATTENDANCE_EXPORT` dengan rentang serta jumlah row. Isi laporan tidak disalin ke audit.
+Semua read memakai session/RLS operasional; export tidak memakai service role.

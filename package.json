@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "supabase test db",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run db:reset && npm run seed:test-users && playwright test",
     "test:bundle": "node tools/assert-no-service-key-in-client.mjs",
     "test:assets": "node tools/assert-assets.mjs",
     "db:start": "supabase start",
@@ -29,12 +29,14 @@
     "db:types": "node tools/generate-database-types.mjs",
     "db:types:check": "node tools/generate-database-types.mjs --check",
     "seed:test-users": "node tools/provision-test-users.mjs",
+    "test:auth-probe": "node tools/probe-test-auth.mjs",
     "bootstrap:super-admin": "node tools/bootstrap-super-admin.mjs",
     "check": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.0",
     "@supabase/supabase-js": "2.109.0",
+    "exceljs": "^4.4.0",
     "next": "16.2.11",
     "react": "19.2.8",
     "react-dom": "19.2.8",
