@@ -125,7 +125,11 @@ drop function public.test_phase4_fail_audit();
 set local role authenticated;
 
 select throws_like(
-  $$select public.phase4_preview_attendance('20000000-0000-4000-8000-000000000001', current_date + 1, '[]'::jsonb)$$,
+  $$select public.phase4_preview_attendance(
+    '20000000-0000-4000-8000-000000000001',
+    (now() at time zone 'Asia/Jakarta')::date + 1,
+    '[]'::jsonb
+  )$$,
   '%FUTURE_DATE_NOT_ALLOWED%',
   'tanggal masa depan ditolak'
 );

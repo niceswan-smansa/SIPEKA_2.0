@@ -85,6 +85,7 @@ select lives_ok(
 select is((select count(*) from public.promotion_batches), 0::bigint,
   'promotion preview performs no write');
 
+reset role;
 insert into public.audit_logs (
   scope, actor_id, actor_name_snapshot, action, entity_type, entity_id, before_data, after_data
 ) values (
@@ -104,7 +105,6 @@ select is(
   'student audit after snapshot is redacted'
 );
 
-reset role;
 select set_config('request.jwt.claim.sub', '72000000-0000-4000-8000-000000000002', true);
 set local role authenticated;
 select throws_like(
