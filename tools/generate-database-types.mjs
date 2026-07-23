@@ -28,10 +28,7 @@ if (process.argv.includes("--check")) {
   const existing = await readFile(target, "utf8");
   const normalize = (value) =>
     value
-      .replace(
-        /  __InternalSupabase: \{\n    PostgrestVersion: "[^"]+";\n  \};\n/,
-        "",
-      )
+      .replace(/  __InternalSupabase: \{\n    PostgrestVersion: "[^"]+";\n  \};\n/, "")
       .replace(
         /      auth_rate_limit_buckets: \{\n[\s\S]*?      \};\n      classes:/,
         "      classes:",
