@@ -28,21 +28,32 @@ async function login(page: Page, identifier: string, password: string) {
   await page.getByRole("button", { name: "Masuk" }).click();
 }
 
-test("anonymous protected route redirects to login", async ({ page }) => {
-  await page.goto("/dashboard");
-  await expect(page).toHaveURL(/\/login$/);
-});
-
-test("USER logs in with username, reads operational placeholder, and cannot mutate", async ({
+test("anonymous protected route redirects to login and report API returns 401", async ({
   page,
 }) => {
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/login$/);
+
+  const response = await page.request.get(
+    "/api/students/00000000-0000-4000-8000-000000000001/report?from=2026-01-01&to=2026-01-31",
+  );
+  expect(response.status()).toBe(401);
+});
+
+test("USER logs in, reads operational data, and cannot mutate or export", async ({ page }) => {
   const credentials = loadCredentials();
   await login(page, credentials.users.user.username, credentials.password);
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByText("Siswa Tidak Hadir", { exact: true })).toBeVisible();
-  const response = await page.request.post("/api/test/mutation");
-  expect(response.status()).toBe(403);
+
+  const mutationResponse = await page.request.post("/api/test/mutation");
+  expect(mutationResponse.status()).toBe(403);
+
+  const exportResponse = await page.request.get(
+    "/api/students/00000000-0000-4000-8000-000000000001/report?from=2026-01-01&to=2026-01-31",
+  );
+  expect(exportResponse.status()).toBe(403);
 
   await page.getByRole("button", { name: "Keluar" }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -89,7 +100,9 @@ test("login failures stay generic for missing, wrong-password, and inactive acco
   ).toBeVisible();
 });
 
-test("mandatory password change blocks protected routes until completion", async ({ page }) => {
+test("mandatory password change rejects reuse and accepts only the new password", async ({
+  page,
+}) => {
   const credentials = loadCredentials();
   await login(page, credentials.users.mustChange.username, credentials.password);
   await expect(page).toHaveURL(/\/change-password$/);
@@ -97,9 +110,30 @@ test("mandatory password change blocks protected routes until completion", async
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/change-password$/);
 
+  await page.getByLabel("Password baru").fill(credentials.password);
+  await page.getByLabel("Konfirmasi password").fill(credentials.password);
+  await page.getByRole("button", { name: "Simpan Password" }).click();
+  await expect(page).toHaveURL(/\/change-password\?error=same-password$/);
+  await expect(
+    page.getByText("Password baru harus berbeda dari password sementara atau password saat ini.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+
   await page.getByLabel("Password baru").fill(credentials.nextPassword);
   await page.getByLabel("Konfirmasi password").fill(credentials.nextPassword);
   await page.getByRole("button", { name: "Simpan Password" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+
+  await page.getByRole("button", { name: "Keluar" }).click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await login(page, credentials.users.mustChange.username, credentials.password);
+  await expect(
+    page.getByText("Username atau password tidak valid.", { exact: true }),
+  ).toBeVisible();
+
+  await login(page, credentials.users.mustChange.username, credentials.nextPassword);
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
