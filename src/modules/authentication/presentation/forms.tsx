@@ -45,37 +45,40 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
 export function ChangePasswordForm({ error }: { error?: string }) {
   return (
-    <form action={changePasswordAction} className="grid gap-5">
-      {error ? <FormError>{passwordErrors[error] ?? passwordErrors.provider}</FormError> : null}
-      <FormField id="new-password" label="Password baru">
-        <PasswordInput
-          id="new-password"
-          name="password"
-          autoComplete="new-password"
-          minLength={12}
-          maxLength={128}
-          required
-        />
-      </FormField>
-      <FormField id="password-confirmation" label="Konfirmasi password">
-        <PasswordInput
-          id="password-confirmation"
-          name="confirmation"
-          autoComplete="new-password"
-          minLength={12}
-          maxLength={128}
-          required
-        />
-      </FormField>
-      <p className="text-xs text-slate-500">
-        12–128 karakter dengan huruf besar, huruf kecil, angka, dan simbol.
-      </p>
-      <SubmitButton>Simpan Password</SubmitButton>
+    <div className="grid gap-4">
+      <form action={changePasswordAction} className="grid gap-5">
+        {error ? <FormError>{passwordErrors[error] ?? passwordErrors.provider}</FormError> : null}
+        <FormField id="new-password" label="Password baru">
+          <PasswordInput
+            id="new-password"
+            name="password"
+            autoComplete="new-password"
+            minLength={12}
+            maxLength={128}
+            required
+          />
+        </FormField>
+        <FormField id="password-confirmation" label="Konfirmasi password">
+          <PasswordInput
+            id="password-confirmation"
+            name="confirmation"
+            autoComplete="new-password"
+            minLength={12}
+            maxLength={128}
+            required
+          />
+        </FormField>
+        <p className="text-xs text-slate-500">
+          12–128 karakter dengan huruf besar, huruf kecil, angka, dan simbol.
+        </p>
+        <SubmitButton>Simpan Password</SubmitButton>
+      </form>
+
       {error === "completion-pending" ? (
-        <Button formAction={retryPasswordCompletionAction} type="submit" className="bg-slate-700">
-          Coba selesaikan status akun
-        </Button>
+        <form action={retryPasswordCompletionAction}>
+          <SubmitButton>Coba selesaikan status akun</SubmitButton>
+        </form>
       ) : null}
-    </form>
+    </div>
   );
 }
