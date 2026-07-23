@@ -217,10 +217,8 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Keep password sign-in available while public registration remains disabled.
-enabled = true
-# Allow/disallow new user signups via email to your project.
-enable_signup = false
+# The global auth setting below keeps public registration disabled while
+# preserving the email/password provider for Admin-created users.
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = false
