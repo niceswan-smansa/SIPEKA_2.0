@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "workbooks": [
+    {
+      "file": "REPLACE_WITH_LOCAL_WORKBOOK.xlsx",
+      "sheets": [{ "sheet": "REPLACE_WITH_SHEET_NAME", "grade": "X", "classNumber": 1 }]
+    }
+  ]
+}

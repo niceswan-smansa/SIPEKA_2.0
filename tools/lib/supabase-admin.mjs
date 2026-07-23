@@ -62,9 +62,25 @@ export function loadAdminConfiguration({ allowRemote = false } = {}) {
   };
 }
 
+async function retryAuth(operation) {
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      const retryable =
+        error?.name === "AuthRetryableFetchError" ||
+        (typeof error?.status === "number" && error.status >= 500);
+      if (!retryable || attempt === 8) throw error;
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, attempt * 125));
+    }
+  }
+}
+
 export async function findUserByEmail(client, email) {
   for (let page = 1; page <= 10; page += 1) {
-    const { data, error } = await client.auth.admin.listUsers({ page, perPage: 100 });
+    const { data, error } = await retryAuth(() =>
+      client.auth.admin.listUsers({ page, perPage: 100 }),
+    );
     if (error) throw error;
 
     const user = data.users.find((candidate) => candidate.email === email);
@@ -78,10 +94,12 @@ export async function findUserByEmail(client, email) {
 export async function upsertAuthUser(client, { email, password }) {
   const existing = await findUserByEmail(client, email);
   if (existing) {
-    const { data, error } = await client.auth.admin.updateUserById(existing.id, {
-      email_confirm: true,
-      password,
-    });
+    const { data, error } = await retryAuth(() =>
+      client.auth.admin.updateUserById(existing.id, {
+        email_confirm: true,
+        password,
+      }),
+    );
     if (error) throw error;
     if (!data.user || data.user.id !== existing.id || data.user.email !== email) {
       throw new Error("Auth fixture update tidak menghasilkan identity canonical.");
@@ -89,11 +107,13 @@ export async function upsertAuthUser(client, { email, password }) {
     return data.user;
   }
 
-  const { data, error } = await client.auth.admin.createUser({
-    email,
-    email_confirm: true,
-    password,
-  });
+  const { data, error } = await retryAuth(() =>
+    client.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      password,
+    }),
+  );
   if (error) throw error;
   if (!data.user || data.user.email !== email) {
     throw new Error("Auth fixture create tidak menghasilkan identity canonical.");

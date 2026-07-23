@@ -23,6 +23,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run test:assets
+      - run: npm run test:pwa
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321

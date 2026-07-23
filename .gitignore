@@ -29,6 +29,7 @@
 
 # Generated migration/import reports may contain PII
 /migration-reports/
+/config/student-source-mapping.local.json
 /reports/migration/
 /**/*migration-report*.csv
 /**/*migration-report*.xlsx

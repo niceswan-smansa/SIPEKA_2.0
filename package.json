@@ -24,6 +24,8 @@
     "test:bundle": "node tools/assert-no-service-key-in-client.mjs",
     "test:assets": "node tools/assert-assets.mjs",
     "test:pwa": "node tools/assert-pwa.mjs",
+    "migration:dry-run": "node tools/student-migration-dry-run.mjs --source data_siswa",
+    "smoke:production": "node tools/production-smoke.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",

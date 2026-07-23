@@ -18,8 +18,8 @@ npm run dev
 ```
 
 Turunan asset publik dibuat dari sumber lokal read-only dan diverifikasi dengan `npm run test:assets`.
-Import, promotion massal, alumni, audit operasional UI, dan PWA belum dibuka. Workbook siswa
-existing tidak dibaca atau diimpor.
+Import CSV, promotion/rollback, alumni, audit operasional, dan PWA online-only tersedia. Workbook
+existing hanya dibaca oleh dry-run local yang menghasilkan summary redacted; belum diimpor.
 
 Jangan mengganti placeholder dengan kredensial produksi. File data siswa lokal bersifat read-only
 dan harus tetap di lokasi yang diabaikan Git.
@@ -35,6 +35,7 @@ npm run test:db
 npm run test:e2e
 npm run build
 npm run test:bundle
+npm run test:pwa
 npm run db:types:check
 npm audit
 ```
@@ -50,6 +51,7 @@ truth produk.
 - `/dashboard` — ADMIN/USER: statistik siswa unik berdasarkan tanggal.
 - `/siswa` dan `/siswa/[id]` — ADMIN/USER: pencarian, detail, kalender, statistik, dan histori.
 - `/siswa/[id]/laporan` — ADMIN/USER: laporan individual read-only; export Excel hanya ADMIN.
+- `/import-siswa`, `/naik-turun-grade`, `/alumni`, `/riwayat-aktivitas` — ADMIN.
 
 Direct Data API write tetap ditolak. Mutation memakai RPC `phase3_*` dengan actor dari session,
 validasi database, dan audit OPERATIONAL dalam transaction yang sama. Editor detail siswa memakai
