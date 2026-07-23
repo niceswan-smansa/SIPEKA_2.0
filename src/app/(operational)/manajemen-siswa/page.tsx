@@ -41,6 +41,8 @@ type Props = {
 const errors: Record<string, string> = {
   DUPLICATE_NIS: "NIS sudah digunakan siswa lain.",
   DUPLICATE_NISN: "NISN sudah digunakan siswa lain.",
+  NIS_FORMAT_INVALID: "NIS hanya boleh berisi digit.",
+  NISN_FORMAT_INVALID: "NISN harus tepat 10 digit.",
   GRADE_CLASS_MISMATCH: "Grade siswa tidak sesuai dengan kelas.",
   CLASS_INACTIVE_OR_NOT_FOUND: "Kelas tidak aktif atau tidak ditemukan.",
   CLASS_NOT_IN_ACTIVE_YEAR: "Kelas tidak berada pada tahun ajaran aktif.",
@@ -184,8 +186,8 @@ function StudentIdentityFields({
   prefix: string;
   student?: {
     fullName: string;
-    nis: string;
-    nisn: string;
+    nis: string | null;
+    nisn: string | null;
     gender: "L" | "P";
     yearEntered: number | null;
   };
@@ -201,10 +203,21 @@ function StudentIdentityFields({
         />
       </FormField>
       <FormField id={`${prefix}-nis`} label="NIS">
-        <Input id={`${prefix}-nis`} name="nis" defaultValue={student?.nis} required />
+        <Input
+          id={`${prefix}-nis`}
+          name="nis"
+          inputMode="numeric"
+          defaultValue={student?.nis ?? ""}
+        />
       </FormField>
       <FormField id={`${prefix}-nisn`} label="NISN">
-        <Input id={`${prefix}-nisn`} name="nisn" defaultValue={student?.nisn} required />
+        <Input
+          id={`${prefix}-nisn`}
+          name="nisn"
+          inputMode="numeric"
+          maxLength={10}
+          defaultValue={student?.nisn ?? ""}
+        />
       </FormField>
       <FormField id={`${prefix}-gender`} label="Jenis kelamin">
         <Select id={`${prefix}-gender`} name="gender" defaultValue={student?.gender ?? "L"}>

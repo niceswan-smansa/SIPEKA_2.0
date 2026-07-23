@@ -31,8 +31,8 @@ export type ExistingAttendance = {
 export type AttendanceStudent = {
   id: string;
   fullName: string;
-  nis: string;
-  nisn: string;
+  nis: string | null;
+  nisn: string | null;
   attendance: ExistingAttendance[];
 };
 

@@ -21,6 +21,8 @@ const errorCode = (error: unknown) => {
     [
       "DUPLICATE_NISN",
       "DUPLICATE_NIS",
+      "NISN_FORMAT_INVALID",
+      "NIS_FORMAT_INVALID",
       "GRADE_CLASS_MISMATCH",
       "CLASS_INACTIVE_OR_NOT_FOUND",
       "CLASS_NOT_IN_ACTIVE_YEAR",

@@ -18,7 +18,7 @@ test("ADMIN previews and imports a synthetic CSV all-or-none", async ({ page }) 
   await page.locator("input[type=file]").setInputFiles({
     name: "synthetic-phase7.csv",
     mimeType: "text/csv",
-    buffer: Buffer.from("NIS,NISN,NAMA,JENIS_KELAMIN\nP7-E2E-001,P7N-E2E-001,Nabila E2E,P\n"),
+    buffer: Buffer.from("NIS,NISN,NAMA,JENIS_KELAMIN\n710001,7710000001,Nabila E2E,P\n"),
   });
   await expect(page.getByText("Valid", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi import 1 siswa" }).click();

@@ -4,8 +4,8 @@ import { OPERATIONAL_GRADES, type OperationalGrade } from "@/shared/domain/grade
 
 export type StudentRecord = {
   id: string;
-  nis: string;
-  nisn: string;
+  nis: string | null;
+  nisn: string | null;
   fullName: string;
   gender: "L" | "P";
   currentGrade: OperationalGrade | "ALUMNI";
@@ -56,10 +56,15 @@ export function normalizeStudentIdentifier(value: string) {
 }
 
 const year = z.coerce.number().int().min(1900).max(2200);
+const optionalIdentifier = (pattern: RegExp) =>
+  z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    z.string().trim().regex(pattern).nullable(),
+  );
 const identityFields = {
   fullName: z.string().trim().min(2).max(160),
-  nis: z.string().trim().min(1).max(40),
-  nisn: z.string().trim().min(1).max(40),
+  nis: optionalIdentifier(/^\d{1,40}$/),
+  nisn: optionalIdentifier(/^\d{10}$/),
   gender: z.enum(["L", "P"]),
   yearEntered: year,
 };

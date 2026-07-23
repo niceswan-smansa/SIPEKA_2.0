@@ -36,8 +36,8 @@ export function createSupabaseAttendanceRepository(): AttendanceRepository {
         items: ((value.items as Record<string, unknown>[]) ?? []).map((item) => ({
           id: String(item.id),
           fullName: String(item.full_name),
-          nis: String(item.nis),
-          nisn: String(item.nisn),
+          nis: item.nis === null ? null : String(item.nis),
+          nisn: item.nisn === null ? null : String(item.nisn),
           attendance: ((item.attendance as Record<string, unknown>[]) ?? []).map(mapAttendance),
         })),
       } satisfies ClassAttendance;

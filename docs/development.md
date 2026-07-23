@@ -119,3 +119,10 @@ password disposable; `.local/test-credentials.json` tidak memuat Auth identity.
 Gunakan `npm run test:auth-probe` dan `npm run test:auth-policy` setelah reset.
 Bootstrap/recovery SUPER_ADMIN memakai environment server-only tanpa email
 pengguna.
+
+## Bootstrap siswa existing lokal
+
+`npm run migration:real-local` melakukan dry reconciliation tanpa menulis.
+Setelah `npm run db:reset`, jalankan `npm run migration:real-local:apply`, lalu
+`npm run seed:test-users`. Output dan laporan hanya berupa count; workbook,
+payload, backup, dan reconciliation lokal berada di path yang di-ignore.

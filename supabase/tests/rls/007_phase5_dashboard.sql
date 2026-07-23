@@ -24,11 +24,11 @@ select set_config('request.jwt.claim.sub', '63000000-0000-4000-8000-000000000001
 select set_config('request.jwt.claim.role', 'authenticated', true);
 set local role authenticated;
 select lives_ok(
-  $$select public.phase3_create_student('Dashboard Satu Sintetis', 'SYN-DASH-001', 'SYN-N-DASH-001', 'P', 'X', '20000000-0000-4000-8000-000000000001', 2026, true)$$,
+  $$select public.phase3_create_student('Dashboard Satu Sintetis', '960001', '9960000001', 'P', 'X', '20000000-0000-4000-8000-000000000001', 2026, true)$$,
   'fixture siswa pertama dibuat'
 );
 select lives_ok(
-  $$select public.phase3_create_student('Dashboard Dua Sintetis', 'SYN-DASH-002', 'SYN-N-DASH-002', 'L', 'X', '20000000-0000-4000-8000-000000000001', 2026, true)$$,
+  $$select public.phase3_create_student('Dashboard Dua Sintetis', '960002', '9960000002', 'L', 'X', '20000000-0000-4000-8000-000000000001', 2026, true)$$,
   'fixture siswa kedua dibuat'
 );
 
@@ -37,10 +37,10 @@ insert into public.attendance_records (
   student_id, class_id, attendance_date, period_number, status, created_by, updated_by
 )
 values
-  ((select id from public.students where nis = 'SYN-DASH-001'), '20000000-0000-4000-8000-000000000001', current_date, 1, 'IZIN', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001'),
-  ((select id from public.students where nis = 'SYN-DASH-001'), '20000000-0000-4000-8000-000000000001', current_date, 2, 'IZIN', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001'),
-  ((select id from public.students where nis = 'SYN-DASH-001'), '20000000-0000-4000-8000-000000000001', current_date, 3, 'SAKIT', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001'),
-  ((select id from public.students where nis = 'SYN-DASH-002'), '20000000-0000-4000-8000-000000000001', current_date, 1, 'TANPA_KETERANGAN', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001');
+  ((select id from public.students where nis = '960001'), '20000000-0000-4000-8000-000000000001', current_date, 1, 'IZIN', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001'),
+  ((select id from public.students where nis = '960001'), '20000000-0000-4000-8000-000000000001', current_date, 2, 'IZIN', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001'),
+  ((select id from public.students where nis = '960001'), '20000000-0000-4000-8000-000000000001', current_date, 3, 'SAKIT', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001'),
+  ((select id from public.students where nis = '960002'), '20000000-0000-4000-8000-000000000001', current_date, 1, 'TANPA_KETERANGAN', '63000000-0000-4000-8000-000000000001', '63000000-0000-4000-8000-000000000001');
 
 set local role authenticated;
 select is((public.phase5_get_dashboard(current_date)->'summary'->>'total')::integer, 2, 'summary menghitung dua siswa unik');

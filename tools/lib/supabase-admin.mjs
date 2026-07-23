@@ -62,16 +62,16 @@ export function loadAdminConfiguration({ allowRemote = false } = {}) {
   };
 }
 
-async function retryAuth(operation) {
-  for (let attempt = 1; attempt <= 8; attempt += 1) {
+export async function retryAuth(operation) {
+  for (let attempt = 1; attempt <= 30; attempt += 1) {
     try {
       return await operation();
     } catch (error) {
       const retryable =
         error?.name === "AuthRetryableFetchError" ||
         (typeof error?.status === "number" && error.status >= 500);
-      if (!retryable || attempt === 8) throw error;
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, attempt * 125));
+      if (!retryable || attempt === 30) throw error;
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, Math.min(attempt * 250, 1000)));
     }
   }
 }

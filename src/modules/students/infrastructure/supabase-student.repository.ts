@@ -13,8 +13,8 @@ import type {
 function mapStudent(value: Record<string, unknown>): StudentRecord {
   return {
     id: String(value.id),
-    nis: String(value.nis),
-    nisn: String(value.nisn),
+    nis: value.nis === null ? null : String(value.nis),
+    nisn: value.nisn === null ? null : String(value.nisn),
     fullName: String(value.full_name),
     gender: value.gender as "L" | "P",
     currentGrade: value.current_grade as StudentRecord["currentGrade"],
@@ -101,8 +101,8 @@ export function createSupabaseStudentRepository(): StudentRepository {
       const client = await createServerSupabaseClient();
       const { data, error } = await client.rpc("phase3_create_student", {
         p_full_name: input.fullName,
-        p_nis: input.nis,
-        p_nisn: input.nisn,
+        p_nis: input.nis ?? "",
+        p_nisn: input.nisn ?? "",
         p_gender: input.gender,
         p_grade: input.grade,
         p_class_id: input.classId,
@@ -117,8 +117,8 @@ export function createSupabaseStudentRepository(): StudentRepository {
       const { error } = await client.rpc("phase3_update_student_identity", {
         p_id: input.id,
         p_full_name: input.fullName,
-        p_nis: input.nis,
-        p_nisn: input.nisn,
+        p_nis: input.nis ?? "",
+        p_nisn: input.nisn ?? "",
         p_gender: input.gender,
         p_year_entered: input.yearEntered,
       });

@@ -15,4 +15,10 @@ describe("student lifecycle CSV", () => {
       "CSV_QUOTE_INVALID",
     );
   });
+  it("accepts blank identifiers but rejects malformed non-blank identifiers", () => {
+    const blank = previewStudentCsv("NIS,NISN,NAMA,JENIS_KELAMIN\n,,Siswa Tanpa Identifier,L\n");
+    expect(blank[0]).toMatchObject({ nis: null, nisn: null, errors: [] });
+    const malformed = previewStudentCsv("NIS,NISN,NAMA,JENIS_KELAMIN\n123,123,Siswa Invalid,P\n");
+    expect(malformed[0]?.errors).not.toHaveLength(0);
+  });
 });

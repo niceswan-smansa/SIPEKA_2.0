@@ -32,8 +32,8 @@ export function StudentList({
               {students.map((student) => (
                 <tr key={student.id} className="border-b border-slate-100">
                   <td className="p-3 font-semibold">{student.fullName}</td>
-                  <td className="p-3">{student.nis}</td>
-                  <td className="p-3">{student.nisn}</td>
+                  <td className="p-3">{student.nis ?? "—"}</td>
+                  <td className="p-3">{student.nisn ?? "—"}</td>
                   <td className="p-3">
                     {student.classNumber
                       ? classDisplayName(
@@ -78,7 +78,7 @@ export function StudentList({
               <div>
                 <h2 className="font-bold">{student.fullName}</h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  NIS {student.nis} · NISN {student.nisn}
+                  NIS {student.nis ?? "—"} · NISN {student.nisn ?? "—"}
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
                   {student.classNumber

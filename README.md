@@ -62,3 +62,7 @@ engine preview/apply Phase 4 yang sama; tidak ada mutation presensi kedua.
 Login SIPEKA menggunakan username dan password saja. Email pengguna tidak
 disimpan atau dikirim; Supabase Auth memakai synthetic identity tersembunyi
 server-side. Tidak ada signup publik atau recovery email.
+
+NIS dan NISN siswa bersifat opsional; UUID internal tetap identity canonical.
+Bootstrap workbook existing hanya dijalankan lokal melalui
+`npm run migration:real-local:apply` dan menghasilkan reconciliation redacted.

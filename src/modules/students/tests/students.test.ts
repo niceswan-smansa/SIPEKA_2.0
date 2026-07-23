@@ -16,8 +16,8 @@ describe("student domain", () => {
     expect(
       studentCreateSchema.safeParse({
         fullName: "Nabila Sintetis",
-        nis: "SYN-001",
-        nisn: "SYN-N-001",
+        nis: "10001",
+        nisn: "0012345678",
         gender: "P",
         grade: "ALUMNI",
         classId: "20000000-0000-4000-8000-000000000001",
@@ -28,8 +28,8 @@ describe("student domain", () => {
     expect(
       studentCreateSchema.safeParse({
         fullName: "Siswa Sintetis",
-        nis: "SYN-002",
-        nisn: "SYN-N-002",
+        nis: "10002",
+        nisn: "0012345679",
         gender: "L",
         grade: "XI",
         classId: "20000000-0000-4000-8000-000000000001",
@@ -37,5 +37,24 @@ describe("student domain", () => {
         isActive: true,
       }).success,
     ).toBe(true);
+  });
+
+  it("accepts missing NIS, NISN, or both", () => {
+    const base = {
+      fullName: "Siswa Tanpa Identifier",
+      gender: "L",
+      grade: "XI",
+      classId: "20000000-0000-4000-8000-000000000001",
+      yearEntered: 2026,
+      isActive: true,
+    };
+    expect(studentCreateSchema.safeParse({ ...base, nis: "", nisn: "0012345678" }).success).toBe(
+      true,
+    );
+    expect(studentCreateSchema.safeParse({ ...base, nis: "10001", nisn: "" }).success).toBe(true);
+    expect(studentCreateSchema.safeParse({ ...base, nis: "", nisn: "" }).success).toBe(true);
+    expect(studentCreateSchema.safeParse({ ...base, nis: "10001", nisn: "123" }).success).toBe(
+      false,
+    );
   });
 });

@@ -3074,3 +3074,9 @@ Email”. All roles login with username/password only. `profiles.email` remains
 detail. There is no public signup, email verification/recovery, magic link,
 email OTP, change-email, or application MFA.
 
+# Product amendment: optional student identifiers
+
+`students.id` UUID adalah identity canonical. NIS/NISN opsional; nilai non-NULL
+divalidasi dan unik melalui partial unique indexes. CSV normal menolak nilai
+malformed, sedangkan lima nilai workbook existing yang telah direview
+dinormalisasi ke NULL oleh tooling migrasi local-only.

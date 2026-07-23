@@ -146,3 +146,18 @@ Akun awal yang direncanakan (tidak dibuat oleh migration atau provisioning
 repository): `kuddus` (ADMIN), `intan.admin` (ADMIN), `intan.superadmin`
 (SUPER_ADMIN), `suci` (ADMIN), dan `nabila` (ADMIN). Dua akun Intan tetap
 terpisah. Temporary password ditentukan di luar repository.
+
+## Real local student bootstrap
+
+1. `npm run db:reset`
+2. `npm run migration:real-local:apply`
+3. `npm run seed:initial-local-accounts`
+4. Jalankan kembali `npm run migration:real-local:apply` untuk membuktikan idempotency.
+5. Buat backup data local-only dengan
+   `npx supabase db dump --local --data-only -f .local/sipeka-real-local-data.sql`.
+
+Mapping workbook memakai 30 sheet kelas eksplisit. Tiga NIS kosong dan dua NISN
+berpanjang invalid yang telah direview menjadi NULL. CSV operasional tidak
+memakai kebijakan ini: nilai malformed tetap validation error.
+Backup dan credential wajib tetap di `.local/` dengan mode `0600`; enkripsi
+sebelum file dipindahkan keluar host lokal.

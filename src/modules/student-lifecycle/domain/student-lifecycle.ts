@@ -1,22 +1,31 @@
 import { z } from "zod";
 
-export type ImportRow = { nis: string; nisn: string; name: string; gender: "L" | "P" };
+export type ImportRow = {
+  nis: string | null;
+  nisn: string | null;
+  name: string;
+  gender: "L" | "P";
+};
 export type ImportPreviewRow = ImportRow & { row: number; errors: string[] };
 
 const formulaPrefix = /^[=+\-@]/;
 const rowSchema = z.object({
-  nis: z
-    .string()
-    .trim()
-    .min(1)
-    .max(40)
-    .refine((value) => !formulaPrefix.test(value)),
-  nisn: z
-    .string()
-    .trim()
-    .min(1)
-    .max(40)
-    .refine((value) => !formulaPrefix.test(value)),
+  nis: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{1,40}$/)
+      .nullable(),
+  ),
+  nisn: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{10}$/)
+      .nullable(),
+  ),
   name: z
     .string()
     .trim()
@@ -84,9 +93,11 @@ export function previewStudentCsv(source: string): ImportPreviewRow[] {
   });
   for (const key of ["nis", "nisn"] as const) {
     const counts = new Map<string, number>();
-    for (const row of rows) counts.set(row[key], (counts.get(row[key]) ?? 0) + 1);
     for (const row of rows)
-      if ((counts.get(row[key]) ?? 0) > 1) row.errors.push(`${key.toUpperCase()} duplikat.`);
+      if (row[key] !== null) counts.set(row[key], (counts.get(row[key]) ?? 0) + 1);
+    for (const row of rows)
+      if (row[key] !== null && (counts.get(row[key]) ?? 0) > 1)
+        row.errors.push(`${key.toUpperCase()} duplikat.`);
   }
   return rows;
 }

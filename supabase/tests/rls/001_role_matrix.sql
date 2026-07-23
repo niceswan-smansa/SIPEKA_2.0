@@ -40,8 +40,8 @@ insert into public.students (
 )
 values (
   '41000000-0000-4000-8000-000000000001',
-  'SYN-RLS-001',
-  'SYN-N-RLS-001',
+  '910001',
+  '9910000001',
   'Siswa RLS Sintetis',
   'siswa rls sintetis',
   'L',
@@ -86,7 +86,7 @@ select throws_like('select * from public.students', '%permission denied%', 'anon
 select throws_like('select * from public.attendance_records', '%permission denied%', 'anonymous tidak dapat membaca attendance');
 select throws_like('select * from public.audit_logs', '%permission denied%', 'anonymous tidak dapat membaca audit');
 select throws_like(
-  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade) values ('SYN-A', 'SYN-NA', 'Anon Sintetis', 'anon sintetis', 'L', 'X')$$,
+  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade) values ('910003', '9910000003', 'Anon Sintetis', 'anon sintetis', 'L', 'X')$$,
   '%permission denied%',
   'anonymous tidak dapat mutation'
 );
@@ -98,7 +98,7 @@ set local role authenticated;
 
 select is((select count(*) from public.students), 1::bigint, 'USER dapat membaca data operasional');
 select throws_like(
-  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade) values ('SYN-U', 'SYN-NU', 'User Write Sintetis', 'user write sintetis', 'P', 'X')$$,
+  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade) values ('910004', '9910000004', 'User Write Sintetis', 'user write sintetis', 'P', 'X')$$,
   '%permission denied%',
   'USER tidak dapat insert student'
 );
@@ -128,7 +128,7 @@ set local role authenticated;
 
 select is((select count(*) from public.students), 1::bigint, 'ADMIN dapat membaca data operasional');
 select throws_like(
-  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade, created_by, updated_by) values ('SYN-ADMIN-002', 'SYN-N-ADMIN-002', 'Admin Insert Sintetis', 'admin insert sintetis', 'P', 'X', '40000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000002')$$,
+  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade, created_by, updated_by) values ('910002', '9910000002', 'Admin Insert Sintetis', 'admin insert sintetis', 'P', 'X', '40000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000002')$$,
   '%permission denied%',
   'ADMIN belum dapat direct insert student'
 );
@@ -156,7 +156,7 @@ select is((select count(*) from public.classes), 0::bigint, 'SUPER_ADMIN tidak d
 select is((select count(*) from public.attendance_records), 0::bigint, 'SUPER_ADMIN tidak dapat membaca attendance');
 select is((select count(*) from public.audit_logs where scope = 'OPERATIONAL'), 0::bigint, 'SUPER_ADMIN tidak dapat membaca operational audit');
 select throws_like(
-  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade) values ('SYN-S', 'SYN-NS', 'Super Write Sintetis', 'super write sintetis', 'L', 'X')$$,
+  $$insert into public.students (nis, nisn, full_name, normalized_name, gender, current_grade) values ('910005', '9910000005', 'Super Write Sintetis', 'super write sintetis', 'L', 'X')$$,
   '%permission denied%',
   'SUPER_ADMIN tidak dapat mutation operasional'
 );

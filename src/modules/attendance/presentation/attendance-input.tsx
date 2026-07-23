@@ -209,7 +209,7 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
                   <strong>{student.fullName}</strong>
                   <br />
                   <span className="text-xs text-slate-500">
-                    {student.nis} · {student.nisn}
+                    {student.nis ?? "—"} · {student.nisn ?? "—"}
                   </span>
                 </span>
               </label>

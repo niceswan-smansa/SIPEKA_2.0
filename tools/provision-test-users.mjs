@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { loadAdminConfiguration } from "./lib/supabase-admin.mjs";
+import { loadAdminConfiguration, retryAuth } from "./lib/supabase-admin.mjs";
 
 const password = process.env.SIPEKA_TEST_PASSWORD ?? `Aa1!${randomBytes(18).toString("base64url")}`;
 const nextPassword = `Bb2!${randomBytes(18).toString("base64url")}`;
@@ -64,21 +64,25 @@ for (const definition of definitions) {
   if (profileLookupError) throw profileLookupError;
   let user;
   if (existingProfile) {
-    const { data, error } = await client.auth.admin.updateUserById(existingProfile.id, {
-      email_confirm: true,
-      password,
-    });
+    const { data, error } = await retryAuth(() =>
+      client.auth.admin.updateUserById(existingProfile.id, {
+        email_confirm: true,
+        password,
+      }),
+    );
     if (error) throw error;
     if (!data.user || data.user.id !== existingProfile.id) {
       throw new Error("Auth fixture update tidak menghasilkan user canonical.");
     }
     user = data.user;
   } else {
-    const { data, error } = await client.auth.admin.createUser({
-      email: `fixture-${randomUUID()}@invalid.local`,
-      email_confirm: true,
-      password,
-    });
+    const { data, error } = await retryAuth(() =>
+      client.auth.admin.createUser({
+        email: `fixture-${randomUUID()}@invalid.local`,
+        email_confirm: true,
+        password,
+      }),
+    );
     if (error) throw error;
     if (!data.user) throw new Error("Auth fixture create tidak menghasilkan user.");
     user = data.user;

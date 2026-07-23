@@ -25,8 +25,8 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   page,
 }) => {
   const suffix = Date.now().toString().slice(-7);
-  const nis = `E2E-P3-${suffix}`;
-  const nisn = `E2E-N-P3-${suffix}`;
+  const nis = `31${suffix}`;
+  const nisn = `311${suffix}`;
   const name = `Nabila Sintetis ${suffix}`;
 
   await login(page, credentials().users.admin.username);
@@ -140,7 +140,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   await page.goto("/manajemen-siswa");
   await page.locator("#create-full-name").fill("Duplikat Sintetis");
   await page.locator("#create-nis").fill(nis);
-  await page.locator("#create-nisn").fill(`${nisn}-2`);
+  await page.locator("#create-nisn").fill(`312${suffix}`);
   await page.locator("#create-year-entered").fill("2026");
   await page.locator("#create-class").selectOption({ label: "X-1" });
   await page.getByRole("button", { name: "Tambah siswa" }).click();

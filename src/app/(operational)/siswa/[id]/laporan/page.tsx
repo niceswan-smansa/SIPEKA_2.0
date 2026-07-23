@@ -46,11 +46,11 @@ export default async function StudentReportPage({ params, searchParams }: Props)
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <dt>NIS</dt>
-            <dd>{student.nis}</dd>
+            <dd>{student.nis ?? "—"}</dd>
           </div>
           <div>
             <dt>NISN</dt>
-            <dd>{student.nisn}</dd>
+            <dd>{student.nisn ?? "—"}</dd>
           </div>
           <div>
             <dt>Hari terdampak</dt>

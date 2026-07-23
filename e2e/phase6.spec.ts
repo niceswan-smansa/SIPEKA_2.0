@@ -32,14 +32,10 @@ test("student attendance detail reuses attendance mutation and exports a safe re
 }) => {
   const suffix = Date.now().toString().slice(-7);
   const name = `@Laporan Sintetis ${suffix}`;
-  const nis = `=P6-${suffix}`;
-  const nisn = `+N-P6-${suffix}`;
 
   await login(page, credentials().users.admin.username);
   await page.goto("/manajemen-siswa");
   await page.locator("#create-full-name").fill(name);
-  await page.locator("#create-nis").fill(nis);
-  await page.locator("#create-nisn").fill(nisn);
   await page.locator("#create-gender").selectOption("P");
   await page.locator("#create-year-entered").fill("2026");
   await page.locator("#create-grade").selectOption("X");
@@ -83,8 +79,8 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   const report = await response.body();
   await workbook.xlsx.load(report as unknown as Parameters<typeof workbook.xlsx.load>[0]);
   const row = workbook.getWorksheet("Presensi")!.getRow(2);
-  expect(row.getCell(3).value).toBe(`'${nis}`);
-  expect(row.getCell(4).value).toBe(`'${nisn}`);
+  expect(row.getCell(3).value).toBe("");
+  expect(row.getCell(4).value).toBe("");
   expect(row.getCell(5).value).toBe(`'${name}`);
 
   await page.goto(`/siswa/${studentId}/laporan?from=${month}-01&to=${today()}`);

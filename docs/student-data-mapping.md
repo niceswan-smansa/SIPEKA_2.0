@@ -20,8 +20,8 @@ Status: draft hasil inspeksi read-only Phase 0. Tidak ada import atau normalisas
 | Source                 | Target                     | Aturan draft                                                          |
 | ---------------------- | -------------------------- | --------------------------------------------------------------------- |
 | `NO`                   | tidak disimpan             | Nomor urut sumber saja                                                |
-| `NIS`                  | `students.nis`             | Baca sebagai text, trim, pertahankan leading zero, wajib unik         |
-| `NISN`                 | `students.nisn`            | Baca sebagai text, trim, pertahankan leading zero, wajib unik         |
+| `NIS`                  | `students.nis`             | Text digit; leading zero dipertahankan; kosong menjadi NULL           |
+| `NISN`                 | `students.nisn`            | Tepat 10 digit; dua nilai reviewed malformed menjadi NULL             |
 | `NAMA` / `NAMA SISWA`  | `students.full_name`       | Trim dan rapikan whitespace; jangan ubah ejaan secara otomatis        |
 | turunan nama           | `students.normalized_name` | Dibentuk adapter, bukan ditulis kembali ke workbook                   |
 | `L/P`                  | `students.gender`          | Normalisasi eksplisit hanya ke enum `L` atau `P`; selain itu error    |
@@ -44,6 +44,6 @@ Target: nis=<disensor>, nisn=<disensor>, full_name=<disensor>, gender=P,
 - Definisikan sheet-to-class map eksplisit, terutama workbook XI dan XII.
 - Bedakan template kelas dari support/master sheet dan abaikan formula/summary rows.
 - Deteksi duplikasi NIS/NISN lintas seluruh workbook tanpa mencetak nilainya.
-- Tolak row tanpa identifier, nama, gender valid, atau mapping kelas yang pasti.
+- Nama dan gender wajib; NIS/NISN boleh NULL sesuai ADR 0011.
 - Buat dry-run count, redacted error report, dan transaksi all-or-nothing; jangan menulis database
   sebelum seluruh ambiguity diselesaikan.

@@ -14,8 +14,6 @@ test("ADMIN previews mixed attendance and All Jam writes one record per period",
 }) => {
   const suffix = Date.now().toString().slice(-7);
   const name = `Attendance Sintetis ${suffix}`;
-  const nis = `E2E-P4-${suffix}`;
-  const nisn = `E2E-N-P4-${suffix}`;
 
   await page.goto("/login");
   await page.getByLabel("Username").fill(credentials().users.admin.username);
@@ -25,8 +23,6 @@ test("ADMIN previews mixed attendance and All Jam writes one record per period",
 
   await page.goto("/manajemen-siswa");
   await page.locator("#create-full-name").fill(name);
-  await page.locator("#create-nis").fill(nis);
-  await page.locator("#create-nisn").fill(nisn);
   await page.locator("#create-gender").selectOption("P");
   await page.locator("#create-year-entered").fill("2026");
   await page.locator("#create-grade").selectOption("X");

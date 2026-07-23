@@ -730,8 +730,8 @@ export type Database = {
           graduation_year: number | null;
           id: string;
           is_active: boolean;
-          nis: string;
-          nisn: string;
+          nis: string | null;
+          nisn: string | null;
           normalized_name: string;
           updated_at: string;
           updated_by: string | null;
@@ -748,8 +748,8 @@ export type Database = {
           graduation_year?: number | null;
           id?: string;
           is_active?: boolean;
-          nis: string;
-          nisn: string;
+          nis?: string | null;
+          nisn?: string | null;
           normalized_name: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -766,8 +766,8 @@ export type Database = {
           graduation_year?: number | null;
           id?: string;
           is_active?: boolean;
-          nis?: string;
-          nisn?: string;
+          nis?: string | null;
+          nisn?: string | null;
           normalized_name?: string;
           updated_at?: string;
           updated_by?: string | null;
@@ -996,6 +996,10 @@ export type Database = {
       };
       phase7_tombstone_alumni: {
         Args: { p_request_id?: string; p_student_id: string };
+        Returns: Json;
+      };
+      phase9_import_existing_students: {
+        Args: { p_batch_key: string; p_rows: Json };
         Returns: Json;
       };
     };

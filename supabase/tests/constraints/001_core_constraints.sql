@@ -35,8 +35,8 @@ insert into public.students (
 )
 values (
   '31000000-0000-4000-8000-000000000001',
-  'SYN-C-001',
-  'SYN-N-C-001',
+  '900001',
+  '9900000001',
   'Siswa Constraint Sintetis',
   'siswa constraint sintetis',
   'L',
@@ -51,13 +51,13 @@ select throws_like(
     insert into public.students (
       nis, nisn, full_name, normalized_name, gender, current_grade, current_class_id, created_by, updated_by
     ) values (
-      'SYN-C-001', 'SYN-N-C-002', 'Duplikat Sintetis', 'duplikat sintetis', 'P', 'X',
+      '900001', '9900000002', 'Duplikat Sintetis', 'duplikat sintetis', 'P', 'X',
       '20000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001'
     )
   $$,
-  '%duplicate key value violates unique constraint%students_nis_key%',
+  '%duplicate key value violates unique constraint%students_nis_unique_not_null_idx%',
   'NIS harus unik'
 );
 
@@ -66,13 +66,13 @@ select throws_like(
     insert into public.students (
       nis, nisn, full_name, normalized_name, gender, current_grade, current_class_id, created_by, updated_by
     ) values (
-      'SYN-C-002', 'SYN-N-C-001', 'Duplikat Sintetis', 'duplikat sintetis', 'P', 'X',
+      '900002', '9900000001', 'Duplikat Sintetis', 'duplikat sintetis', 'P', 'X',
       '20000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001'
     )
   $$,
-  '%duplicate key value violates unique constraint%students_nisn_key%',
+  '%duplicate key value violates unique constraint%students_nisn_unique_not_null_idx%',
   'NISN harus unik'
 );
 
@@ -100,7 +100,7 @@ select throws_like(
       nis, nisn, full_name, normalized_name, gender, current_grade, current_class_id,
       created_by, updated_by
     ) values (
-      'SYN-C-003', 'SYN-N-C-003', 'Mismatch Sintetis', 'mismatch sintetis', 'L', 'XI',
+      '900003', '9900000003', 'Mismatch Sintetis', 'mismatch sintetis', 'L', 'XI',
       '20000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001'
@@ -116,7 +116,7 @@ select throws_like(
       nis, nisn, full_name, normalized_name, gender, current_grade, current_class_id,
       created_by, updated_by
     ) values (
-      'SYN-C-004', 'SYN-N-C-004', 'Alumni Sintetis', 'alumni sintetis', 'P', 'ALUMNI',
+      '900004', '9900000004', 'Alumni Sintetis', 'alumni sintetis', 'P', 'ALUMNI',
       '20000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001'

@@ -21,23 +21,23 @@ set local role authenticated;
 select lives_ok(
   $$select public.phase7_import_students(
     '20000000-0000-4000-8000-000000000001', 'synthetic.csv', 2026,
-    '[{"nis":"P7-001","nisn":"P7N-001","name":"Nabila Phase Tujuh","gender":"P"}]'::jsonb
+    '[{"nis":"980001","nisn":"9980000001","name":"Nabila Phase Tujuh","gender":"P"}]'::jsonb
   )$$,
   'ADMIN import satu batch sintetis'
 );
 select is((select count(*) from public.import_batches where status = 'COMPLETED'), 1::bigint, 'import batch selesai');
-select is((select count(*) from public.students where nis = 'P7-001'), 1::bigint, 'import membuat siswa');
-select is((select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = 'P7-001' and e.is_current), 1::bigint, 'import membuat current enrollment');
+select is((select count(*) from public.students where nis = '980001'), 1::bigint, 'import membuat siswa');
+select is((select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = '980001' and e.is_current), 1::bigint, 'import membuat current enrollment');
 select is((select count(*) from public.audit_logs where action = 'STUDENT_IMPORT'), 1::bigint, 'import diaudit');
 select throws_like(
   $$select public.phase7_import_students(
     '20000000-0000-4000-8000-000000000001', 'bad.csv', 2026,
-    '[{"nis":"P7-001","nisn":"P7N-002","name":"Duplikat","gender":"L"}]'::jsonb
+    '[{"nis":"980001","nisn":"9980000002","name":"Duplikat","gender":"L"}]'::jsonb
   )$$,
   '%DUPLICATE_NIS%',
   'duplicate database ditolak all-or-none'
 );
-select is((select count(*) from public.students where nis = 'P7-002'), 0::bigint, 'import gagal tidak menulis baris');
+select is((select count(*) from public.students where nis = '980002'), 0::bigint, 'import gagal tidak menulis baris');
 select throws_like(
   $$insert into public.import_batches (class_id, file_name, row_count, created_by)
     values ('20000000-0000-4000-8000-000000000001', 'direct.csv', 0, '70000000-0000-4000-8000-000000000001')$$,
@@ -53,14 +53,14 @@ select lives_ok(
   $$select public.phase7_promote_academic_year((select id from public.academic_years where name = '2027/2028'))$$,
   'promotion mengganti tahun secara atomik'
 );
-select is((select current_grade from public.students where nis = 'P7-001'), 'XI'::public.grade_level, 'X naik menjadi XI');
-select is((select count(*) from public.student_enrollments where student_id = (select id from public.students where nis = 'P7-001') and not is_current), 1::bigint, 'enrollment lama dipertahankan');
+select is((select current_grade from public.students where nis = '980001'), 'XI'::public.grade_level, 'X naik menjadi XI');
+select is((select count(*) from public.student_enrollments where student_id = (select id from public.students where nis = '980001') and not is_current), 1::bigint, 'enrollment lama dipertahankan');
 select is((select count(*) from public.audit_logs where action = 'STUDENT_PROMOTION_APPLY'), 1::bigint, 'promotion diaudit');
 select lives_ok(
   $$select public.phase7_rollback_promotion((select id from public.promotion_batches order by created_at desc limit 1))$$,
   'rollback snapshot berhasil'
 );
-select is((select current_grade from public.students where nis = 'P7-001'), 'X'::public.grade_level, 'rollback mengembalikan grade tepat');
+select is((select current_grade from public.students where nis = '980001'), 'X'::public.grade_level, 'rollback mengembalikan grade tepat');
 select is((select status from public.promotion_batches order by created_at desc limit 1), 'REVERTED'::public.batch_status, 'batch ditandai reverted');
 
 reset role;

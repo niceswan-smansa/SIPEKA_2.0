@@ -20,7 +20,7 @@ set local role authenticated;
 
 select lives_ok(
   $$select public.phase3_create_student(
-    'Siswa Occupancy Sintetis', 'SYN-OCC-001', 'SYN-N-OCC-001', 'L', 'X',
+    'Siswa Occupancy Sintetis', '940001', '9940000001', 'L', 'X',
     '20000000-0000-4000-8000-000000000003', 2026, true
   )$$,
   'ADMIN membuat siswa aktif dengan current enrollment'
@@ -48,24 +48,24 @@ select is(
 
 select lives_ok(
   $$select public.phase3_change_student_academic(
-    (select id from public.students where nis = 'SYN-OCC-001'), 'X',
+    (select id from public.students where nis = '940001'), 'X',
     '20000000-0000-4000-8000-000000000003', false
   )$$,
   'ADMIN menonaktifkan siswa tanpa menghapus enrollment'
 );
-select is((select is_active from public.students where nis = 'SYN-OCC-001'), false, 'siswa menjadi nonaktif');
+select is((select is_active from public.students where nis = '940001'), false, 'siswa menjadi nonaktif');
 select is(
   (select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where e.class_id = '20000000-0000-4000-8000-000000000003' and e.is_current and s.is_active),
   0::bigint,
   'siswa nonaktif tidak dihitung sebagai siswa aktif kelas'
 );
 select is(
-  (select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = 'SYN-OCC-001'),
+  (select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = '940001'),
   1::bigint,
   'enrollment history siswa nonaktif tetap ada'
 );
 select is(
-  (select is_current from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = 'SYN-OCC-001'),
+  (select is_current from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = '940001'),
   true,
   'current enrollment siswa nonaktif dipertahankan'
 );
@@ -84,26 +84,26 @@ select is(
   'penonaktifan kelas ditulis ke audit'
 );
 select is(
-  (select count(*) from public.audit_logs where action = 'STUDENT_DEACTIVATE' and entity_id = (select id::text from public.students where nis = 'SYN-OCC-001')),
+  (select count(*) from public.audit_logs where action = 'STUDENT_DEACTIVATE' and entity_id = (select id::text from public.students where nis = '940001')),
   1::bigint,
   'penonaktifan siswa ditulis ke audit'
 );
 select throws_like(
   $$select public.phase3_change_student_academic(
-    (select id from public.students where nis = 'SYN-OCC-001'), 'X',
+    (select id from public.students where nis = '940001'), 'X',
     '20000000-0000-4000-8000-000000000003', true
   )$$,
   '%CLASS_INACTIVE_OR_NOT_FOUND%',
   'siswa tidak dapat diaktifkan kembali ke kelas nonaktif'
 );
-select is((select is_active from public.students where nis = 'SYN-OCC-001'), false, 'aktivasi gagal mempertahankan siswa nonaktif');
+select is((select is_active from public.students where nis = '940001'), false, 'aktivasi gagal mempertahankan siswa nonaktif');
 select is(
-  (select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = 'SYN-OCC-001'),
+  (select count(*) from public.student_enrollments e join public.students s on s.id = e.student_id where s.nis = '940001'),
   1::bigint,
   'aktivasi gagal tidak menghapus enrollment history'
 );
 select is(
-  (select count(*) from public.audit_logs where action = 'STUDENT_ACTIVATE' and entity_id = (select id::text from public.students where nis = 'SYN-OCC-001')),
+  (select count(*) from public.audit_logs where action = 'STUDENT_ACTIVATE' and entity_id = (select id::text from public.students where nis = '940001')),
   0::bigint,
   'aktivasi gagal tidak membuat audit sukses'
 );
@@ -143,7 +143,7 @@ select throws_like(
   'ADMIN direct UPDATE classes tetap ditolak'
 );
 select throws_like(
-  $$delete from public.student_enrollments where student_id = (select id from public.students where nis = 'SYN-OCC-001')$$,
+  $$delete from public.student_enrollments where student_id = (select id from public.students where nis = '940001')$$,
   '%permission denied%',
   'ADMIN direct DELETE enrollment history tetap ditolak'
 );

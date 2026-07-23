@@ -65,7 +65,7 @@ select lives_ok(
 );
 select throws_like(
   $$select public.phase3_create_student(
-    'Kelas Nonaktif', 'SYN-P3-OFF', 'SYN-N-P3-OFF', 'L', 'X',
+    'Kelas Nonaktif', '930004', '9930000004', 'L', 'X',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'X' and c.class_number = 10), 2027, true
   )$$,
   '%CLASS_INACTIVE_OR_NOT_FOUND%',
@@ -81,7 +81,7 @@ select lives_ok(
 
 select lives_ok(
   $$select public.phase3_create_student(
-    'Nabila Sintetis', 'SYN-P3-001', 'SYN-N-P3-001', 'P', 'X',
+    'Nabila Sintetis', '930001', '9930000001', 'P', 'X',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'X' and c.class_number = 1),
     2027, true
   )$$,
@@ -91,7 +91,7 @@ select is((select count(*) from public.student_enrollments where is_current), 1:
 select is((select count(*) from public.audit_logs where action = 'STUDENT_CREATE'), 1::bigint, 'create siswa diaudit');
 select throws_like(
   $$select public.phase3_create_student(
-    'Duplikat NIS', 'SYN-P3-001', 'SYN-N-P3-002', 'L', 'X',
+    'Duplikat NIS', '930001', '9930000002', 'L', 'X',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'X' and c.class_number = 1), 2027, true
   )$$,
   '%DUPLICATE_NIS%',
@@ -99,7 +99,7 @@ select throws_like(
 );
 select throws_like(
   $$select public.phase3_create_student(
-    'Duplikat NISN', 'SYN-P3-002', 'SYN-N-P3-001', 'L', 'X',
+    'Duplikat NISN', '930002', '9930000001', 'L', 'X',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'X' and c.class_number = 1), 2027, true
   )$$,
   '%DUPLICATE_NISN%',
@@ -107,7 +107,7 @@ select throws_like(
 );
 select throws_like(
   $$select public.phase3_create_student(
-    'Mismatch', 'SYN-P3-003', 'SYN-N-P3-003', 'L', 'XI',
+    'Mismatch', '930003', '9930000003', 'L', 'XI',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'X' and c.class_number = 1), 2027, true
   )$$,
   '%GRADE_CLASS_MISMATCH%',
@@ -125,17 +125,17 @@ select throws_like(
 
 select lives_ok(
   $$select public.phase3_update_student_identity(
-    (select id from public.students where nis = 'SYN-P3-001'),
-    'Nabila Putri Sintetis', 'SYN-P3-001', 'SYN-N-P3-001', 'P', 2027
+    (select id from public.students where nis = '930001'),
+    'Nabila Putri Sintetis', '930001', '9930000001', 'P', 2027
   )$$,
   'ADMIN memperbarui identitas siswa'
 );
-select is((select normalized_name from public.students where nis = 'SYN-P3-001'), 'nabila putri sintetis', 'normalized name diperbarui');
+select is((select normalized_name from public.students where nis = '930001'), 'nabila putri sintetis', 'normalized name diperbarui');
 select is((select count(*) from public.audit_logs where action = 'STUDENT_UPDATE'), 1::bigint, 'identity update diaudit');
 
 select lives_ok(
   $$select public.phase3_change_student_academic(
-    (select id from public.students where nis = 'SYN-P3-001'), 'X',
+    (select id from public.students where nis = '930001'), 'X',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'X' and c.class_number = 2), true
   )$$,
   'ADMIN memindahkan kelas siswa'
@@ -146,39 +146,39 @@ select is((select count(*) from public.audit_logs where action = 'STUDENT_MOVE_C
 
 select lives_ok(
   $$select public.phase3_change_student_academic(
-    (select id from public.students where nis = 'SYN-P3-001'), 'X',
-    (select current_class_id from public.students where nis = 'SYN-P3-001'), false
+    (select id from public.students where nis = '930001'), 'X',
+    (select current_class_id from public.students where nis = '930001'), false
   )$$,
   'ADMIN menonaktifkan siswa'
 );
-select is((select is_active from public.students where nis = 'SYN-P3-001'), false, 'status siswa menjadi nonaktif');
+select is((select is_active from public.students where nis = '930001'), false, 'status siswa menjadi nonaktif');
 select lives_ok(
   $$select public.phase3_update_class(
-    (select current_class_id from public.students where nis = 'SYN-P3-001'), '', '', false
+    (select current_class_id from public.students where nis = '930001'), '', '', false
   )$$,
   'kelas dengan current enrollment siswa nonaktif dapat dinonaktifkan'
 );
 select lives_ok(
   $$select public.phase3_update_class(
-    (select current_class_id from public.students where nis = 'SYN-P3-001'), '', '', true
+    (select current_class_id from public.students where nis = '930001'), '', '', true
   )$$,
   'kelas diaktifkan kembali sebelum siswa diaktifkan'
 );
 select lives_ok(
   $$select public.phase3_change_student_academic(
-    (select id from public.students where nis = 'SYN-P3-001'), 'X',
-    (select current_class_id from public.students where nis = 'SYN-P3-001'), true
+    (select id from public.students where nis = '930001'), 'X',
+    (select current_class_id from public.students where nis = '930001'), true
   )$$,
   'ADMIN mengaktifkan kembali siswa'
 );
 select lives_ok(
   $$select public.phase3_change_student_academic(
-    (select id from public.students where nis = 'SYN-P3-001'), 'XI',
+    (select id from public.students where nis = '930001'), 'XI',
     (select c.id from public.classes c join public.academic_years y on y.id = c.academic_year_id where y.name = '2027/2028' and c.grade = 'XI' and c.class_number = 1), true
   )$$,
   'ADMIN melakukan koreksi grade individual ke kelas yang sesuai'
 );
-select is((select current_grade from public.students where nis = 'SYN-P3-001'), 'XI'::public.grade_level, 'grade siswa diperbarui');
+select is((select current_grade from public.students where nis = '930001'), 'XI'::public.grade_level, 'grade siswa diperbarui');
 select is((select count(*) from public.audit_logs where action = 'STUDENT_CHANGE_GRADE'), 1::bigint, 'perubahan grade individual diaudit');
 
 select is(
@@ -253,13 +253,13 @@ for each row when (new.scope = 'OPERATIONAL') execute function public.test_phase
 set local role authenticated;
 select throws_like(
   $$select public.phase3_update_student_identity(
-    (select id from public.students where nis = 'SYN-P3-001'),
-    'Should Roll Back', 'SYN-P3-001', 'SYN-N-P3-001', 'P', 2027
+    (select id from public.students where nis = '930001'),
+    'Should Roll Back', '930001', '9930000001', 'P', 2027
   )$$,
   '%PHASE3_AUDIT_FAILURE%',
   'audit failure menggagalkan mutation'
 );
-select is((select full_name from public.students where nis = 'SYN-P3-001'), 'Nabila Putri Sintetis', 'student rollback saat audit gagal');
+select is((select full_name from public.students where nis = '930001'), 'Nabila Putri Sintetis', 'student rollback saat audit gagal');
 reset role;
 drop trigger test_phase3_fail_audit on public.audit_logs;
 drop function public.test_phase3_fail_audit();

@@ -18,7 +18,7 @@ set local role authenticated;
 
 select lives_ok(
   $$select public.phase3_create_student(
-    'Siswa Attendance Sintetis', 'SYN-ATT-001', 'SYN-N-ATT-001', 'L', 'X',
+    'Siswa Attendance Sintetis', '950001', '9950000001', 'L', 'X',
     '20000000-0000-4000-8000-000000000001', 2026, true
   )$$,
   'ADMIN menyiapkan siswa attendance sintetis'
@@ -35,7 +35,7 @@ select lives_ok(
   $$select public.phase4_preview_attendance(
     '20000000-0000-4000-8000-000000000001', current_date,
     jsonb_build_array(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', 1, 'mode', 'upsert', 'status', 'IZIN', 'note', 'Sintetis'
     ))
   )$$,
@@ -46,7 +46,7 @@ select is(
   (public.phase4_preview_attendance(
     '20000000-0000-4000-8000-000000000001', current_date,
     jsonb_build_array(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', 1, 'mode', 'upsert', 'status', 'IZIN'
     ))
   )->'summary'->>'new')::integer,
@@ -60,12 +60,12 @@ select
   public.phase4_preview_attendance(
     '20000000-0000-4000-8000-000000000001', current_date,
     jsonb_build_array(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', 1, 'mode', 'upsert', 'status', 'IZIN'
     ))
   )->>'token',
   jsonb_build_array(jsonb_build_object(
-    'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+    'student_id', (select id from public.students where nis = '950001'),
     'period_number', 1, 'mode', 'upsert', 'status', 'IZIN'
   ));
 select lives_ok(
@@ -75,8 +75,8 @@ select lives_ok(
   ) from phase4_apply_fixture),
   'apply menyimpan attendance secara atomik'
 );
-select is((select count(*) from public.attendance_records where student_id = (select id from public.students where nis = 'SYN-ATT-001')), 1::bigint, 'satu record attendance tersimpan');
-select is((select count(*) from public.attendance_revisions where student_id = (select id from public.students where nis = 'SYN-ATT-001')), 1::bigint, 'revision CREATE tersimpan');
+select is((select count(*) from public.attendance_records where student_id = (select id from public.students where nis = '950001')), 1::bigint, 'satu record attendance tersimpan');
+select is((select count(*) from public.attendance_revisions where student_id = (select id from public.students where nis = '950001')), 1::bigint, 'revision CREATE tersimpan');
 select is((select count(*) from public.attendance_batches), 1::bigint, 'batch attendance tersimpan');
 select is((select count(*) from public.audit_logs where action = 'ATTENDANCE_BATCH_APPLY'), 1::bigint, 'audit batch tersimpan');
 select throws_like(
@@ -101,12 +101,12 @@ select
   public.phase4_preview_attendance(
     '20000000-0000-4000-8000-000000000001', current_date,
     jsonb_build_array(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', 3, 'mode', 'upsert', 'status', 'SAKIT'
     ))
   )->>'token',
   jsonb_build_array(jsonb_build_object(
-    'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+    'student_id', (select id from public.students where nis = '950001'),
     'period_number', 3, 'mode', 'upsert', 'status', 'SAKIT'
   ));
 select throws_like(
@@ -134,7 +134,7 @@ select lives_ok(
   $$select public.phase4_preview_attendance(
     '20000000-0000-4000-8000-000000000001', current_date,
     (select jsonb_agg(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', period_number, 'mode', 'upsert', 'status', 'SAKIT'
     )) from generate_series(1, 10) period_number)
   )$$,
@@ -143,17 +143,17 @@ select lives_ok(
 
 select throws_like(
   $$insert into public.attendance_records (student_id, class_id, attendance_date, period_number, status, created_by, updated_by)
-    values ((select id from public.students where nis = 'SYN-ATT-001'), '20000000-0000-4000-8000-000000000001', current_date, 2, 'SAKIT', '62000000-0000-4000-8000-000000000001', '62000000-0000-4000-8000-000000000001')$$,
+    values ((select id from public.students where nis = '950001'), '20000000-0000-4000-8000-000000000001', current_date, 2, 'SAKIT', '62000000-0000-4000-8000-000000000001', '62000000-0000-4000-8000-000000000001')$$,
   '%permission denied%',
   'ADMIN direct INSERT attendance tetap ditolak'
 );
 select throws_like(
-  $$update public.attendance_records set status = 'SAKIT' where student_id = (select id from public.students where nis = 'SYN-ATT-001')$$,
+  $$update public.attendance_records set status = 'SAKIT' where student_id = (select id from public.students where nis = '950001')$$,
   '%permission denied%',
   'ADMIN direct UPDATE attendance tetap ditolak'
 );
 select throws_like(
-  $$delete from public.attendance_records where student_id = (select id from public.students where nis = 'SYN-ATT-001')$$,
+  $$delete from public.attendance_records where student_id = (select id from public.students where nis = '950001')$$,
   '%permission denied%',
   'ADMIN direct DELETE attendance tetap ditolak'
 );
@@ -188,7 +188,7 @@ select lives_ok(
   $$select public.phase4_preview_attendance(
     '20000000-0000-4000-8000-000000000001', current_date,
     jsonb_build_array(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', 2, 'mode', 'upsert', 'status', 'SAKIT'
     ))
   )$$,
@@ -198,20 +198,20 @@ insert into phase4_preview_fixture(token)
 select public.phase4_preview_attendance(
   '20000000-0000-4000-8000-000000000001', current_date,
   jsonb_build_array(jsonb_build_object(
-    'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+    'student_id', (select id from public.students where nis = '950001'),
     'period_number', 2, 'mode', 'upsert', 'status', 'SAKIT'
   ))
 )->>'token';
 reset role;
 insert into public.attendance_records (student_id, class_id, attendance_date, period_number, status, created_by, updated_by)
-values ((select id from public.students where nis = 'SYN-ATT-001'), '20000000-0000-4000-8000-000000000001', current_date, 2, 'IZIN', '62000000-0000-4000-8000-000000000001', '62000000-0000-4000-8000-000000000001');
+values ((select id from public.students where nis = '950001'), '20000000-0000-4000-8000-000000000001', current_date, 2, 'IZIN', '62000000-0000-4000-8000-000000000001', '62000000-0000-4000-8000-000000000001');
 select is((select count(*) from public.attendance_records where period_number = 2), 1::bigint, 'fixture stale tersimpan oleh database owner');
 select throws_like(
   $$select public.phase4_apply_attendance(
     (select token from phase4_preview_fixture),
     '20000000-0000-4000-8000-000000000001', current_date,
     jsonb_build_array(jsonb_build_object(
-      'student_id', (select id from public.students where nis = 'SYN-ATT-001'),
+      'student_id', (select id from public.students where nis = '950001'),
       'period_number', 2, 'mode', 'upsert', 'status', 'SAKIT'
     ))
   )$$,

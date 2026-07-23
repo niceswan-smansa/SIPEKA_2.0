@@ -110,3 +110,10 @@ menonaktifkan siswa dan tombstone mengganti identitas menjadi label non-PII, tan
 `profiles.email` selalu `NULL`; username lowercase dan unik adalah identity
 aplikasi. Supabase Auth menyimpan synthetic identity acak secara internal untuk
 password authentication dan tidak menjadi data domain.
+
+## Identifier siswa
+
+`students.id` UUID adalah identity utama. `nis` dan `nisn` nullable. Nilai NIS
+non-NULL hanya digit; NISN non-NULL tepat 10 digit. Partial unique indexes
+menegakkan uniqueness hanya untuk nilai yang tersedia. Tidak ada foreign key
+atau workflow yang memakai NIS/NISN sebagai identity canonical.

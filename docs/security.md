@@ -15,6 +15,14 @@ Reset akun dilakukan Super Admin dengan temporary password dan
 Supabase Dashboard atau tool server-only. Implementasi kompatibel dengan Free
 tier: password Auth/Admin API, tanpa SMTP atau fitur Auth berbayar.
 
+## Identifier siswa nullable
+
+RPC normal memvalidasi NIS digit dan NISN 10 digit bila diisi. Empty input
+dinormalisasi ke NULL; duplicate check mengabaikan NULL. Direct table write
+tetap ditolak. RPC migrasi workbook hanya diberi execute kepada `service_role`,
+memproses seluruh payload dalam satu transaction, dan hanya menulis summary
+redacted ke audit.
+
 - `.env.example` hanya placeholder. `SUPABASE_SERVICE_ROLE_KEY` hanya dibaca module `server-only`
   dan tidak diekspor melalui barrel yang dapat masuk client bundle.
 - Browser memakai URL dan publishable/anon key. Session server memakai cookie Supabase SSR dan

@@ -88,8 +88,8 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
         <Card>
           <h2 className="mb-4 text-lg font-bold">Identitas</h2>
           <dl className="grid grid-cols-2 gap-4 text-sm">
-            <Detail label="NIS" value={student.nis} />
-            <Detail label="NISN" value={student.nisn} />
+            <Detail label="NIS" value={student.nis ?? "—"} />
+            <Detail label="NISN" value={student.nisn ?? "—"} />
             <Detail
               label="Jenis kelamin"
               value={student.gender === "L" ? "Laki-laki" : "Perempuan"}
