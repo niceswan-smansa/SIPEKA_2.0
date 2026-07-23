@@ -16,15 +16,19 @@ import { createSupabaseAccountRepository } from "../infrastructure/supabase-acco
 function service() {
   return createAccountService(createSupabaseAccountRepository());
 }
+
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value : "";
 }
+
 function bool(value: FormDataEntryValue | null) {
   return value === "on" || value === "true";
 }
+
 function genericError(path: string, code = "operation"): never {
   redirect(`${path}?error=${encodeURIComponent(code)}`);
 }
+
 function logFailure(operation: string, result?: AccountOperationResult, targetId?: string) {
   console.error(
     JSON.stringify({
@@ -59,11 +63,14 @@ export async function createAccountAction(formData: FormData) {
     isActive: bool(formData.get("isActive")),
   };
   const parsed = accountInputSchema.safeParse(input);
-  if (!parsed.success)
+
+  if (!parsed.success) {
     genericError(
       "/super-admin/accounts/new",
       input.password !== input.confirmation ? "confirmation" : "policy",
     );
+  }
+
   let result: AccountOperationResult;
   try {
     result = await service().createAccount(actor, parsed.data);
@@ -71,7 +78,8 @@ export async function createAccountAction(formData: FormData) {
     logFailure("CREATE");
     genericError("/super-admin/accounts/new");
   }
-  requireSuccess("/super-admin/accounts/new", "CREATE", result, actor.id);
+
+  requireSuccess("/super-admin/accounts/new", "CREATE", result, result.account?.id);
   redirect("/super-admin/accounts?success=created");
 }
 
@@ -85,7 +93,9 @@ export async function updateAccountAction(formData: FormData) {
     isActive: bool(formData.get("isActive")),
   };
   const parsed = accountUpdateSchema.safeParse(input);
+
   if (!id || !parsed.success) genericError(`/super-admin/accounts/${id}`);
+
   let result: AccountOperationResult;
   try {
     result = await service().updateAccount(actor, id, parsed.data);
@@ -93,6 +103,7 @@ export async function updateAccountAction(formData: FormData) {
     logFailure("UPDATE", undefined, id);
     genericError(`/super-admin/accounts/${id}`);
   }
+
   requireSuccess(`/super-admin/accounts/${id}`, "UPDATE", result, id);
   redirect(`/super-admin/accounts/${id}?success=updated`);
 }
@@ -105,11 +116,14 @@ export async function resetPasswordAction(formData: FormData) {
     confirmation: text(formData.get("confirmation")),
   };
   const parsed = passwordResetSchema.safeParse(input);
-  if (!id || !parsed.success)
+
+  if (!id || !parsed.success) {
     genericError(
       `/super-admin/accounts/${id}`,
       input.password !== input.confirmation ? "confirmation" : "policy",
     );
+  }
+
   let result: AccountOperationResult;
   try {
     result = await service().resetPassword(
@@ -122,6 +136,7 @@ export async function resetPasswordAction(formData: FormData) {
     logFailure("RESET_PASSWORD", undefined, id);
     genericError(`/super-admin/accounts/${id}`);
   }
+
   requireSuccess(`/super-admin/accounts/${id}`, "RESET_PASSWORD", result, id);
   redirect(`/super-admin/accounts/${id}?success=reset`);
 }
@@ -129,6 +144,7 @@ export async function resetPasswordAction(formData: FormData) {
 export async function setAccountActiveAction(formData: FormData) {
   const actor = await requirePageAccess("SUPER_ADMIN");
   const id = text(formData.get("id"));
+
   let result: AccountOperationResult;
   try {
     result = await service().setActive(actor, id, bool(formData.get("isActive")));
@@ -136,6 +152,7 @@ export async function setAccountActiveAction(formData: FormData) {
     logFailure("SET_ACTIVE", undefined, id);
     genericError(`/super-admin/accounts/${id}`);
   }
+
   requireSuccess(`/super-admin/accounts/${id}`, "SET_ACTIVE", result, id);
   redirect(`/super-admin/accounts/${id}?success=status`);
 }
@@ -143,6 +160,7 @@ export async function setAccountActiveAction(formData: FormData) {
 export async function forceLogoutAction(formData: FormData) {
   const actor = await requirePageAccess("SUPER_ADMIN");
   const id = text(formData.get("id"));
+
   let result: AccountOperationResult;
   try {
     result = await service().forceLogout(actor, id);
@@ -150,6 +168,7 @@ export async function forceLogoutAction(formData: FormData) {
     logFailure("FORCE_LOGOUT", undefined, id);
     genericError(`/super-admin/accounts/${id}`);
   }
+
   requireSuccess(`/super-admin/accounts/${id}`, "FORCE_LOGOUT", result, id);
   redirect(`/super-admin/accounts/${id}?success=logout`);
 }
@@ -157,6 +176,7 @@ export async function forceLogoutAction(formData: FormData) {
 export async function deleteAccountAction(formData: FormData) {
   const actor = await requirePageAccess("SUPER_ADMIN");
   const id = text(formData.get("id"));
+
   let result: AccountOperationResult;
   try {
     result = await service().deleteAccount(actor, id);
@@ -164,6 +184,7 @@ export async function deleteAccountAction(formData: FormData) {
     logFailure("DELETE", undefined, id);
     genericError(`/super-admin/accounts/${id}`);
   }
+
   requireSuccess("/super-admin/accounts", "DELETE", result, id);
-  redirect(`/super-admin/accounts?success=deleted`);
+  redirect("/super-admin/accounts?success=deleted");
 }
