@@ -66,6 +66,7 @@ jobs:
       - run: npm run db:reset
       - run: node tools/refresh-local-gateway.mjs
       - run: npm run seed:test-users
+      - run: npm run probe:test-auth
       - run: npm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@v4

@@ -35,6 +35,7 @@
     "db:types": "node tools/generate-database-types.mjs",
     "db:types:check": "node tools/generate-database-types.mjs --check",
     "seed:test-users": "node tools/provision-test-users.mjs",
+    "probe:test-auth": "node tools/probe-test-auth.mjs",
     "seed:initial-local-accounts": "node tools/provision-initial-local-accounts.mjs",
     "test:auth-probe": "node tools/probe-test-auth.mjs",
     "test:auth-policy": "node tools/assert-username-auth-policy.mjs",
