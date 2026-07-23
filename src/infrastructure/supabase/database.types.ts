@@ -1,11 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -356,30 +351,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
-      };
-      auth_rate_limit_buckets: {
-        Row: {
-          attempt_count: number;
-          expires_at: string;
-          key_hash: string;
-          scope: string;
-          window_started_at: string;
-        };
-        Insert: {
-          attempt_count: number;
-          expires_at: string;
-          key_hash: string;
-          scope: string;
-          window_started_at: string;
-        };
-        Update: {
-          attempt_count?: number;
-          expires_at?: string;
-          key_hash?: string;
-          scope?: string;
-          window_started_at?: string;
-        };
-        Relationships: [];
       };
       classes: {
         Row: {
@@ -873,41 +844,6 @@ export type Database = {
         Returns: Json;
       };
       complete_password_change: { Args: never; Returns: undefined };
-      consume_auth_rate_limit: {
-        Args: {
-          p_key_hash: string;
-          p_limit: number;
-          p_scope: string;
-          p_window_seconds: number;
-        };
-        Returns: boolean;
-      };
-      phase10_get_student_report: {
-        Args: { p_end_date: string; p_start_date: string; p_student_id: string };
-        Returns: Json;
-      };
-      phase10_list_classes: {
-        Args: {
-          p_academic_year_id?: string;
-          p_grade?: Database["public"]["Enums"]["grade_level"];
-        };
-        Returns: {
-          academic_year_active: boolean;
-          academic_year_id: string;
-          academic_year_name: string;
-          active_student_count: number;
-          class_number: number;
-          grade: Database["public"]["Enums"]["grade_level"];
-          homeroom_teacher: string;
-          id: string;
-          is_active: boolean;
-          notes: string;
-        }[];
-      };
-      phase10_preview_promotion: {
-        Args: { p_to_academic_year_id: string };
-        Returns: Json;
-      };
       phase3_activate_academic_year: {
         Args: { p_id: string; p_request_id?: string };
         Returns: Json;

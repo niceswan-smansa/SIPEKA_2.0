@@ -10,6 +10,8 @@ if (process.env.SUPABASE_WORKDIR) args.push("--workdir", process.env.SUPABASE_WO
 const result = spawnSync("npm", ["exec", "--", "supabase", ...args], {
   encoding: "utf8",
 });
+
+if (result.error) throw result.error;
 if (result.status !== 0) {
   process.stderr.write(result.stderr);
   process.exit(result.status ?? 1);
@@ -24,27 +26,34 @@ const generated = await format(result.stdout, {
   trailingComma: "all",
 });
 
+const normalize = (value) =>
+  value
+    .replace(/\r\n/g, "\n")
+    .replace(/  __InternalSupabase: \{\n    PostgrestVersion: "[^"]+";\n  \};\n/, "")
+    .trimEnd();
+
 if (process.argv.includes("--check")) {
   const existing = await readFile(target, "utf8");
-  const normalize = (value) =>
-    value
-      .replace(/  __InternalSupabase: \{\n    PostgrestVersion: "[^"]+";\n  \};\n/, "")
-      .replace(
-        /      auth_rate_limit_buckets: \{\n[\s\S]*?      \};\n      classes:/,
-        "      classes:",
-      );
-  if (normalize(existing) !== normalize(generated)) {
-    const symbols = (value) =>
-      [...value.matchAll(/^\s{4}([A-Za-z_][A-Za-z0-9_]*): \{/gm)].map((match) => match[1]);
-    const before = new Set(symbols(existing));
-    const after = new Set(symbols(generated));
-    const missing = [...after].filter((name) => !before.has(name)).slice(0, 20);
-    const extra = [...before].filter((name) => !after.has(name)).slice(0, 20);
-    console.error(
-      `Database type symbols differ; missing=${missing.join(",")}; extra=${extra.join(",")}`,
-    );
+  const normalizedExisting = normalize(existing);
+  const normalizedGenerated = normalize(generated);
+
+  if (normalizedExisting !== normalizedGenerated) {
+    const existingLines = normalizedExisting.split("\n");
+    const generatedLines = normalizedGenerated.split("\n");
+    const limit = Math.max(existingLines.length, generatedLines.length);
+    let firstDifference = 0;
+
+    while (
+      firstDifference < limit &&
+      existingLines[firstDifference] === generatedLines[firstDifference]
+    ) {
+      firstDifference += 1;
+    }
+
+    console.error(`Database types berbeda mulai sekitar baris ${firstDifference + 1}.`);
     throw new Error("Database types tidak sinkron. Jalankan npm run db:types.");
   }
+
   console.log("Database types sinkron dengan schema lokal.");
 } else {
   await writeFile(target, generated);
