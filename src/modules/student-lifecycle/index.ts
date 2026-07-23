@@ -18,5 +18,9 @@ export {
   rollbackPromotionAction,
   tombstoneAlumniAction,
 } from "./presentation/actions";
-export { StudentImportPreview } from "./presentation/import-preview";
 export { AlumniActions } from "./presentation/alumni-actions";
+export { StudentImportPreview } from "./presentation/import-preview";
+export {
+  PromotionApplyControl,
+  PromotionRollbackControl,
+} from "./presentation/promotion-confirmation";
