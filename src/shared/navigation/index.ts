@@ -9,9 +9,9 @@ export type NavigationItem = {
 const OPERATIONAL: NavigationItem[] = [
   { label: "Dashboard", href: "/dashboard", available: true },
   { label: "Input Presensi", href: "/attendance", available: false },
-  { label: "Cari Siswa", href: "/students/search", available: false, readOnly: true },
-  { label: "Manajemen Siswa", href: "/students", available: false },
-  { label: "Manajemen Kelas", href: "/classes", available: false },
+  { label: "Cari Siswa", href: "/siswa", available: true, readOnly: true },
+  { label: "Manajemen Siswa", href: "/manajemen-siswa", available: true },
+  { label: "Manajemen Kelas", href: "/manajemen-kelas", available: true },
   { label: "Import Siswa", href: "/imports", available: false },
   { label: "Naik/Turun Grade", href: "/promotion", available: false },
   { label: "Alumni", href: "/alumni", available: false },

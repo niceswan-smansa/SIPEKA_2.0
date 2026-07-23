@@ -2,6 +2,7 @@
 
 import type {
   ButtonHTMLAttributes,
+  FormHTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
   SelectHTMLAttributes,
@@ -191,8 +192,9 @@ export function ConfirmDialog({
   children: ReactNode;
   confirmLabel?: string;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }) {
+  const [pending, setPending] = useState(false);
   return (
     <Dialog open={open} title={title} onClose={onCancel}>
       <p className="mb-5 text-sm text-slate-600">{children}</p>
@@ -204,8 +206,20 @@ export function ConfirmDialog({
         >
           Batal
         </Button>
-        <Button type="button" className="bg-red-700 hover:bg-red-800" onClick={onConfirm}>
-          {confirmLabel}
+        <Button
+          type="button"
+          className="bg-red-700 hover:bg-red-800"
+          disabled={pending}
+          onClick={async () => {
+            setPending(true);
+            try {
+              await onConfirm();
+            } finally {
+              setPending(false);
+            }
+          }}
+        >
+          {pending ? "Memproses…" : confirmLabel}
         </Button>
       </div>
     </Dialog>
@@ -327,5 +341,27 @@ export function ResponsiveContainer({
 }: { children: ReactNode } & ClassName) {
   return (
     <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>
+  );
+}
+
+export function UnsavedForm({ children, onSubmit, ...props }: FormHTMLAttributes<HTMLFormElement>) {
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    if (!dirty) return;
+    const protect = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", protect);
+    return () => window.removeEventListener("beforeunload", protect);
+  }, [dirty]);
+  return (
+    <form
+      {...props}
+      onChange={() => setDirty(true)}
+      onSubmit={(event) => {
+        setDirty(false);
+        onSubmit?.(event);
+      }}
+    >
+      {children}
+    </form>
   );
 }

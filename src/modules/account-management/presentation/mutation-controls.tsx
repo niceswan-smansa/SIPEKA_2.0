@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { ConfirmDialog, Button, Dialog, FormField, PasswordInput } from "@/shared/ui";
 
-type Action = (formData: FormData) => void;
+type Action = (formData: FormData) => Promise<void>;
 export function AccountMutationControls({
   id,
   fullName,
@@ -25,11 +25,11 @@ export function AccountMutationControls({
   const [dialog, setDialog] = useState<"reset" | "deactivate" | "logout" | "delete" | null>(null);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const submit = (action: Action, values: Record<string, string>) => {
+  const submit = async (action: Action, values: Record<string, string>) => {
     const data = new FormData();
     data.set("id", id);
     Object.entries(values).forEach(([key, value]) => data.set(key, value));
-    action(data);
+    await action(data);
   };
   return (
     <div className="flex flex-wrap gap-2">
@@ -88,9 +88,9 @@ export function AccountMutationControls({
           </Button>
           <Button
             type="button"
-            onClick={() => {
-              submit(resetAction, { password, confirmation });
+            onClick={async () => {
               setDialog(null);
+              await submit(resetAction, { password, confirmation });
             }}
           >
             Simpan
@@ -101,9 +101,9 @@ export function AccountMutationControls({
         open={dialog === "deactivate"}
         title={isActive ? "Nonaktifkan akun" : "Aktifkan akun"}
         onCancel={() => setDialog(null)}
-        onConfirm={() => {
-          submit(statusAction, { isActive: String(!isActive) });
+        onConfirm={async () => {
           setDialog(null);
+          await submit(statusAction, { isActive: String(!isActive) });
         }}
       >
         {isActive
@@ -114,9 +114,9 @@ export function AccountMutationControls({
         open={dialog === "logout"}
         title="Force logout"
         onCancel={() => setDialog(null)}
-        onConfirm={() => {
-          submit(forceLogoutAction, {});
+        onConfirm={async () => {
           setDialog(null);
+          await submit(forceLogoutAction, {});
         }}
       >
         Penyedia autentikasi harus mengonfirmasi pencabutan semua sesi. Jika tidak didukung, operasi
@@ -126,9 +126,9 @@ export function AccountMutationControls({
         open={dialog === "delete"}
         title="Hapus akses akun"
         onCancel={() => setDialog(null)}
-        onConfirm={() => {
-          submit(deleteAction, {});
+        onConfirm={async () => {
           setDialog(null);
+          await submit(deleteAction, {});
         }}
       >
         Akses {fullName} akan dihapus melalui tombstone. Riwayat audit tetap dipertahankan.

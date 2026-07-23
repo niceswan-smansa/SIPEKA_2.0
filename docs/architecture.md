@@ -35,3 +35,15 @@ Mutasi profile memakai RPC server-only agar profile dan audit ACCOUNT atomik; op
 diorkestrasi dengan compensation. Server Actions tetap tipis dan actor selalu berasal dari session
 server. Route yang belum masuk fase
 tidak dibuat sebagai halaman palsu; menu roadmap ditampilkan disabled “Segera”.
+
+## Phase 3 boundaries
+
+Phase 3 menambahkan modul `academic-years`, `classes`, `students`, dan `student-search`, masing-masing
+dengan `domain`, `application`, `infrastructure`, `presentation`, `tests`, dan `index.ts`. Read model
+siswa dipakai bersama oleh manajemen dan pencarian; pagination, filter, dan sort terjadi di server.
+Client Component hanya mengelola filter atau konfirmasi UI dan tidak mengimpor repository server.
+
+Semua mutation tahun ajaran, kelas, siswa, dan enrollment melewati RPC `phase3_*` `SECURITY DEFINER`
+yang memanggil helper ADMIN aktif, mengambil actor dari `auth.uid()`, memvalidasi invariant, serta
+menulis audit OPERATIONAL sebelum transaction commit. Policy direct write tetap tertutup. USER hanya
+mendapat read model melalui session/RLS; SUPER_ADMIN tetap terisolasi dari data operasional.

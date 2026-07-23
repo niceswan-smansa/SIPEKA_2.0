@@ -13,5 +13,13 @@ describe("role-aware navigation", () => {
     const labels = getNavigationForRole("USER").map((item) => item.label);
     expect(labels).toEqual(["Dashboard", "Cari Siswa", "Laporan", "Profil"]);
     expect(labels).not.toContain("Input Presensi");
+    expect(labels).not.toContain("Manajemen Siswa");
+    expect(labels).not.toContain("Manajemen Kelas");
+  });
+  it("exposes Phase 3 management routes only to ADMIN", () => {
+    const routes = getNavigationForRole("ADMIN")
+      .filter((item) => item.available)
+      .map((item) => item.href);
+    expect(routes).toEqual(["/dashboard", "/siswa", "/manajemen-siswa", "/manajemen-kelas"]);
   });
 });

@@ -790,6 +790,88 @@ export type Database = {
         Returns: Json;
       };
       complete_password_change: { Args: never; Returns: undefined };
+      phase3_activate_academic_year: {
+        Args: { p_id: string; p_request_id?: string };
+        Returns: Json;
+      };
+      phase3_change_student_academic: {
+        Args: {
+          p_class_id: string;
+          p_grade: Database["public"]["Enums"]["grade_level"];
+          p_id: string;
+          p_is_active: boolean;
+          p_request_id?: string;
+        };
+        Returns: Json;
+      };
+      phase3_create_academic_year: {
+        Args: {
+          p_end_date: string;
+          p_is_active?: boolean;
+          p_name: string;
+          p_request_id?: string;
+          p_start_date: string;
+        };
+        Returns: Json;
+      };
+      phase3_create_student: {
+        Args: {
+          p_class_id: string;
+          p_full_name: string;
+          p_gender: Database["public"]["Enums"]["gender"];
+          p_grade: Database["public"]["Enums"]["grade_level"];
+          p_is_active?: boolean;
+          p_nis: string;
+          p_nisn: string;
+          p_request_id?: string;
+          p_year_entered: number;
+        };
+        Returns: Json;
+      };
+      phase3_search_students: {
+        Args: {
+          p_class_id?: string;
+          p_grade?: Database["public"]["Enums"]["grade_level"];
+          p_is_active?: boolean;
+          p_page?: number;
+          p_page_size?: number;
+          p_search?: string;
+          p_year_entered?: number;
+        };
+        Returns: Json;
+      };
+      phase3_update_academic_year: {
+        Args: {
+          p_end_date: string;
+          p_id: string;
+          p_name: string;
+          p_request_id?: string;
+          p_start_date: string;
+        };
+        Returns: Json;
+      };
+      phase3_update_class: {
+        Args: {
+          p_homeroom_teacher: string;
+          p_id: string;
+          p_is_active: boolean;
+          p_notes: string;
+          p_request_id?: string;
+        };
+        Returns: Json;
+      };
+      phase3_update_student_identity: {
+        Args: {
+          p_full_name: string;
+          p_gender: Database["public"]["Enums"]["gender"];
+          p_id: string;
+          p_nis: string;
+          p_nisn: string;
+          p_request_id?: string;
+          p_year_entered: number;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "USER";

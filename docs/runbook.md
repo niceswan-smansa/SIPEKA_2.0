@@ -71,3 +71,17 @@ cabut akses bila perlu, dan bersihkan history dengan prosedur insiden yang diset
 
 Jangan memakai database produksi untuk development. Migration yang sudah merge tidak boleh diedit;
 tambahkan migration baru untuk perubahan berikutnya.
+
+## Operasi Phase 3
+
+Setelah reset, jalankan `npm run db:types`, `npm run seed:test-users`, lalu `npm run test:db` dan
+`npm run test:e2e`. Seed hanya membuat periode, satu tahun development, 30 slot kelas, dan akun
+disposable; tidak ada siswa nyata. Tahun baru dibuat dari `/manajemen-kelas`; pilih aktif hanya bila
+tidak ada siswa aktif/current enrollment pada tahun lama. Jika ditolak, tunggu workflow promotion
+Phase 7—jangan menonaktifkan constraint atau mengubah tahun langsung.
+
+Jika RPC gagal, seluruh perubahan PostgreSQL dan audit rollback bersama. Untuk diagnosis aman, catat
+request id dan error code saja; jangan menyalin data siswa atau payload form ke log. Jika deployment
+menunjukkan ketidaksesuaian setelah gangguan koneksi, periksa audit OPERATIONAL dan current enrollment
+melalui server-only read service sebelum retry. Mutation langsung lewat Data API harus tetap menerima
+permission denied.

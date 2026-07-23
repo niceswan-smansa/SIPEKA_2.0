@@ -40,6 +40,27 @@ SUPER_ADMIN hanya melihat portal akun; ADMIN/USER memakai shell operasional. Men
 diimplementasikan tetap disabled sampai phase fiturnya tersedia. Account mutation hanya dipanggil dari
 server action setelah guard SUPER_ADMIN; daftar akun berasal dari `profiles` dengan pagination server.
 
+## Phase 3 routes dan modul
+
+Route `/manajemen-kelas` dan `/manajemen-siswa` hanya ADMIN. `/siswa` dan `/siswa/[id]` dapat dibuka
+ADMIN/USER; USER tidak menerima form, tombol, link edit, atau action mutation. `student-search` memakai
+URL search params sebagai source of truth dan debounce 300 ms, tetapi query tetap server-side.
+
+RPC catalog saat ini:
+
+| RPC                                                             | Tanggung jawab                                    |
+| --------------------------------------------------------------- | ------------------------------------------------- |
+| `phase3_create_academic_year`                                   | tahun ajaran + 30 slot + audit                    |
+| `phase3_update_academic_year` / `phase3_activate_academic_year` | metadata dan active-year switch                   |
+| `phase3_update_class`                                           | wali kelas, notes, status + audit                 |
+| `phase3_create_student`                                         | identitas + current enrollment + audit            |
+| `phase3_update_student_identity`                                | identitas dan normalized name + audit             |
+| `phase3_change_student_academic`                                | grade/kelas/status dan enrollment history + audit |
+| `phase3_search_students`                                        | read-only partial search, filter, pagination      |
+
+Read query memakai RLS user session, bukan service role. Import, attendance, promotion massal, alumni,
+reports, dan operational audit UI tetap menunggu fase masing-masing.
+
 ## Branch protection yang disarankan
 
 Lindungi `main`, wajibkan pull request dan satu approval, larang force-push, wajibkan branch up to

@@ -61,6 +61,26 @@ akan dibuka melalui scoped server service atau RPC terotorisasi pada phase fitur
 dengan validasi, transaction, revision history, dan audit. Critical invariants tetap ditegakkan
 oleh constraint/trigger database.
 
+## Phase 3 RPC boundary
+
+RPC `phase3_create_academic_year`, `phase3_update_academic_year`, `phase3_activate_academic_year`,
+`phase3_update_class`, `phase3_create_student`, `phase3_update_student_identity`, dan
+`phase3_change_student_academic` hanya dapat dipanggil role `authenticated` setelah fungsi internal
+memverifikasi `auth.uid()` ke profile `ADMIN`, `is_active=true`, dan `must_change_password=false`.
+Role claim browser/JWT tambahan tidak dipercaya. USER, SUPER_ADMIN, anonymous, ADMIN nonaktif, dan
+ADMIN wajib ganti password ditolak. Fungsi memakai `SECURITY DEFINER`, `SET search_path=''`, objek
+fully-qualified, revoke PUBLIC/anon, serta actor server-side.
+
+RPC mengubah tabel terkait dan menulis audit OPERATIONAL dalam satu transaction. Audit failure
+merollback mutation; direct table write tetap gagal. Event Phase 3: `ACADEMIC_YEAR_CREATE`,
+`ACADEMIC_YEAR_UPDATE`, `ACADEMIC_YEAR_ACTIVATE`, `CLASS_UPDATE`, `CLASS_ACTIVATE`,
+`CLASS_DEACTIVATE`, `STUDENT_CREATE`, `STUDENT_UPDATE`, `STUDENT_MOVE_CLASS`,
+`STUDENT_CHANGE_GRADE`, `STUDENT_ACTIVATE`, dan `STUDENT_DEACTIVATE`.
+
+Search adalah `SECURITY INVOKER` agar RLS session tetap berlaku. USER menerima daftar/detail dasar;
+SUPER_ADMIN tidak menerima operational rows. Tidak ada data workbook existing dalam seed, fixture,
+log, snapshot, atau response.
+
 ## Data sensitif
 
 Semua sumber siswa, report migrasi ber-PII, dump, credential lokal, dan session output di-ignore

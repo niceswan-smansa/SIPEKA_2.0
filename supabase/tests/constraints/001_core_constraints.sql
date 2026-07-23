@@ -49,9 +49,10 @@ values (
 select throws_like(
   $$
     insert into public.students (
-      nis, nisn, full_name, normalized_name, gender, current_grade, created_by, updated_by
+      nis, nisn, full_name, normalized_name, gender, current_grade, current_class_id, created_by, updated_by
     ) values (
       'SYN-C-001', 'SYN-N-C-002', 'Duplikat Sintetis', 'duplikat sintetis', 'P', 'X',
+      '20000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001'
     )
@@ -63,9 +64,10 @@ select throws_like(
 select throws_like(
   $$
     insert into public.students (
-      nis, nisn, full_name, normalized_name, gender, current_grade, created_by, updated_by
+      nis, nisn, full_name, normalized_name, gender, current_grade, current_class_id, created_by, updated_by
     ) values (
       'SYN-C-002', 'SYN-N-C-001', 'Duplikat Sintetis', 'duplikat sintetis', 'P', 'X',
+      '20000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001',
       '30000000-0000-4000-8000-000000000001'
     )
