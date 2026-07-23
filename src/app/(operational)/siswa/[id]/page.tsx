@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { z } from "zod";
 
+import { todayJakarta } from "@/modules/attendance";
 import { requirePageAccess } from "@/modules/authorization";
 import { classDisplayName } from "@/modules/classes";
-import { todayJakarta } from "@/modules/attendance";
 import {
   createStudentAttendanceService,
   createSupabaseStudentAttendanceRepository,
@@ -13,39 +14,51 @@ import {
   StudentAttendanceTrend,
 } from "@/modules/student-attendance";
 import { createStudentService, createSupabaseStudentRepository } from "@/modules/students";
-import { Badge, Card, PageHeader, Table } from "@/shared/ui";
 import { formatJakartaDateTime, isIsoDate, isMonthStart } from "@/shared/domain/dates";
-import { z } from "zod";
+import { Badge, Card, PageHeader, Table } from "@/shared/ui";
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ date?: string; month?: string }>;
 };
+
 export default async function StudentDetailPage({ params, searchParams }: Props) {
   const profile = await requirePageAccess("OPERATIONAL");
-  const id = z.uuid().parse((await params).id);
+
+  const idResult = z.uuid().safeParse((await params).id);
+  if (!idResult.success) notFound();
+
+  const id = idResult.data;
   const query = await searchParams;
   const selectedDate = isIsoDate(query.date) ? query.date : todayJakarta();
   const month = isMonthStart(query.month) ? query.month : monthStart(selectedDate);
+
   const student = await createStudentService(createSupabaseStudentRepository()).getDetail(id);
   if (!student) notFound();
+
   const attendance = await createStudentAttendanceService(
     createSupabaseStudentAttendanceRepository(),
   ).get(id, selectedDate, month);
+
   const className =
     student.classNumber && student.currentGrade !== "ALUMNI"
       ? classDisplayName(student.currentGrade, student.classNumber)
       : "Tidak ada";
+
   const selectedClassId = attendance.periods[0]?.classId ?? student.currentClassId;
   const editable =
     profile.role === "ADMIN" &&
     selectedDate <= todayJakarta() &&
     selectedClassId === student.currentClassId &&
     selectedClassId !== null;
+
   const range = {
     from: month,
-    to: `${month.slice(0, 7)}-${new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate()}`,
+    to: `${month.slice(0, 7)}-${new Date(
+      Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0),
+    ).getUTCDate()}`,
   };
+
   return (
     <>
       <PageHeader
@@ -59,6 +72,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
             >
               Laporan
             </Link>
+
             {profile.role === "ADMIN" ? (
               <>
                 <Link
@@ -78,6 +92,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
           </div>
         }
       />
+
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <h2 className="mb-4 text-lg font-bold">Identitas</h2>
@@ -103,6 +118,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
             </div>
           </dl>
         </Card>
+
         <Card>
           <StudentAttendanceCalendar
             selectedDate={selectedDate}
@@ -111,6 +127,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
           />
         </Card>
       </div>
+
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <Card>
           <h2 className="mb-4 text-lg font-bold">Rincian {selectedDate}</h2>
@@ -132,9 +149,11 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                     <td>{index + 1}</td>
                     <td>
                       {period?.status
-                        ? { IZIN: "Izin", SAKIT: "Sakit", TANPA_KETERANGAN: "Tanpa Keterangan" }[
-                            period.status
-                          ]
+                        ? {
+                            IZIN: "Izin",
+                            SAKIT: "Sakit",
+                            TANPA_KETERANGAN: "Tanpa Keterangan",
+                          }[period.status]
                         : "Hadir"}
                     </td>
                     <td>{period?.note ?? "—"}</td>
@@ -146,6 +165,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
             </tbody>
           </Table>
         </Card>
+
         <Card>
           <h2 className="mb-4 text-lg font-bold">Statistik bulan</h2>
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -160,9 +180,11 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
           </div>
         </Card>
       </div>
+
       <Card className="mt-5">
         <StudentAttendanceTrend data={attendance.trend} />
       </Card>
+
       {editable ? (
         <Card className="mt-5">
           <h2 className="mb-4 text-lg font-bold">Koreksi beberapa jam</h2>
@@ -181,6 +203,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
           </p>
         </Card>
       ) : null}
+
       <Card className="mt-5">
         <h2 className="mb-4 text-lg font-bold">Histori perubahan</h2>
         {attendance.revisions.length ? (
@@ -214,6 +237,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
           <p className="text-sm text-slate-600">Belum ada perubahan presensi.</p>
         )}
       </Card>
+
       <Card className="mt-5">
         <h2 className="mb-4 text-lg font-bold">Histori enrollment</h2>
         <Table>
@@ -246,6 +270,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
     </>
   );
 }
+
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -254,6 +279,7 @@ function Detail({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
 function Stat({ label, value }: { label: string; value: number | undefined }) {
   return (
     <div className="rounded-lg bg-slate-50 p-3">
