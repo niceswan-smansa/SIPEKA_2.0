@@ -58,8 +58,15 @@ RPC catalog saat ini:
 | `phase3_change_student_academic`                                | grade/kelas/status dan enrollment history + audit |
 | `phase3_search_students`                                        | read-only partial search, filter, pagination      |
 
-Read query memakai RLS user session, bukan service role. Import, attendance, promotion massal, alumni,
-reports, dan operational audit UI tetap menunggu fase masing-masing.
+Read query memakai RLS user session, bukan service role. Import, promotion massal, alumni, reports,
+dan operational audit UI tetap menunggu fase masing-masing.
+
+## Phase 4 attendance
+
+Route `/presensi/input` hanya ADMIN. RPC `phase4_get_class_attendance`,
+`phase4_preview_attendance`, dan `phase4_apply_attendance` menyediakan roster/existing data, diff
+preview, stale protection, revision, batch, dan audit. Reset database sebelum database test atau E2E
+agar fixture sintetis antarsuite tidak mempengaruhi count assertion.
 
 ## Branch protection yang disarankan
 

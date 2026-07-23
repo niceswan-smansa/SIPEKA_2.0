@@ -47,3 +47,11 @@ Semua mutation tahun ajaran, kelas, siswa, dan enrollment melewati RPC `phase3_*
 yang memanggil helper ADMIN aktif, mengambil actor dari `auth.uid()`, memvalidasi invariant, serta
 menulis audit OPERATIONAL sebelum transaction commit. Policy direct write tetap tertutup. USER hanya
 mendapat read model melalui session/RLS; SUPER_ADMIN tetap terisolasi dari data operasional.
+
+## Phase 4 attendance boundary
+
+`attendance` memakai satu read model kelas/tanggal tanpa N+1 dan dua mutation RPC. Preview mengikat
+token pada actor, kelas, tanggal, payload canonical, snapshot database, expiry, dan status penggunaan.
+Apply mengunci scope kelas/tanggal, membaca ulang snapshot, lalu menulis attendance, revision, batch,
+dan audit dalam satu transaction. React hanya mengelola draft; diff serta summary authoritative tetap
+berasal dari PostgreSQL.

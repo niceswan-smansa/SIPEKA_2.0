@@ -87,3 +87,11 @@ Semua sumber siswa, report migrasi ber-PII, dump, credential lokal, dan session 
 Git. Workbook existing tetap read-only dan tidak pernah disalin ke aplikasi, fixture, snapshot,
 log, artifact CI, atau `public/`. Logo dan hero memakai turunan WebP yang metadata non-esensialnya
 di-strip; izin publikasi hero tetap tanggung jawab pemilik deployment.
+
+## Phase 4 attendance
+
+RPC preview/apply memanggil helper ADMIN aktif berdasarkan `auth.uid()`, memakai `SECURITY DEFINER`,
+`search_path=''`, fully-qualified object, revoke default, dan execute grant eksplisit. Token preview
+tidak dapat dipakai actor/scope/payload lain, kadaluarsa setelah sepuluh menit, sekali pakai, dan
+ditolak bila snapshot attendance berubah. Direct table mutation, revision write, token-table read,
+serta audit write tetap tidak tersedia bagi client.

@@ -85,3 +85,10 @@ request id dan error code saja; jangan menyalin data siswa atau payload form ke 
 menunjukkan ketidaksesuaian setelah gangguan koneksi, periksa audit OPERATIONAL dan current enrollment
 melalui server-only read service sebelum retry. Mutation langsung lewat Data API harus tetap menerima
 permission denied.
+
+## Operasi Phase 4
+
+Preview attendance berlaku sepuluh menit dan sekali pakai. Error `STALE_PREVIEW` berarti scope
+kelas/tanggal berubah setelah preview; muat ulang roster lalu preview ulang, jangan retry token lama.
+Error audit atau revision me-rollback seluruh record dan batch. Untuk pengujian bersih jalankan
+`npm run db:reset`, `npm run seed:test-users`, E2E, lalu reset lagi sebelum `npm run test:db`.

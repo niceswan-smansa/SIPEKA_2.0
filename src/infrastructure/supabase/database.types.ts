@@ -106,6 +106,60 @@ export type Database = {
           },
         ];
       };
+      attendance_preview_tokens: {
+        Row: {
+          actor_id: string;
+          attendance_date: string;
+          class_id: string;
+          created_at: string;
+          expires_at: string;
+          id: string;
+          payload_hash: string;
+          snapshot_hash: string;
+          token_hash: string;
+          used_at: string | null;
+        };
+        Insert: {
+          actor_id: string;
+          attendance_date: string;
+          class_id: string;
+          created_at?: string;
+          expires_at: string;
+          id?: string;
+          payload_hash: string;
+          snapshot_hash: string;
+          token_hash: string;
+          used_at?: string | null;
+        };
+        Update: {
+          actor_id?: string;
+          attendance_date?: string;
+          class_id?: string;
+          created_at?: string;
+          expires_at?: string;
+          id?: string;
+          payload_hash?: string;
+          snapshot_hash?: string;
+          token_hash?: string;
+          used_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_preview_tokens_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendance_preview_tokens_class_id_fkey";
+            columns: ["class_id"];
+            isOneToOne: false;
+            referencedRelation: "classes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       attendance_records: {
         Row: {
           attendance_date: string;
@@ -869,6 +923,33 @@ export type Database = {
           p_nisn: string;
           p_request_id?: string;
           p_year_entered: number;
+        };
+        Returns: Json;
+      };
+      phase4_apply_attendance: {
+        Args: {
+          p_attendance_date: string;
+          p_class_id: string;
+          p_payload: Json;
+          p_request_id?: string;
+          p_token: string;
+        };
+        Returns: Json;
+      };
+      phase4_get_class_attendance: {
+        Args: {
+          p_attendance_date: string;
+          p_class_id: string;
+          p_search?: string;
+        };
+        Returns: Json;
+      };
+      phase4_preview_attendance: {
+        Args: {
+          p_attendance_date: string;
+          p_class_id: string;
+          p_payload: Json;
+          p_request_id?: string;
         };
         Returns: Json;
       };

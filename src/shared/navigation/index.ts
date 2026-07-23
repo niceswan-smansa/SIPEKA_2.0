@@ -8,7 +8,7 @@ export type NavigationItem = {
 };
 const OPERATIONAL: NavigationItem[] = [
   { label: "Dashboard", href: "/dashboard", available: true },
-  { label: "Input Presensi", href: "/attendance", available: false },
+  { label: "Input Presensi", href: "/presensi/input", available: true },
   { label: "Cari Siswa", href: "/siswa", available: true, readOnly: true },
   { label: "Manajemen Siswa", href: "/manajemen-siswa", available: true },
   { label: "Manajemen Kelas", href: "/manajemen-kelas", available: true },

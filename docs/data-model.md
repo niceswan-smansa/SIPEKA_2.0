@@ -19,6 +19,8 @@ dari database kosong dalam urutan berikut:
 9. `20260723030300_phase3_student_search_rpc.sql` — read RPC search terparameterisasi dan pagination.
 10. `20260723030400_phase3_class_occupancy_semantics.sql` — menyelaraskan RPC dan trigger kelas agar
     okupansi hanya menghitung siswa aktif dengan current enrollment.
+11. `20260723040000_phase4_attendance_core.sql` — token preview, read model attendance, transactional
+    apply, revision, batch, dan audit Phase 4.
 
 ## Tabel
 
@@ -71,3 +73,11 @@ Search `phase3_search_students` menerima pencarian partial case-insensitive pada
 NIS, dan NISN, filter opsional grade/kelas/status/tahun masuk, serta page/page_size bounded. Sort
 stabil memakai nama lalu id. Trigram index tersedia untuk normalized name, NIS, dan NISN; query plan
 dan batas pagination diuji di pgTAP.
+
+## Attendance Phase 4
+
+`attendance_preview_tokens` menyimpan hash token, actor, kelas, tanggal, hash payload, hash snapshot,
+expiry, dan waktu penggunaan; token mentah hanya dikembalikan kepada actor pemilik preview. Apply
+menghasilkan satu `attendance_records` per jam, menaikkan version saat update, membuat
+`attendance_revisions` untuk CREATE/UPDATE/DELETE, satu `attendance_batches`, dan audit summary
+`ATTENDANCE_BATCH_APPLY` dalam transaction yang sama.

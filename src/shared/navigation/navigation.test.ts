@@ -20,6 +20,12 @@ describe("role-aware navigation", () => {
     const routes = getNavigationForRole("ADMIN")
       .filter((item) => item.available)
       .map((item) => item.href);
-    expect(routes).toEqual(["/dashboard", "/siswa", "/manajemen-siswa", "/manajemen-kelas"]);
+    expect(routes).toEqual([
+      "/dashboard",
+      "/presensi/input",
+      "/siswa",
+      "/manajemen-siswa",
+      "/manajemen-kelas",
+    ]);
   });
 });
