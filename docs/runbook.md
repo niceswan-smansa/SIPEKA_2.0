@@ -6,6 +6,21 @@ Jalankan `npm run format`, `npm run lint`, `npm run typecheck`, `npm run test`, 
 `npm run test:e2e`, `npm run test:db`, dan `npm audit`. E2E memerlukan browser Chromium
 (`npx playwright install chromium`).
 
+E2E default bersifat non-destruktif. Untuk database disposable saja:
+
+```bash
+mkdir -p .local
+printf 'disposable\n' > .local/e2e-disposable
+SIPEKA_E2E_DISPOSABLE=true npm run test:e2e:reset
+```
+
+Jangan membuat marker tersebut pada database real-local.
+
+Reset password dan delete account bersifat safe-first: profile diblokir/tombstone sebelum operasi
+Auth. Retry status `PASSWORD_RESET_AUTH_FAILED` atau `ACCOUNT_AUTH_CLEANUP_PENDING`; jangan membuka
+flag profile. Retry penyelesaian mandatory password memakai signed HttpOnly cookie maksimal 10
+menit. Alumni dipaginasi, promotion harus dipreview tanpa write, dan laporan maksimal 366 hari.
+
 ## Supabase lokal
 
 Docker diperlukan oleh Supabase CLI. Jika socket Docker tidak dapat diakses, gunakan daemon

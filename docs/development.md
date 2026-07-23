@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Gunakan Node.js 20.9+ dan Docker (atau rootless Podman untuk lokal).
+1. Gunakan Node.js 24.x dan Docker (atau rootless Podman untuk lokal).
 2. Jalankan `npm install`.
 3. Salin `.env.example` menjadi `.env.local` dan gunakan hanya nilai lokal.
 4. Jalankan `npx supabase start`, `npm run db:reset`, dan `npm run db:types` bila mengerjakan
@@ -88,9 +88,10 @@ perubahan import graph.
 
 Provisioning test bersifat canonical dan menyimpan credential hanya di `.local/` yang di-ignore.
 `npm run test:auth-probe` memverifikasi login langsung ke local Auth tanpa mencetak credential.
-Playwright selalu memulai server baru agar proses Next lama tidak mempertahankan environment sebelum
-reset/provisioning. `npm run test:e2e` selalu menjalankan reset dan provisioning sebelum Playwright,
-sehingga suite dapat diulang tanpa mewarisi password, class occupancy, atau attendance fixture.
+Playwright selalu memulai server baru. `npm run test:e2e` hanya menjalankan Playwright tanpa reset.
+`npm run test:e2e:reset` memerlukan `SIPEKA_E2E_DISPOSABLE=true`, target localhost, dan marker
+`.local/e2e-disposable` berisi `disposable`. CI melakukan reset/provisioning tepat sekali pada runner
+ephemeral.
 
 ## Phase 7 import dan lifecycle
 

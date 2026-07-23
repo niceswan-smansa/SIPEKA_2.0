@@ -7,6 +7,11 @@ ke local. Staging default memakai data sintetis. Vercel memakai region `sin1`; e
 memuat URL Supabase, publishable key, dan service-role key server-only. Public signup harus off dan
 redirect URL dibatasi ke domain deployment.
 
+Staging sudah tersedia; username bootstrap berasal dari environment dan staging saat ini memakai
+`superadmin.dev`. Ini bukan klaim production siap atau sudah dideploy. Production tetap memerlukan
+CI hijau dan UAT manual. Migration hardening bersifat additive; rollback kode tidak menghapus object
+database baru.
+
 ## Deployment
 
 1. Buat backup dan catat restore point.

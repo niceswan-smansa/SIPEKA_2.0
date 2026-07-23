@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.9.0"
+    "node": "24.x"
   },
   "overrides": {
     "postcss": "8.5.22",
@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "supabase test db",
-    "test:e2e": "npm run db:reset && node tools/refresh-local-gateway.mjs && npm run seed:test-users && playwright test",
+    "test:e2e": "playwright test",
+    "test:e2e:reset": "node tools/run-destructive-e2e.mjs",
     "test:bundle": "node tools/assert-no-service-key-in-client.mjs",
     "test:assets": "node tools/assert-assets.mjs",
     "test:pwa": "node tools/assert-pwa.mjs",

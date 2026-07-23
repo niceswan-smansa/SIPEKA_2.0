@@ -6,7 +6,7 @@ dashboard Phase 1–5.
 
 ## Mulai
 
-Prasyarat: Node.js 20.9+ dan Docker (atau rootless Podman) untuk Supabase lokal.
+Prasyarat: Node.js 24.x dan Docker (atau rootless Podman) untuk Supabase lokal.
 
 ```bash
 npm install
@@ -39,6 +39,10 @@ npm run test:pwa
 npm run db:types:check
 npm audit
 ```
+
+`npm run test:e2e` hanya menjalankan Playwright dan tidak mereset database. Reset fixture hanya
+melalui `npm run test:e2e:reset` pada database localhost disposable dengan flag dan sentinel
+eksplisit.
 
 Lihat `docs/development.md` untuk setup lengkap dan `docs/implementation-plan.md` untuk source of
 truth produk.

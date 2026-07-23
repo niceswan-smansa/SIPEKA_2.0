@@ -148,6 +148,12 @@ enrollment, atau audit; direct batch/table writes tetap ditolak.
 ## Phase 8 hardening
 
 Protected route memakai `private, no-store`. CSP melarang framing, production mengaktifkan HSTS, dan
-nosniff/referrer/permissions headers berlaku global. Login rate limit memakai address server dan
-identifier canonical; deployment multi-instance harus memakai edge/distributed store. Service worker
-tidak cache HTML protected, API, siswa, attendance, account, audit, report, atau export.
+nosniff/referrer/permissions headers berlaku global. Login rate limit terdistribusi disimpan sebagai
+HMAC hash di PostgreSQL; IP dan username mentah tidak disimpan. Production tanpa
+`RATE_LIMIT_SECRET` gagal tertutup. Service worker tidak cache HTML protected, API, siswa,
+attendance, account, audit, report, atau export.
+
+Reset password dan delete account menutup akses profile sebelum operasi Auth. Retry completion
+password memakai signed HttpOnly cookie 10 menit tanpa credential. Audit student baru menghapus
+`nis`, `nisn`, `full_name`, dan `normalized_name` melalui trigger. Row lama tidak dimutasi dan
+disanitasi repository sebelum mencapai UI.
