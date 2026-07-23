@@ -33,8 +33,18 @@ if (process.argv.includes("--check")) {
         /      auth_rate_limit_buckets: \{\n[\s\S]*?      \};\n      classes:/,
         "      classes:",
       );
-  if (normalize(existing) !== normalize(generated))
+  if (normalize(existing) !== normalize(generated)) {
+    const symbols = (value) =>
+      [...value.matchAll(/^\s{4}([A-Za-z_][A-Za-z0-9_]*): \{/gm)].map((match) => match[1]);
+    const before = new Set(symbols(existing));
+    const after = new Set(symbols(generated));
+    const missing = [...after].filter((name) => !before.has(name)).slice(0, 20);
+    const extra = [...before].filter((name) => !after.has(name)).slice(0, 20);
+    console.error(
+      `Database type symbols differ; missing=${missing.join(",")}; extra=${extra.join(",")}`,
+    );
     throw new Error("Database types tidak sinkron. Jalankan npm run db:types.");
+  }
   console.log("Database types sinkron dengan schema lokal.");
 } else {
   await writeFile(target, generated);
