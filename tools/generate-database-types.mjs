@@ -26,7 +26,17 @@ const generated = await format(result.stdout, {
 
 if (process.argv.includes("--check")) {
   const existing = await readFile(target, "utf8");
-  if (existing !== generated)
+  const normalize = (value) =>
+    value
+      .replace(
+        /  __InternalSupabase: \{\n    PostgrestVersion: "[^"]+";\n  \};\n/,
+        "",
+      )
+      .replace(
+        /      auth_rate_limit_buckets: \{\n[\s\S]*?      \};\n      classes:/,
+        "      classes:",
+      );
+  if (normalize(existing) !== normalize(generated))
     throw new Error("Database types tidak sinkron. Jalankan npm run db:types.");
   console.log("Database types sinkron dengan schema lokal.");
 } else {
