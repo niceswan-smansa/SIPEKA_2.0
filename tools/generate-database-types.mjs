@@ -7,7 +7,9 @@ import { format } from "prettier";
 const args = ["gen", "types", "typescript", "--local"];
 if (process.env.SUPABASE_WORKDIR) args.push("--workdir", process.env.SUPABASE_WORKDIR);
 
-const result = spawnSync("supabase", args, { encoding: "utf8" });
+const result = spawnSync("npm", ["exec", "--", "supabase", ...args], {
+  encoding: "utf8",
+});
 if (result.status !== 0) {
   process.stderr.write(result.stderr);
   process.exit(result.status ?? 1);
