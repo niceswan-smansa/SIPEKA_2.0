@@ -79,7 +79,8 @@ export async function createAccountAction(formData: FormData) {
     genericError("/super-admin/accounts/new");
   }
 
-  requireSuccess("/super-admin/accounts/new", "CREATE", result, result.account?.id);
+  const createdAccountId = "account" in result ? result.account?.id : undefined;
+  requireSuccess("/super-admin/accounts/new", "CREATE", result, createdAccountId);
   redirect("/super-admin/accounts?success=created");
 }
 
