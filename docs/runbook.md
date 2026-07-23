@@ -114,3 +114,11 @@ npm run test:auth-probe
 Probe hanya menampilkan origin lokal, status Auth, error code, dan kecocokan ID. Jika probe berhasil
 tetapi UI gagal, hentikan server Next lama dan jalankan Playwright yang memulai `dev:local` baru.
 Jangan mengubah redirect atau pesan login sebelum credential boundary ini terbukti gagal.
+
+## Operasi Phase 7
+
+Import hanya menerima CSV terotorisasi, maksimum 500 row dan 1 MB. Preview yang memiliki satu
+invalid/duplicate harus dibatalkan; RPC menjamin zero rows bila transaction gagal. Promotion
+mengaktifkan tahun tujuan bersama perpindahan current enrollment dan menyimpan snapshot. Rollback
+ditolak bila siswa berubah setelah batch. Alumni archive mempertahankan histori; tombstone hanya
+mengganti identitas dan tidak menghapus attendance/enrollment.

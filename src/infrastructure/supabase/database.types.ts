@@ -972,6 +972,32 @@ export type Database = {
         };
         Returns: undefined;
       };
+      phase7_archive_alumni: {
+        Args: { p_request_id?: string; p_student_id: string };
+        Returns: Json;
+      };
+      phase7_import_students: {
+        Args: {
+          p_class_id: string;
+          p_file_name: string;
+          p_request_id?: string;
+          p_rows: Json;
+          p_year_entered: number;
+        };
+        Returns: Json;
+      };
+      phase7_promote_academic_year: {
+        Args: { p_request_id?: string; p_to_academic_year_id: string };
+        Returns: Json;
+      };
+      phase7_rollback_promotion: {
+        Args: { p_batch_id: string; p_request_id?: string };
+        Returns: Json;
+      };
+      phase7_tombstone_alumni: {
+        Args: { p_request_id?: string; p_student_id: string };
+        Returns: Json;
+      };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "USER";

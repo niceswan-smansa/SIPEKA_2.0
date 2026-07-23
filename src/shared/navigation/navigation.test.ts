@@ -16,7 +16,7 @@ describe("role-aware navigation", () => {
     expect(labels).not.toContain("Manajemen Siswa");
     expect(labels).not.toContain("Manajemen Kelas");
   });
-  it("exposes Phase 3 management routes only to ADMIN", () => {
+  it("exposes available operational mutation routes only to ADMIN", () => {
     const routes = getNavigationForRole("ADMIN")
       .filter((item) => item.available)
       .map((item) => item.href);
@@ -26,6 +26,9 @@ describe("role-aware navigation", () => {
       "/siswa",
       "/manajemen-siswa",
       "/manajemen-kelas",
+      "/import-siswa",
+      "/naik-turun-grade",
+      "/alumni",
     ]);
   });
 });

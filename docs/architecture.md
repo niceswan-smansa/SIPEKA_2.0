@@ -74,3 +74,11 @@ Editor detail siswa mengubah satu siswa pada satu tanggal melalui preview/apply 
 tetap menjadi sumber diff, stale check, idempotency, revision, batch, dan audit. Laporan print memakai
 read model yang sama; endpoint Excel menjalankan authorization ADMIN, menghasilkan workbook in-memory,
 mencatat audit summary, dan mengirim response `private, no-store`.
+
+## Phase 7 lifecycle boundary
+
+`student-lifecycle` memisahkan parser CSV, application service, repository RPC, dan presentation.
+`phase7_import_students` memvalidasi seluruh payload sebelum insert siswa/enrollment dan audit dalam
+satu transaksi. Promotion menyimpan snapshot di `promotion_batches`/`promotion_batch_items`;
+rollback hanya mengembalikan snapshot bila state saat ini masih cocok. Alumni diarsipkan atau
+ditombstone tanpa menghapus attendance/enrollment history. Tidak ada direct Data API write.

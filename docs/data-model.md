@@ -24,6 +24,8 @@ dari database kosong dalam urutan berikut:
 12. `20260723050000_phase5_dashboard_statistics.sql` — read model statistik siswa unik.
 13. `20260723060000_phase6_student_attendance_reports.sql` — detail presensi siswa, laporan, revision
     timeline, dan audit export.
+14. `20260723070000_phase7_import_promotion_alumni.sql` — import all-or-none, promotion snapshot,
+    rollback, dan alumni archive/tombstone.
 
 ## Tabel
 
@@ -95,3 +97,10 @@ presentation menyimpulkannya sebagai `Hadir`.
 `phase6_record_student_export` hanya dapat dijalankan ADMIN aktif dan mencatat
 `STUDENT_ATTENDANCE_EXPORT` dengan rentang serta jumlah row. Isi laporan tidak disalin ke audit.
 Semua read memakai session/RLS operasional; export tidak memakai service role.
+
+## Phase 7 batch
+
+Import menyimpan metadata pada `import_batches`; payload row tidak disimpan setelah transaksi.
+Promotion menyimpan before/after grade, class, dan enrollment pada `promotion_batch_items`, sehingga
+rollback tidak menebak aturan turun grade. `ALUMNI` tidak memiliki current class; archive hanya
+menonaktifkan siswa dan tombstone mengganti identitas menjadi label non-PII, tanpa menghapus histori.

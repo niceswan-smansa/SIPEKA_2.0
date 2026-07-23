@@ -92,6 +92,14 @@ Playwright selalu memulai server baru agar proses Next lama tidak mempertahankan
 reset/provisioning. `npm run test:e2e` selalu menjalankan reset dan provisioning sebelum Playwright,
 sehingga suite dapat diulang tanpa mewarisi password, class occupancy, atau attendance fixture.
 
+## Phase 7 import dan lifecycle
+
+`/import-siswa` hanya ADMIN dan menerima CSV header `NIS,NISN,NAMA,JENIS_KELAMIN`; preview browser
+tidak mengirim data sebelum seluruh baris valid. `/naik-turun-grade` menjalankan promotion dan
+rollback snapshot. `/alumni` mempertahankan histori; archive/tombstone adalah operasi terpisah.
+RPC catalog: `phase7_import_students`, `phase7_promote_academic_year`,
+`phase7_rollback_promotion`, `phase7_archive_alumni`, dan `phase7_tombstone_alumni`.
+
 ## Branch protection yang disarankan
 
 Lindungi `main`, wajibkan pull request dan satu approval, larang force-push, wajibkan branch up to

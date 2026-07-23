@@ -114,3 +114,11 @@ Workbook Excel dibuat in-memory dan tidak meninggalkan file sementara. NIS/NISN 
 Seluruh string yang diawali `=`, `+`, `-`, atau `@` diawali apostrof untuk mencegah formula
 injection. Nama file hanya memakai identifier aman. Response report/export memakai
 `Cache-Control: private, no-store`; audit export hanya menyimpan summary, tanpa isi laporan.
+
+## Phase 7 import, promotion, alumni
+
+CSV import dibatasi 500 row/1 MB di UI, seluruh row divalidasi termasuk formula prefix dan duplicate
+NIS/NISN sebelum RPC. RPC mengulang validasi pada server dan rollback seluruh siswa/enrollment bila
+satu row atau audit gagal. Promotion/rollback/archive/tombstone hanya ADMIN aktif melalui
+`SECURITY DEFINER` RPC dan actor berasal dari `auth.uid()`. Tombstone alumni tidak menghapus attendance,
+enrollment, atau audit; direct batch/table writes tetap ditolak.
