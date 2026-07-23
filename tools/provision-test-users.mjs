@@ -3,11 +3,13 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { loadAdminConfiguration, retryAuth } from "./lib/supabase-admin.mjs";
+import { assertPasswordPolicy } from "./lib/password-policy.mjs";
 
 const password = process.env.SIPEKA_TEST_PASSWORD ?? `Aa1!${randomBytes(18).toString("base64url")}`;
 const nextPassword = `Bb2!${randomBytes(18).toString("base64url")}`;
 
-if (password.length < 12) throw new Error("SIPEKA_TEST_PASSWORD minimal 12 karakter.");
+assertPasswordPolicy(password);
+assertPasswordPolicy(nextPassword);
 
 const definitions = [
   {

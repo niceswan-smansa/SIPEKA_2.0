@@ -24,7 +24,7 @@ function createGateway(overrides: Partial<AuthenticationGateway> = {}): Authenti
     resolveAuthIdentity: vi.fn().mockResolvedValue("hidden-identity@invalid.local"),
     signInWithPassword: vi.fn().mockResolvedValue(activeUser.id),
     signOut: vi.fn().mockResolvedValue(undefined),
-    updatePassword: vi.fn().mockResolvedValue(true),
+    updatePassword: vi.fn().mockResolvedValue({ ok: true }),
     ...overrides,
   };
 }
@@ -115,5 +115,34 @@ describe("authentication application service", () => {
       await changePassword(gateway, activeUser, "Disposable!456", "Disposable!789"),
     ).toMatchObject({ ok: false });
     expect(gateway.updatePassword).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["SAME_PASSWORD", "same-password"],
+    ["WEAK_PASSWORD", "weak-password"],
+    ["SESSION_EXPIRED", "session-expired"],
+    ["PROVIDER_FAILURE", "provider"],
+  ] as const)("maps provider reason %s without exposing its raw error", async (reason, code) => {
+    const result = await changePassword(
+      createGateway({ updatePassword: vi.fn().mockResolvedValue({ ok: false, reason }) }),
+      activeUser,
+      "Disposable!456",
+      "Disposable!456",
+    );
+    expect(result).toEqual({ ok: false, code });
+  });
+
+  it("marks password completion as retryable after Auth succeeds", async () => {
+    const result = await changePassword(
+      createGateway({ completePasswordChange: vi.fn().mockResolvedValue(false) }),
+      activeUser,
+      "Disposable!456",
+      "Disposable!456",
+    );
+    expect(result).toEqual({
+      ok: false,
+      code: "completion-pending",
+      passwordUpdated: true,
+    });
   });
 });

@@ -30,6 +30,13 @@ describe("server access decisions", () => {
     ).toEqual({ redirectTo: "/login", type: "LOGOUT" });
   });
 
+  it("logs out an authenticated session without a profile", () => {
+    expect(decideAccess({ authenticated: true, profile: null }, "OPERATIONAL")).toEqual({
+      redirectTo: "/login",
+      type: "LOGOUT",
+    });
+  });
+
   it("forces password change before every protected area", () => {
     expect(
       decideAccess(

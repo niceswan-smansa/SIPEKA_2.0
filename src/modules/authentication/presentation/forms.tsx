@@ -4,7 +4,20 @@ import { useFormStatus } from "react-dom";
 
 import { Button, FormError, FormField, Input, PasswordInput } from "@/shared/ui";
 
-import { changePasswordAction, loginAction } from "./actions";
+import { changePasswordAction, loginAction, retryPasswordCompletionAction } from "./actions";
+
+const passwordErrors: Record<string, string> = {
+  mismatch: "Konfirmasi password tidak cocok.",
+  policy:
+    "Password harus 12–128 karakter dan memuat huruf besar, huruf kecil, angka, serta simbol.",
+  "same-password": "Password baru harus berbeda dari password sementara atau password saat ini.",
+  "weak-password":
+    "Password harus 12–128 karakter dan memuat huruf besar, huruf kecil, angka, serta simbol.",
+  "session-expired": "Sesi Anda telah berakhir. Silakan masuk kembali.",
+  provider: "Password belum dapat diperbarui. Silakan coba kembali.",
+  "completion-pending":
+    "Password sudah berubah, tetapi status akun belum terselesaikan. Coba selesaikan kembali tanpa mengganti password lagi.",
+};
 
 function SubmitButton({ children }: { children: string }) {
   const { pending } = useFormStatus();
@@ -33,28 +46,36 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 export function ChangePasswordForm({ error }: { error?: string }) {
   return (
     <form action={changePasswordAction} className="grid gap-5">
-      {error ? (
-        <FormError>
-          {error === "validation"
-            ? "Password belum memenuhi ketentuan."
-            : "Password tidak dapat diperbarui."}
-        </FormError>
-      ) : null}
+      {error ? <FormError>{passwordErrors[error] ?? passwordErrors.provider}</FormError> : null}
       <FormField id="new-password" label="Password baru">
-        <PasswordInput id="new-password" name="password" autoComplete="new-password" required />
+        <PasswordInput
+          id="new-password"
+          name="password"
+          autoComplete="new-password"
+          minLength={12}
+          maxLength={128}
+          required
+        />
       </FormField>
       <FormField id="password-confirmation" label="Konfirmasi password">
         <PasswordInput
           id="password-confirmation"
           name="confirmation"
           autoComplete="new-password"
+          minLength={12}
+          maxLength={128}
           required
         />
       </FormField>
       <p className="text-xs text-slate-500">
-        Minimal 12 karakter dengan huruf besar, huruf kecil, angka, dan simbol.
+        12–128 karakter dengan huruf besar, huruf kecil, angka, dan simbol.
       </p>
       <SubmitButton>Simpan Password</SubmitButton>
+      {error === "completion-pending" ? (
+        <Button formAction={retryPasswordCompletionAction} type="submit" className="bg-slate-700">
+          Coba selesaikan status akun
+        </Button>
+      ) : null}
     </form>
   );
 }

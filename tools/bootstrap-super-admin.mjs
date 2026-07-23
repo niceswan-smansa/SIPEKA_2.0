@@ -1,15 +1,16 @@
 import { randomUUID } from "node:crypto";
 
 import { loadAdminConfiguration } from "./lib/supabase-admin.mjs";
+import { assertPasswordPolicy } from "./lib/password-policy.mjs";
 
 const username = process.env.BOOTSTRAP_SUPER_ADMIN_USERNAME?.trim().toLowerCase();
 const fullName = process.env.BOOTSTRAP_SUPER_ADMIN_FULL_NAME?.trim();
 const password = process.env.BOOTSTRAP_SUPER_ADMIN_PASSWORD;
 const allowRemote = process.env.ALLOW_REMOTE_SUPER_ADMIN_BOOTSTRAP === "true";
 
-if (!username || !fullName || !password || password.length < 12) {
-  throw new Error("Environment bootstrap Super Admin tidak lengkap atau password terlalu pendek.");
-}
+if (!username || !fullName || !password)
+  throw new Error("Environment bootstrap Super Admin tidak lengkap.");
+assertPasswordPolicy(password);
 
 if (!/^[a-z0-9._-]+$/.test(username)) throw new Error("Username Super Admin tidak valid.");
 

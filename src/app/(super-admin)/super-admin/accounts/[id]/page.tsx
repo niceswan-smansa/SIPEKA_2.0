@@ -6,7 +6,6 @@ import {
   createAccountService,
   createSupabaseAccountRepository,
   deleteAccountAction,
-  forceLogoutAction,
   resetPasswordAction,
   setAccountActiveAction,
   updateAccountAction,
@@ -43,9 +42,17 @@ export default async function AccountDetailPage({ params, searchParams }: Props)
         <p className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
           {query.error === "SESSION_REVOCATION_UNSUPPORTED"
             ? "Sesi akun belum dapat dicabut secara langsung. Nonaktifkan akun atau gunakan reset password untuk membatasi akses."
-            : query.error === "AUDIT_FAILURE"
-              ? "Perubahan tidak dianggap berhasil karena audit akun tidak dapat ditulis."
-              : "Operasi tidak dapat diselesaikan. Data tetap dilindungi."}
+            : query.error === "PASSWORD_RESET_AUTH_FAILED"
+              ? "Akun sudah diblokir untuk mengganti password, tetapi password sementara belum berhasil ditetapkan."
+              : query.error === "ACCOUNT_AUTH_CLEANUP_PENDING"
+                ? "Akses akun sudah ditutup, tetapi pembersihan identitas autentikasi belum selesai. Coba hapus akses kembali."
+                : query.error === "confirmation"
+                  ? "Konfirmasi password tidak cocok."
+                  : query.error === "policy"
+                    ? "Password harus 12–128 karakter dan memuat huruf besar, huruf kecil, angka, serta simbol."
+                    : query.error === "AUDIT_FAILURE"
+                      ? "Perubahan tidak dianggap berhasil karena audit akun tidak dapat ditulis."
+                      : "Operasi tidak dapat diselesaikan. Data tetap dilindungi."}
         </p>
       ) : null}
       {query.success ? (
@@ -126,7 +133,6 @@ export default async function AccountDetailPage({ params, searchParams }: Props)
           isActive={account.isActive}
           resetAction={resetPasswordAction}
           statusAction={setAccountActiveAction}
-          forceLogoutAction={forceLogoutAction}
           deleteAction={deleteAccountAction}
         />
       </Card>

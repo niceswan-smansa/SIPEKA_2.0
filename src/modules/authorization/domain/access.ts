@@ -32,9 +32,10 @@ export function sanitizeRedirect(value: string | null | undefined, fallback: str
 }
 
 export function decideAccess(context: AccessContext, kind: AccessKind): AccessDecision {
-  if (!context.authenticated || !context.profile) {
+  if (!context.authenticated) {
     return { redirectTo: "/login", type: "REDIRECT" };
   }
+  if (!context.profile) return { redirectTo: "/login", type: "LOGOUT" };
 
   if (!context.profile.isActive) {
     return { redirectTo: "/login", type: "LOGOUT" };

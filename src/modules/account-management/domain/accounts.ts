@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "@/shared/security/password-policy";
 
 export const MANAGED_ROLES = ["ADMIN", "USER"] as const;
 export type ManagedRole = (typeof MANAGED_ROLES)[number];
@@ -38,7 +39,25 @@ export type AccountAuditEntry = {
   metadata: Record<string, unknown>;
 };
 
-export const accountInputSchema = z.object({
+export const accountInputSchema = z
+  .object({
+    fullName: z.string().trim().min(2).max(160),
+    username: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9._-]{3,40}$/),
+    role: z.enum(MANAGED_ROLES),
+    password: passwordSchema,
+    confirmation: z.string().max(128),
+    isActive: z.boolean().default(true),
+  })
+  .refine((value) => value.password === value.confirmation, {
+    message: "Konfirmasi password tidak cocok.",
+    path: ["confirmation"],
+  });
+
+export const accountUpdateSchema = z.object({
   fullName: z.string().trim().min(2).max(160),
   username: z
     .string()
@@ -46,21 +65,17 @@ export const accountInputSchema = z.object({
     .toLowerCase()
     .regex(/^[a-z0-9._-]{3,40}$/),
   role: z.enum(MANAGED_ROLES),
-  password: z.string().min(12).max(128),
-  confirmation: z.string().max(128),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
-
-export const accountUpdateSchema = accountInputSchema.pick({
-  fullName: true,
-  username: true,
-  role: true,
-  isActive: true,
-});
-export const passwordResetSchema = z.object({
-  password: z.string().min(12).max(128),
-  confirmation: z.string().max(128),
-});
+export const passwordResetSchema = z
+  .object({
+    password: passwordSchema,
+    confirmation: z.string().max(128),
+  })
+  .refine((value) => value.password === value.confirmation, {
+    message: "Konfirmasi password tidak cocok.",
+    path: ["confirmation"],
+  });
 
 export type AccountInput = z.infer<typeof accountInputSchema>;
 export type AccountUpdateInput = z.infer<typeof accountUpdateSchema>;
@@ -82,7 +97,14 @@ export type AccountOperationResult =
   | { status: "unsupported"; code: "SESSION_REVOCATION_UNSUPPORTED" }
   | {
       status: "failed";
-      code: "AUTH_PROVIDER_FAILURE" | "DATABASE_FAILURE" | "AUDIT_FAILURE" | "PARTIAL_OPERATION";
+      code:
+        | "AUTH_PROVIDER_FAILURE"
+        | "DATABASE_FAILURE"
+        | "AUDIT_FAILURE"
+        | "PARTIAL_OPERATION"
+        | "PASSWORD_RESET_AUTH_FAILED"
+        | "ACCOUNT_AUTH_CLEANUP_PENDING";
+      account?: AccountRecord;
     };
 
 export type SessionRevocationResult =

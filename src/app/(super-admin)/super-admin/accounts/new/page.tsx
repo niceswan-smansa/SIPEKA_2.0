@@ -17,7 +17,11 @@ export default async function NewAccountPage({ searchParams }: Props) {
       <Card className="max-w-2xl">
         {params.error ? (
           <p className="mb-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
-            Akun tidak dapat dibuat. Periksa data dan coba lagi.
+            {params.error === "confirmation"
+              ? "Konfirmasi password tidak cocok."
+              : params.error === "policy"
+                ? "Password harus 12–128 karakter dan memuat huruf besar, huruf kecil, angka, serta simbol."
+                : "Akun tidak dapat dibuat. Periksa data dan coba lagi."}
           </p>
         ) : null}
         <form action={createAccountAction} className="grid gap-5">
@@ -41,14 +45,21 @@ export default async function NewAccountPage({ searchParams }: Props) {
               id="temporary-password"
               name="password"
               autoComplete="new-password"
+              minLength={12}
+              maxLength={128}
               required
             />
           </FormField>
+          <p className="-mt-3 text-xs text-slate-500">
+            12–128 karakter dengan huruf besar, huruf kecil, angka, dan simbol.
+          </p>
           <FormField id="temporary-confirmation" label="Konfirmasi password">
             <PasswordInput
               id="temporary-confirmation"
               name="confirmation"
               autoComplete="new-password"
+              minLength={12}
+              maxLength={128}
               required
             />
           </FormField>

@@ -42,7 +42,7 @@ function tombstoneUsername(id: string) {
 }
 
 function tombstoneEmail() {
-  return `deleted+${crypto.randomUUID()}@invalid.local`;
+  return `deleted+${randomUUID()}@invalid.local`;
 }
 
 export function createAccountService(repository: AccountRepository) {
@@ -137,21 +137,35 @@ export function createAccountService(repository: AccountRepository) {
       if (!parsed.success) throw new Error("VALIDATION");
       ensureConfirmation(parsed.data.password, parsed.data.confirmation);
 
+      let updated;
       try {
-        await repository.updateAuthUser(id, { password: parsed.data.password });
-      } catch {
-        return failure("AUTH_PROVIDER_FAILURE");
-      }
-      try {
-        const updated = await repository.markPasswordResetWithAudit({
+        updated = await repository.markPasswordResetWithAudit({
           actorId: actor.id,
           targetId: id,
           requestId: randomUUID(),
         });
-        return { status: "success", code: "PASSWORD_RESET", account: updated };
       } catch (error) {
-        return failure(failureCode(error, "PARTIAL_OPERATION"));
+        return failure(failureCode(error, "AUDIT_FAILURE"));
       }
+      try {
+        await repository.updateAuthUser(id, { password: parsed.data.password });
+      } catch {
+        try {
+          await repository.insertAudit({
+            actorId: actor.id,
+            actorName: actor.fullName,
+            action: "RESET_PASSWORD_FAILED",
+            entityId: id,
+            before: accountSnapshot(target),
+            after: accountSnapshot(updated),
+            metadata: { status: "FAILED", code: "AUTH_PROVIDER_FAILURE" },
+          });
+        } catch {
+          // Safe-first state already blocks access; recovery remains retryable.
+        }
+        return { status: "failed", code: "PASSWORD_RESET_AUTH_FAILED", account: updated };
+      }
+      return { status: "success", code: "PASSWORD_RESET", account: updated };
     },
 
     async setActive(
@@ -246,30 +260,28 @@ export function createAccountService(repository: AccountRepository) {
       const target = await repository.getAccount(id);
       if (!target) throw new Error("NOT_FOUND");
       assertManagedTarget(actor.id, target);
-      if (isDeletedTombstone(target)) {
-        return { status: "success", code: "ACCOUNT_DELETED" };
+      let tombstone = target;
+      try {
+        if (!isDeletedTombstone(target)) {
+          tombstone = await repository.tombstoneProfileWithAudit({
+            actorId: actor.id,
+            targetId: id,
+            tombstoneUsername: tombstoneUsername(id),
+            requestId: randomUUID(),
+          });
+        }
+      } catch (error) {
+        return failure(failureCode(error, "AUDIT_FAILURE"));
       }
 
-      // Supabase password policy requires mixed character classes.
       const password = `Aa1!${randomBytes(32).toString("base64url")}`;
       try {
         await repository.replaceAuthIdentity(id, tombstoneEmail());
         await repository.updateAuthUser(id, { password });
       } catch {
-        return failure("AUTH_PROVIDER_FAILURE");
+        return { status: "failed", code: "ACCOUNT_AUTH_CLEANUP_PENDING", account: tombstone };
       }
-
-      try {
-        const updated = await repository.tombstoneProfileWithAudit({
-          actorId: actor.id,
-          targetId: id,
-          tombstoneUsername: tombstoneUsername(id),
-          requestId: randomUUID(),
-        });
-        return { status: "success", code: "ACCOUNT_DELETED", account: updated };
-      } catch (error) {
-        return failure(failureCode(error, "PARTIAL_OPERATION"));
-      }
+      return { status: "success", code: "ACCOUNT_DELETED", account: tombstone };
     },
   };
 }

@@ -11,7 +11,6 @@ export function AccountMutationControls({
   isActive,
   resetAction,
   statusAction,
-  forceLogoutAction,
   deleteAction,
 }: {
   id: string;
@@ -19,17 +18,24 @@ export function AccountMutationControls({
   isActive: boolean;
   resetAction: Action;
   statusAction: Action;
-  forceLogoutAction: Action;
   deleteAction: Action;
 }) {
-  const [dialog, setDialog] = useState<"reset" | "deactivate" | "logout" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<"reset" | "deactivate" | "delete" | null>(null);
+  const [pending, setPending] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const submit = async (action: Action, values: Record<string, string>) => {
     const data = new FormData();
     data.set("id", id);
     Object.entries(values).forEach(([key, value]) => data.set(key, value));
-    await action(data);
+    setPending(true);
+    try {
+      await action(data);
+    } finally {
+      setPassword("");
+      setConfirmation("");
+      setPending(false);
+    }
   };
   return (
     <div className="flex flex-wrap gap-2">
@@ -40,13 +46,9 @@ export function AccountMutationControls({
       >
         Reset Password
       </Button>
-      <Button
-        type="button"
-        className="bg-slate-200 text-slate-800 hover:bg-slate-300"
-        onClick={() => setDialog("logout")}
-      >
-        Force Logout (jika didukung)
-      </Button>
+      <p className="self-center text-xs text-slate-500">
+        Pencabutan seluruh sesi belum didukung penyedia autentikasi.
+      </p>
       <Button
         type="button"
         className="bg-amber-600 hover:bg-amber-700"
@@ -66,6 +68,10 @@ export function AccountMutationControls({
           <FormField id="reset-password" label="Password baru">
             <PasswordInput
               id="reset-password"
+              name="password"
+              required
+              minLength={12}
+              maxLength={128}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
@@ -73,14 +79,22 @@ export function AccountMutationControls({
           <FormField id="reset-confirmation" label="Konfirmasi password">
             <PasswordInput
               id="reset-confirmation"
+              name="confirmation"
+              required
+              minLength={12}
+              maxLength={128}
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
             />
           </FormField>
         </div>
+        <p className="mt-3 text-xs text-slate-500">
+          12–128 karakter dengan huruf besar, huruf kecil, angka, dan simbol.
+        </p>
         <div className="mt-5 flex justify-end gap-2">
           <Button
             type="button"
+            disabled={pending}
             className="bg-slate-200 text-slate-800"
             onClick={() => setDialog(null)}
           >
@@ -88,12 +102,13 @@ export function AccountMutationControls({
           </Button>
           <Button
             type="button"
+            disabled={pending}
             onClick={async () => {
-              setDialog(null);
               await submit(resetAction, { password, confirmation });
+              setDialog(null);
             }}
           >
-            Simpan
+            {pending ? "Memproses…" : "Simpan"}
           </Button>
         </div>
       </Dialog>
@@ -109,18 +124,6 @@ export function AccountMutationControls({
         {isActive
           ? `Akun ${fullName} akan ditolak dari aplikasi.`
           : `Akun ${fullName} akan dapat digunakan kembali.`}
-      </ConfirmDialog>
-      <ConfirmDialog
-        open={dialog === "logout"}
-        title="Force logout"
-        onCancel={() => setDialog(null)}
-        onConfirm={async () => {
-          setDialog(null);
-          await submit(forceLogoutAction, {});
-        }}
-      >
-        Penyedia autentikasi harus mengonfirmasi pencabutan semua sesi. Jika tidak didukung, operasi
-        akan dilaporkan gagal dan tidak menampilkan pesan berhasil.
       </ConfirmDialog>
       <ConfirmDialog
         open={dialog === "delete"}

@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { loadAdminConfiguration, retryAuth } from "./lib/supabase-admin.mjs";
+import { assertPasswordPolicy } from "./lib/password-policy.mjs";
 
 const definitions = [
   ["kuddus", "Moh Kuddus, S.Ag, M.Th.I", "ADMIN"],
@@ -16,6 +17,7 @@ const credentials = [];
 
 for (const [username, fullName, role] of definitions) {
   const password = `Aa1!${randomBytes(18).toString("base64url")}`;
+  assertPasswordPolicy(password);
   const { data: profile, error: lookupError } = await client
     .from("profiles")
     .select("id")

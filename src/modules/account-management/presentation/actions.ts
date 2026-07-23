@@ -8,6 +8,7 @@ import { createAccountService } from "../application/account-service";
 import {
   accountInputSchema,
   accountUpdateSchema,
+  passwordResetSchema,
   type AccountOperationResult,
 } from "../domain/accounts";
 import { createSupabaseAccountRepository } from "../infrastructure/supabase-account.repository";
@@ -57,10 +58,15 @@ export async function createAccountAction(formData: FormData) {
     confirmation: text(formData.get("confirmation")),
     isActive: bool(formData.get("isActive")),
   };
-  if (!accountInputSchema.safeParse(input).success) genericError("/super-admin/accounts/new");
+  const parsed = accountInputSchema.safeParse(input);
+  if (!parsed.success)
+    genericError(
+      "/super-admin/accounts/new",
+      input.password !== input.confirmation ? "confirmation" : "policy",
+    );
   let result: AccountOperationResult;
   try {
-    result = await service().createAccount(actor, input as never);
+    result = await service().createAccount(actor, parsed.data);
   } catch {
     logFailure("CREATE");
     genericError("/super-admin/accounts/new");
@@ -78,11 +84,11 @@ export async function updateAccountAction(formData: FormData) {
     role: text(formData.get("role")),
     isActive: bool(formData.get("isActive")),
   };
-  if (!id || !accountUpdateSchema.safeParse(input).success)
-    genericError(`/super-admin/accounts/${id}`);
+  const parsed = accountUpdateSchema.safeParse(input);
+  if (!id || !parsed.success) genericError(`/super-admin/accounts/${id}`);
   let result: AccountOperationResult;
   try {
-    result = await service().updateAccount(actor, id, input as never);
+    result = await service().updateAccount(actor, id, parsed.data);
   } catch {
     logFailure("UPDATE", undefined, id);
     genericError(`/super-admin/accounts/${id}`);
@@ -94,13 +100,23 @@ export async function updateAccountAction(formData: FormData) {
 export async function resetPasswordAction(formData: FormData) {
   const actor = await requirePageAccess("SUPER_ADMIN");
   const id = text(formData.get("id"));
+  const input = {
+    password: text(formData.get("password")),
+    confirmation: text(formData.get("confirmation")),
+  };
+  const parsed = passwordResetSchema.safeParse(input);
+  if (!id || !parsed.success)
+    genericError(
+      `/super-admin/accounts/${id}`,
+      input.password !== input.confirmation ? "confirmation" : "policy",
+    );
   let result: AccountOperationResult;
   try {
     result = await service().resetPassword(
       actor,
       id,
-      text(formData.get("password")),
-      text(formData.get("confirmation")),
+      parsed.data.password,
+      parsed.data.confirmation,
     );
   } catch {
     logFailure("RESET_PASSWORD", undefined, id);

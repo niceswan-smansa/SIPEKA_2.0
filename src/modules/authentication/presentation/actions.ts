@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { z } from "zod";
 
 import { defaultPathForRole, requirePageAccess, sanitizeRedirect } from "@/modules/authorization";
@@ -11,7 +11,10 @@ import { changePassword } from "../application/change-password";
 import { logoutUser } from "../application/logout-user";
 import { createSupabaseAuthenticationGateway } from "../infrastructure/supabase-authentication.gateway";
 import { allowRateLimited } from "@/shared/security/rate-limit";
+import { createSignedState, verifySignedState } from "@/shared/security/signed-state";
 
+const COMPLETION_COOKIE = "sipeka-password-completion";
+const COMPLETION_PURPOSE = "password-completion";
 const loginSchema = z.object({
   identifier: z.string().trim().min(1).max(254),
   password: z.string().min(1).max(256),
@@ -61,7 +64,7 @@ export async function changePasswordAction(formData: FormData) {
     password: formData.get("password"),
   });
 
-  if (!parsed.success) redirect("/change-password?error=validation");
+  if (!parsed.success) redirect("/change-password?error=policy");
 
   const result = await changePassword(
     await createSupabaseAuthenticationGateway(),
@@ -70,6 +73,44 @@ export async function changePasswordAction(formData: FormData) {
     parsed.data.confirmation,
   );
 
-  if (!result.ok) redirect("/change-password?error=validation");
+  if (!result.ok) {
+    if (result.passwordUpdated) {
+      const secret = process.env.RATE_LIMIT_SECRET;
+      if (secret) {
+        (await cookies()).set(
+          COMPLETION_COOKIE,
+          createSignedState(profile.id, COMPLETION_PURPOSE, secret),
+          {
+            httpOnly: true,
+            maxAge: 600,
+            path: "/change-password",
+            sameSite: "strict",
+            secure: process.env.NODE_ENV === "production",
+          },
+        );
+      }
+    }
+    redirect(`/change-password?error=${result.code}`);
+  }
+  (await cookies()).delete(COMPLETION_COOKIE);
+  redirect(defaultPathForRole(profile.role));
+}
+
+export async function retryPasswordCompletionAction() {
+  const profile = await requirePageAccess("AUTHENTICATED");
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COMPLETION_COOKIE)?.value;
+  const secret = process.env.RATE_LIMIT_SECRET;
+  if (
+    !token ||
+    !secret ||
+    !verifySignedState(token, { purpose: COMPLETION_PURPOSE, userId: profile.id }, secret)
+  )
+    redirect("/change-password?error=completion-pending");
+
+  const gateway = await createSupabaseAuthenticationGateway();
+  if (!(await gateway.completePasswordChange(profile)))
+    redirect("/change-password?error=completion-pending");
+  cookieStore.delete(COMPLETION_COOKIE);
   redirect(defaultPathForRole(profile.role));
 }

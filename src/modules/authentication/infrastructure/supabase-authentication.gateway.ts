@@ -74,7 +74,21 @@ export async function createSupabaseAuthenticationGateway(): Promise<Authenticat
     },
     async updatePassword(password) {
       const { error } = await serverClient.auth.updateUser({ password });
-      return !error;
+      if (!error) return { ok: true };
+      const reasons: Record<
+        string,
+        "SAME_PASSWORD" | "WEAK_PASSWORD" | "REAUTHENTICATION_REQUIRED" | "SESSION_EXPIRED"
+      > = {
+        bad_jwt: "SESSION_EXPIRED",
+        reauthentication_needed: "REAUTHENTICATION_REQUIRED",
+        reauthentication_not_valid: "REAUTHENTICATION_REQUIRED",
+        refresh_token_not_found: "SESSION_EXPIRED",
+        same_password: "SAME_PASSWORD",
+        session_not_found: "SESSION_EXPIRED",
+        weak_password: "WEAK_PASSWORD",
+      };
+      const reason = reasons[error.code ?? ""];
+      return { ok: false, reason: reason ?? "PROVIDER_FAILURE" };
     },
   };
 }

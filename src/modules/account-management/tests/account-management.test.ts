@@ -152,6 +152,49 @@ describe("account-management", () => {
     expect(JSON.stringify(resetInput)).not.toContain(password);
   });
 
+  it("blocks the account before changing its Auth password", async () => {
+    const calls: string[] = [];
+    const service = createAccountService(
+      repository({
+        markPasswordResetWithAudit: async () => {
+          calls.push("database");
+          return { ...target, mustChangePassword: true };
+        },
+        updateAuthUser: async () => {
+          calls.push("auth");
+        },
+      }),
+    );
+    await service.resetPassword(
+      { id: "actor", fullName: "Super Admin" },
+      target.id,
+      password,
+      password,
+    );
+    expect(calls).toEqual(["database", "auth"]);
+  });
+
+  it("keeps must-change enforced when the Auth password update fails", async () => {
+    const service = createAccountService(
+      repository({
+        updateAuthUser: async () => {
+          throw new Error("provider");
+        },
+      }),
+    );
+    const result = await service.resetPassword(
+      { id: "actor", fullName: "Super Admin" },
+      target.id,
+      password,
+      password,
+    );
+    expect(result).toMatchObject({
+      status: "failed",
+      code: "PASSWORD_RESET_AUTH_FAILED",
+      account: { mustChangePassword: true },
+    });
+  });
+
   it("uses an access tombstone and never records the randomized credential", async () => {
     const updates: Record<string, unknown>[] = [];
     const audits: Parameters<AccountRepository["insertAudit"]>[0][] = [];
@@ -288,7 +331,8 @@ describe("account-management", () => {
     expect(actions).toEqual(["FORCE_LOGOUT"]);
   });
 
-  it("keeps delete retry idempotent for an existing tombstone", async () => {
+  it("retries Auth cleanup for an existing tombstone", async () => {
+    let identityCleanups = 0;
     const service = createAccountService(
       repository({
         getAccount: async () => ({
@@ -297,13 +341,14 @@ describe("account-management", () => {
           isActive: false,
           mustChangePassword: true,
         }),
-        updateAuthUser: async () => {
-          throw new Error("must not call Auth for a tombstone retry");
+        replaceAuthIdentity: async () => {
+          identityCleanups += 1;
         },
       }),
     );
     await expect(
       service.deleteAccount({ id: "actor", fullName: "Super Admin" }, target.id),
-    ).resolves.toEqual({ status: "success", code: "ACCOUNT_DELETED" });
+    ).resolves.toMatchObject({ status: "success", code: "ACCOUNT_DELETED" });
+    expect(identityCleanups).toBe(1);
   });
 });
