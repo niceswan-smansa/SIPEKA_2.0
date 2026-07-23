@@ -1,30 +1,43 @@
 import { notFound } from "next/navigation";
+import { z } from "zod";
 
 import { requirePageAccess } from "@/modules/authorization";
 import {
-  PrintButton,
   createStudentAttendanceService,
   createSupabaseStudentAttendanceRepository,
+  PrintButton,
   reportRangeSchema,
 } from "@/modules/student-attendance";
 import { createStudentService, createSupabaseStudentRepository } from "@/modules/students";
 import { Card, PageHeader, Table } from "@/shared/ui";
-import { z } from "zod";
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ from?: string; to?: string }>;
 };
+
 export default async function StudentReportPage({ params, searchParams }: Props) {
   await requirePageAccess("OPERATIONAL");
-  const id = z.uuid().parse((await params).id);
+
+  const idResult = z.uuid().safeParse((await params).id);
+  if (!idResult.success) notFound();
+
   const query = await searchParams;
-  const range = reportRangeSchema.parse({ startDate: query.from, endDate: query.to });
+  const rangeResult = reportRangeSchema.safeParse({
+    startDate: query.from,
+    endDate: query.to,
+  });
+  if (!rangeResult.success) notFound();
+
+  const id = idResult.data;
+  const range = rangeResult.data;
   const student = await createStudentService(createSupabaseStudentRepository()).getDetail(id);
   if (!student) notFound();
+
   const rows = await createStudentAttendanceService(
     createSupabaseStudentAttendanceRepository(),
   ).getReport(id, range.startDate, range.endDate);
+
   const totals = {
     days: new Set(rows.map((row) => row.date)).size,
     hours: rows.length,
@@ -32,6 +45,7 @@ export default async function StudentReportPage({ params, searchParams }: Props)
     sakit: rows.filter((row) => row.status === "SAKIT").length,
     tanpa: rows.filter((row) => row.status === "TANPA_KETERANGAN").length,
   };
+
   return (
     <main className="mx-auto max-w-5xl p-6 print:p-0">
       <PageHeader
@@ -39,6 +53,7 @@ export default async function StudentReportPage({ params, searchParams }: Props)
         description={`${range.startDate} sampai ${range.endDate}`}
         action={<PrintButton />}
       />
+
       <Card>
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
@@ -71,6 +86,7 @@ export default async function StudentReportPage({ params, searchParams }: Props)
           </div>
         </dl>
       </Card>
+
       <Card className="mt-5">
         <Table>
           <thead>
