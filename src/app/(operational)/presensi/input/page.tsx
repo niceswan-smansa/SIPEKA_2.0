@@ -6,17 +6,36 @@ import {
 } from "@/modules/attendance";
 import { requirePageAccess } from "@/modules/authorization";
 import {
+  classDisplayName,
   createClassService,
   createSupabaseClassRepository,
-  classDisplayName,
 } from "@/modules/classes";
-import { Alert, Button, Card, FormField, PageHeader, Select } from "@/shared/ui";
 import { isIsoDate } from "@/shared/domain/dates";
+import { Alert, Button, Card, FormField, PageHeader, Select } from "@/shared/ui";
 
 type Props = { searchParams: Promise<{ classId?: string; date?: string }> };
 
+function attendanceInputKey(initial: {
+  classId: string;
+  attendanceDate: string;
+  items: Array<{
+    id: string;
+    attendance: Array<{ id: string; version: number }>;
+  }>;
+}) {
+  const records = initial.items
+    .flatMap((student) =>
+      student.attendance.map((item) => `${student.id}:${item.id}:${item.version}`),
+    )
+    .sort()
+    .join("|");
+
+  return `${initial.classId}:${initial.attendanceDate}:${records}`;
+}
+
 export default async function AttendanceInputPage({ searchParams }: Props) {
   await requirePageAccess("ADMIN_MUTATION");
+
   const params = await searchParams;
   const date = isIsoDate(params.date) ? params.date : todayJakarta();
   const classes = (await createClassService(createSupabaseClassRepository()).list()).filter(
@@ -36,6 +55,7 @@ export default async function AttendanceInputPage({ searchParams }: Props) {
         title="Input Presensi"
         description="Catat ketidakhadiran per siswa dan jam pelajaran."
       />
+
       <Card className="mb-5">
         <form method="get" className="flex flex-wrap items-end gap-3">
           <FormField id="attendance-date" label="Tanggal">
@@ -49,6 +69,7 @@ export default async function AttendanceInputPage({ searchParams }: Props) {
               required
             />
           </FormField>
+
           <FormField id="attendance-class" label="Kelas">
             <Select
               id="attendance-class"
@@ -63,18 +84,15 @@ export default async function AttendanceInputPage({ searchParams }: Props) {
               ))}
             </Select>
           </FormField>
+
           <Button type="submit">Muat data</Button>
         </form>
       </Card>
+
       {!selectedClass || !initial ? (
         <Alert tone="info">Belum ada kelas aktif pada tahun ajaran aktif.</Alert>
       ) : (
-        <AttendanceInput
-          key={initial.items
-            .flatMap((student) => student.attendance.map((item) => `${item.id}:${item.version}`))
-            .join("|")}
-          initial={initial}
-        />
+        <AttendanceInput key={attendanceInputKey(initial)} initial={initial} />
       )}
     </>
   );
