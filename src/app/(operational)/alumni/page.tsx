@@ -6,7 +6,17 @@ import {
   createStudentSearchService,
 } from "@/modules/student-search";
 import { AlumniActions } from "@/modules/student-lifecycle";
-import { Card, EmptyState, PageHeader } from "@/shared/ui";
+import { Card, EmptyState, PageHeader, Pagination } from "@/shared/ui";
+
+const successMessages: Record<string, string> = {
+  archived: "Alumni berhasil diarsipkan.",
+  tombstoned: "Identitas alumni berhasil ditombstone. Histori tetap dipertahankan.",
+};
+
+const errorMessages: Record<string, string> = {
+  archive: "Alumni belum dapat diarsipkan.",
+  tombstone: "Identitas alumni belum dapat ditombstone.",
+};
 
 export default async function AlumniPage({
   searchParams,
@@ -14,6 +24,7 @@ export default async function AlumniPage({
   searchParams: Promise<{ page?: string; success?: string; error?: string }>;
 }) {
   await requirePageAccess("ADMIN_MUTATION");
+
   const params = await searchParams;
   const { result } = await createStudentSearchService(createStudentSearchRepository()).search({
     grade: "ALUMNI",
@@ -21,26 +32,36 @@ export default async function AlumniPage({
     pageSize: "50",
     page: params.page ?? "1",
   });
+  const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
+  const makeHref = (nextPage: number) => `/alumni?page=${nextPage}`;
+
   return (
     <>
       <PageHeader
         title="Alumni"
         description="Arsip mempertahankan presensi, enrollment, dan audit."
       />
+
       {params.success ? (
-        <p role="status" className="mb-4 rounded bg-emerald-50 p-3 text-sm text-emerald-800">
-          Operasi alumni berhasil.
+        <p
+          role="status"
+          className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+          {successMessages[params.success] ?? "Operasi alumni berhasil."}
         </p>
       ) : null}
+
       {params.error ? (
-        <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-sm text-red-800">
-          Operasi alumni tidak dapat diselesaikan.
+        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800">
+          {errorMessages[params.error] ?? "Operasi alumni tidak dapat diselesaikan."}
         </p>
       ) : null}
+
       <div className="mt-5 grid gap-3">
         {!result.items.length ? (
           <EmptyState>Belum ada alumni. Alumni muncul setelah promotion kelas XII.</EmptyState>
         ) : null}
+
         {result.items.map((student) => (
           <Card key={student.id}>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -60,16 +81,15 @@ export default async function AlumniPage({
           </Card>
         ))}
       </div>
-      {result.total > result.pageSize ? (
-        <nav className="mt-5 flex gap-3" aria-label="Pagination alumni">
-          {result.page > 1 ? (
-            <Link href={`/alumni?page=${result.page - 1}`}>Sebelumnya</Link>
-          ) : null}
-          {result.page * result.pageSize < result.total ? (
-            <Link href={`/alumni?page=${result.page + 1}`}>Berikutnya</Link>
-          ) : null}
-        </nav>
-      ) : null}
+
+      <div className="mt-5">
+        <Pagination
+          page={result.page}
+          totalPages={totalPages}
+          {...(result.page > 1 ? { previousHref: makeHref(result.page - 1) } : {})}
+          {...(result.page < totalPages ? { nextHref: makeHref(result.page + 1) } : {})}
+        />
+      </div>
     </>
   );
 }
