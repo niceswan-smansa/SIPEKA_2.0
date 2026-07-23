@@ -52,7 +52,6 @@ export async function createAccountAction(formData: FormData) {
   const input = {
     fullName: text(formData.get("fullName")),
     username: text(formData.get("username")),
-    email: text(formData.get("email")),
     role: text(formData.get("role")),
     password: text(formData.get("password")),
     confirmation: text(formData.get("confirmation")),
@@ -76,7 +75,6 @@ export async function updateAccountAction(formData: FormData) {
   const input = {
     fullName: text(formData.get("fullName")),
     username: text(formData.get("username")),
-    email: text(formData.get("email")),
     role: text(formData.get("role")),
     isActive: bool(formData.get("isActive")),
   };

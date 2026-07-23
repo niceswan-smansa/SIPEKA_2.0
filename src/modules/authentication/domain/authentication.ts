@@ -1,6 +1,6 @@
 import type { AccountProfile } from "@/shared/permissions";
 
-export const GENERIC_LOGIN_ERROR = "Username/email atau password tidak valid.";
+export const GENERIC_LOGIN_ERROR = "Username atau password tidak valid.";
 
 export type LoginInput = {
   identifier: string;
@@ -11,8 +11,8 @@ export type AuthenticationResult =
   { ok: true; profile: AccountProfile } | { ok: false; message: typeof GENERIC_LOGIN_ERROR };
 
 export interface AuthenticationGateway {
-  resolveEmail(username: string): Promise<string | null>;
-  signInWithPassword(email: string, password: string): Promise<string | null>;
+  resolveAuthIdentity(username: string): Promise<string | null>;
+  signInWithPassword(authIdentity: string, password: string): Promise<string | null>;
   getProfile(userId: string): Promise<AccountProfile | null>;
   recordLogin(userId: string): Promise<void>;
   signOut(): Promise<void>;

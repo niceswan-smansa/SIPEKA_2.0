@@ -12,22 +12,20 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, and audits a synthetic ac
   };
   const suffix = Date.now().toString().slice(-7);
   const username = `phase2.${suffix}`;
-  const email = `${username}@example.test`;
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(credentials.users.superAdmin.username);
+  await page.getByLabel("Username").fill(credentials.users.superAdmin.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/super-admin\/accounts$/);
   await page.goto("/super-admin/accounts/new");
   await page.getByLabel("Nama lengkap").fill("Akun Sintetis Phase 2");
   await page.getByLabel("Username").fill(username);
-  await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password sementara").fill(credentials.password);
   await page.getByLabel("Konfirmasi password").fill(credentials.password);
   await page.getByRole("button", { name: "Buat Akun" }).click();
   await expect(page).toHaveURL(/\/super-admin\/accounts\?success=created/);
 
-  await page.getByLabel("Cari nama, username, atau email").fill(username);
+  await page.getByLabel("Cari nama atau username").fill(username);
   await page.getByRole("button", { name: "Terapkan" }).click();
   await page
     .getByRole("row", { name: new RegExp(username) })
@@ -63,12 +61,12 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, and audits a synthetic ac
 
   await page.getByRole("button", { name: "Keluar" }).click();
   await expect(page).toHaveURL(/\/login/);
-  await page.getByLabel("Username atau Email").fill(email);
+  await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Masuk" }).click();
-  await expect(page.getByText("Username/email atau password tidak valid.")).toBeVisible();
+  await expect(page.getByText("Username atau password tidak valid.")).toBeVisible();
 
-  await page.getByLabel("Username atau Email").fill(credentials.users.superAdmin.username);
+  await page.getByLabel("Username").fill(credentials.users.superAdmin.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/super-admin\/accounts$/);
@@ -77,7 +75,6 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, and audits a synthetic ac
   await page.goto("/super-admin/accounts/new");
   await page.getByLabel("Nama lengkap").fill("Akun Reuse Sintetis");
   await page.getByLabel("Username").fill(reusedUsername);
-  await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password sementara").fill(credentials.password);
   await page.getByLabel("Konfirmasi password").fill(credentials.password);
   await page.getByRole("button", { name: "Buat Akun" }).click();

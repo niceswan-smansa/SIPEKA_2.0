@@ -9,7 +9,7 @@ const credentials = () =>
 
 test("USER uses the date-driven dashboard and monthly calendar", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(credentials().users.user.username);
+  await page.getByLabel("Username").fill(credentials().users.user.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials().password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);

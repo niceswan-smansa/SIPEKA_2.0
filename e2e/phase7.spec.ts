@@ -2,13 +2,13 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-type Credentials = { password: string; users: { admin: { email: string } } };
+type Credentials = { password: string; users: { admin: { username: string } } };
 const credentials = () =>
   JSON.parse(readFileSync(resolve(".local/test-credentials.json"), "utf8")) as Credentials;
 
 test("ADMIN previews and imports a synthetic CSV all-or-none", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(credentials().users.admin.email);
+  await page.getByLabel("Username").fill(credentials().users.admin.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials().password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);

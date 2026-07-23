@@ -1,4 +1,19 @@
-# Keamanan Phase 1 dan Phase 2
+# Keamanan SIPEKA
+
+## Identity username-only
+
+Pengguna hanya login dengan username dan password. `profiles.email` dipaksa
+`NULL` oleh migration dan trigger database. Supabase Auth memakai synthetic
+email acak sebagai detail internal password provider; resolver username
+server-only mengambil identity itu lalu langsung melakukan sign-in. Identity
+synthetic tidak boleh masuk browser, audit, log, report, export, fixture
+snapshot, atau bundle. Public signup, email verification, recovery email,
+magic link, OTP, dan MFA aplikasi tidak tersedia.
+
+Reset akun dilakukan Super Admin dengan temporary password dan
+`must_change_password`. Recovery SUPER_ADMIN dilakukan developer melalui
+Supabase Dashboard atau tool server-only. Implementasi kompatibel dengan Free
+tier: password Auth/Admin API, tanpa SMTP atau fitur Auth berbayar.
 
 - `.env.example` hanya placeholder. `SUPABASE_SERVICE_ROLE_KEY` hanya dibaca module `server-only`
   dan tidak diekspor melalui barrel yang dapat masuk client bundle.
@@ -14,10 +29,9 @@
 - Seluruh mutasi akun mengembalikan result terstruktur dan hanya sukses setelah audit ACCOUNT
   berhasil. Create, update identity/role/status, reset marker, dan tombstone memakai RPC
   profile+audit atomik; create menghapus Auth user sebagai compensation bila RPC gagal.
-- Penghapusan akun memakai access tombstone pada profile dan identity Auth: email Auth menjadi
-  `deleted+<uuid>@invalid.local`, password diacak, profile username menjadi `deleted_<32 hex>`,
-  email null, dan inactive. Foreign key profile tetap dipertahankan, snapshot audit tidak hilang,
-  dan email lama dapat digunakan kembali setelah Auth update sukses.
+- Penghapusan akun memakai access tombstone pada profile dan identity Auth: identity Auth diganti
+  synthetic identity acak pada domain invalid, password diacak, profile username menjadi
+  `deleted_<32 hex>`, email null, dan inactive. Foreign key profile serta snapshot audit tetap ada.
 - Supabase Admin API membutuhkan JWT target untuk revokasi sesi. Karena portal tidak memiliki JWT
   tersebut, force logout saat ini menghasilkan `SESSION_REVOCATION_UNSUPPORTED` dan audit
   `FORCE_LOGOUT_FAILED`; UI tidak menampilkan sukses. Reset/nonaktif memakai profile guard pada

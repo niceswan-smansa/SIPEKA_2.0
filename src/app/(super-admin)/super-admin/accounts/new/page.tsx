@@ -30,9 +30,6 @@ export default async function NewAccountPage({ searchParams }: Props) {
               Huruf kecil, angka, titik, garis bawah, atau tanda hubung.
             </span>
           </FormField>
-          <FormField id="email" label="Email">
-            <Input id="email" name="email" type="email" autoComplete="email" required />
-          </FormField>
           <FormField id="role" label="Role">
             <Select id="role" name="role" defaultValue="USER">
               <option value="USER">USER</option>

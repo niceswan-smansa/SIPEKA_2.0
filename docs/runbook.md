@@ -27,8 +27,9 @@ disposable (SUPER_ADMIN, ADMIN, USER, inactive, dan must-change) dengan password
 `SIPEKA_TEST_PASSWORD` dari environment lokal. Password tidak ditulis ke source atau migration;
 credential test disimpan sementara di `.local/test-credentials.json` yang di-ignore Git.
 
-Untuk bootstrap akun Super Admin pertama, jalankan `npm run bootstrap:super-admin` dengan
-`BOOTSTRAP_SUPER_ADMIN_EMAIL`, `BOOTSTRAP_SUPER_ADMIN_PASSWORD`, dan konfigurasi Supabase lokal.
+Untuk bootstrap atau recovery Super Admin, jalankan `npm run bootstrap:super-admin` dengan
+`BOOTSTRAP_SUPER_ADMIN_USERNAME`, `BOOTSTRAP_SUPER_ADMIN_FULL_NAME`,
+`BOOTSTRAP_SUPER_ADMIN_PASSWORD`, dan konfigurasi Supabase server-only.
 Script menolak host non-lokal secara default dan tidak dapat membuat Super Admin kedua melalui
 aplikasi.
 
@@ -45,10 +46,9 @@ Jika pembuatan akun gagal setelah Auth user dibuat, service melakukan `deleteUse
 Jika compensation gagal, gunakan server-only admin service untuk cleanup; jangan menyalin password
 atau token ke tiket/commit.
 
-Penghapusan akun Phase 2 adalah tombstone akses: Auth email dianonimkan ke
-`deleted+<account-id>@invalid.local`, password diacak, `profiles.is_active=false`, username menjadi
-`deleted_<32 hex>`, dan email profile null. Auth user tidak dihapus agar FK profile dan histori tetap
-tersedia; email lama dapat dipakai kembali setelah update Auth. Audit menyimpan snapshot sebelum
+Penghapusan akun adalah tombstone akses: Auth identity diganti synthetic identity acak pada domain
+invalid, password diacak, `profiles.is_active=false`, username menjadi `deleted_<32 hex>`, dan email
+profile null. Auth user tidak dihapus agar FK profile dan histori tetap tersedia. Audit menyimpan snapshot sebelum
 perubahan, tanpa credential. Retry pada tombstone yang sudah ada idempotent.
 
 Jika Auth berhasil tetapi RPC tombstone/audit gagal, service mengembalikan `PARTIAL_OPERATION`; jangan
@@ -128,3 +128,21 @@ mengganti identitas dan tidak menghapus attendance/enrollment.
 Jika offline, hanya `/offline.html` ditampilkan. Jangan menambahkan protected route ke daftar static
 cache `public/sw.js`; tidak ada offline queue atau background sync. Setelah perubahan service worker,
 naikkan nama cache, jalankan `npm run test:pwa`, dan verifikasi response protected tetap `no-store`.
+
+# Account identity and recovery
+
+SIPEKA tidak mengirim email dan tidak menyediakan self-service recovery.
+Super Admin mereset ADMIN/USER dengan temporary password; pengguna wajib
+mengganti password. Recovery SUPER_ADMIN dilakukan developer melalui Dashboard
+Supabase atau `bootstrap:super-admin` dengan environment lokal/server-only.
+Jangan mencetak atau menyimpan synthetic Auth identity, password, token, atau
+service key.
+
+Hosted Free tier dibatasi dua project untuk staging dan production; project
+dapat dipause setelah tidak aktif. Lakukan backup terenkripsi manual, pantau
+ukuran database, dan dokumentasikan rekonsiliasi Auth/profile sebelum recovery.
+
+Akun awal yang direncanakan (tidak dibuat oleh migration atau provisioning
+repository): `kuddus` (ADMIN), `intan.admin` (ADMIN), `intan.superadmin`
+(SUPER_ADMIN), `suci` (ADMIN), dan `nabila` (ADMIN). Dua akun Intan tetap
+terpisah. Temporary password ditentukan di luar repository.

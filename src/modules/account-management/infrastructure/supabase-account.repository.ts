@@ -14,7 +14,6 @@ type ProfileRow = Pick<
   Database["public"]["Tables"]["profiles"]["Row"],
   | "id"
   | "username"
-  | "email"
   | "full_name"
   | "role"
   | "is_active"
@@ -29,7 +28,6 @@ function mapProfile(row: ProfileRow): AccountRecord {
   return {
     id: row.id,
     username: row.username,
-    email: row.email,
     fullName: row.full_name,
     role: row.role,
     isActive: row.is_active,
@@ -45,7 +43,6 @@ function mapRpcProfile(value: unknown): AccountRecord {
   return {
     id: String(row.id),
     username: String(row.username),
-    email: row.email === null ? null : String(row.email),
     fullName: String(row.full_name),
     role: row.role as AccountRecord["role"],
     isActive: Boolean(row.is_active),
@@ -65,7 +62,7 @@ export function createSupabaseAccountRepository(): AccountRepository {
       let request = client
         .from("profiles")
         .select(
-          "id, username, email, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at",
+          "id, username, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at",
           { count: "exact" },
         )
         .in("role", ["ADMIN", "USER"])
@@ -75,10 +72,7 @@ export function createSupabaseAccountRepository(): AccountRepository {
       if (query.active !== undefined) request = request.eq("is_active", query.active);
       if (query.search) {
         const safe = query.search.replace(/[(),%*_]/g, " ").trim();
-        if (safe)
-          request = request.or(
-            `full_name.ilike.%${safe}%,username.ilike.%${safe}%,email.ilike.%${safe}%`,
-          );
+        if (safe) request = request.or(`full_name.ilike.%${safe}%,username.ilike.%${safe}%`);
       }
       const { data, count, error } = await request.range(
         (page - 1) * pageSize,
@@ -96,7 +90,7 @@ export function createSupabaseAccountRepository(): AccountRepository {
       const { data, error } = await client
         .from("profiles")
         .select(
-          "id, username, email, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at",
+          "id, username, full_name, role, is_active, must_change_password, last_login_at, created_at, updated_at",
         )
         .eq("id", id)
         .maybeSingle();
@@ -105,7 +99,7 @@ export function createSupabaseAccountRepository(): AccountRepository {
     },
     async createAuthUser(input) {
       const { data, error } = await client.auth.admin.createUser({
-        email: input.email,
+        email: `sipeka-${crypto.randomUUID()}@invalid.local`,
         password: input.password,
         email_confirm: true,
         user_metadata: {},
@@ -119,8 +113,14 @@ export function createSupabaseAccountRepository(): AccountRepository {
     },
     async updateAuthUser(id, input) {
       const { error } = await client.auth.admin.updateUserById(id, {
-        ...(input.email ? { email: input.email, email_confirm: true } : {}),
         ...(input.password ? { password: input.password } : {}),
+      });
+      if (error) throw error;
+    },
+    async replaceAuthIdentity(id, identity) {
+      const { error } = await client.auth.admin.updateUserById(id, {
+        email: identity,
+        email_confirm: true,
       });
       if (error) throw error;
     },
@@ -130,7 +130,7 @@ export function createSupabaseAccountRepository(): AccountRepository {
         p_target_id: input.id,
         p_full_name: input.fullName,
         p_username: input.username,
-        p_email: input.email,
+        p_email: "",
         p_role: input.role,
         p_is_active: input.isActive,
         p_must_change_password: input.mustChangePassword,
@@ -145,7 +145,7 @@ export function createSupabaseAccountRepository(): AccountRepository {
         p_target_id: input.targetId,
         p_full_name: input.fullName,
         p_username: input.username,
-        p_email: input.email ?? "",
+        p_email: "",
         p_role: input.role,
         p_is_active: input.isActive,
         p_action: input.action,

@@ -6,7 +6,6 @@ export type ManagedRole = (typeof MANAGED_ROLES)[number];
 export type AccountRecord = {
   id: string;
   username: string;
-  email: string | null;
   fullName: string;
   role: "SUPER_ADMIN" | ManagedRole;
   isActive: boolean;
@@ -46,7 +45,6 @@ export const accountInputSchema = z.object({
     .trim()
     .toLowerCase()
     .regex(/^[a-z0-9._-]{3,40}$/),
-  email: z.string().trim().toLowerCase().email().max(254).optional().or(z.literal("")),
   role: z.enum(MANAGED_ROLES),
   password: z.string().min(12).max(128),
   confirmation: z.string().max(128),
@@ -56,7 +54,6 @@ export const accountInputSchema = z.object({
 export const accountUpdateSchema = accountInputSchema.pick({
   fullName: true,
   username: true,
-  email: true,
   role: true,
   isActive: true,
 });
@@ -101,13 +98,12 @@ export function accountSnapshot(
     | AccountRecord
     | Pick<
         AccountRecord,
-        "id" | "username" | "email" | "fullName" | "role" | "isActive" | "mustChangePassword"
+        "id" | "username" | "fullName" | "role" | "isActive" | "mustChangePassword"
       >,
 ) {
   return {
     id: account.id,
     username: account.username,
-    email: account.email,
     full_name: account.fullName,
     role: account.role,
     is_active: account.isActive,
@@ -122,13 +118,13 @@ export function assertManagedTarget(actorId: string, target: AccountRecord) {
 export interface AccountRepository {
   listAccounts(query: AccountListQuery): Promise<AccountListResult>;
   getAccount(id: string): Promise<AccountRecord | null>;
-  createAuthUser(input: { email: string; password: string }): Promise<{ id: string }>;
+  createAuthUser(input: { password: string }): Promise<{ id: string }>;
   deleteAuthUser(id: string): Promise<void>;
-  updateAuthUser(id: string, input: { email?: string; password?: string }): Promise<void>;
+  updateAuthUser(id: string, input: { password?: string }): Promise<void>;
+  replaceAuthIdentity(id: string, identity: string): Promise<void>;
   insertProfileWithAudit(input: {
     id: string;
     username: string;
-    email: string;
     fullName: string;
     role: ManagedRole;
     isActive: boolean;
@@ -141,7 +137,6 @@ export interface AccountRepository {
     targetId: string;
     fullName: string;
     username: string;
-    email: string | null;
     role: ManagedRole;
     isActive: boolean;
     action: "UPDATE" | "ROLE_CHANGE" | "ACTIVATE" | "DEACTIVATE";

@@ -5,7 +5,6 @@ import type { AccountProfile } from "@/shared/permissions";
 import { decideAccess, sanitizeRedirect } from "../domain/access";
 
 const profile: AccountProfile = {
-  email: "user.test@sipeka.test",
   fullName: "User Sintetis",
   id: "user-id",
   isActive: true,

@@ -13,7 +13,6 @@ const password = `Aa1!${"x".repeat(9)}`;
 const target: AccountRecord = {
   id: "target",
   username: "operator",
-  email: "operator@example.test",
   fullName: "Operator Sintetis",
   role: "USER",
   isActive: true,
@@ -34,7 +33,6 @@ function repository(overrides: Partial<AccountRepository> = {}): AccountReposito
       ...target,
       id: input.id,
       username: input.username,
-      email: input.email,
       fullName: input.fullName,
       role: input.role,
       isActive: input.isActive,
@@ -44,7 +42,6 @@ function repository(overrides: Partial<AccountRepository> = {}): AccountReposito
       ...target,
       fullName: input.fullName,
       username: input.username,
-      email: input.email,
       role: input.role,
       isActive: input.isActive,
     }),
@@ -52,13 +49,13 @@ function repository(overrides: Partial<AccountRepository> = {}): AccountReposito
     tombstoneProfileWithAudit: async (input) => ({
       ...target,
       username: input.tombstoneUsername,
-      email: null,
       isActive: false,
       mustChangePassword: true,
     }),
     insertAudit: async () => undefined,
     listAccountAudit: async () => ({ items: [], page: 1, pageSize: 25, total: 0 }),
     revokeSessions: async () => ({ status: "unsupported", code: "SESSION_REVOCATION_UNSUPPORTED" }),
+    replaceAuthIdentity: async () => undefined,
     ...overrides,
   };
 }
@@ -70,7 +67,6 @@ describe("account-management", () => {
       accountInputSchema.safeParse({
         fullName: "Akun",
         username: "admin",
-        email: "a@example.test",
         role: "SUPER_ADMIN",
         password,
         confirmation: password,
@@ -103,7 +99,6 @@ describe("account-management", () => {
       {
         fullName: "Akun Baru",
         username: "akun.baru",
-        email: "baru@example.test",
         role: "USER",
         password,
         confirmation: password,
@@ -128,7 +123,6 @@ describe("account-management", () => {
         {
           fullName: "Akun Baru",
           username: "akun.audit",
-          email: "audit@example.test",
           role: "USER",
           password,
           confirmation: password,
@@ -169,7 +163,6 @@ describe("account-management", () => {
           return {
             ...target,
             username: input.tombstoneUsername,
-            email: null,
             isActive: false,
             mustChangePassword: true,
           };
@@ -187,6 +180,7 @@ describe("account-management", () => {
     expect(randomizedCredential).not.toBe("");
     expect(randomizedCredential).toMatch(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])/);
     expect(JSON.stringify(audits)).not.toContain(randomizedCredential);
+    expect(JSON.stringify(audits)).not.toContain("@invalid.local");
   });
 
   it("does not claim force logout when Supabase cannot revoke without a target JWT", async () => {
@@ -221,12 +215,37 @@ describe("account-management", () => {
       {
         fullName: "Nama Baru",
         username: "operator-baru",
-        email: target.email ?? "",
         role: "USER",
         isActive: true,
       },
     );
     expect(result).toEqual({ status: "failed", code: "AUDIT_FAILURE" });
+  });
+
+  it("does not change Auth identity when username changes", async () => {
+    let authTouched = false;
+    const service = createAccountService(
+      repository({
+        updateAuthUser: async () => {
+          authTouched = true;
+        },
+        replaceAuthIdentity: async () => {
+          authTouched = true;
+        },
+      }),
+    );
+    const result = await service.updateAccount(
+      { id: "actor", fullName: "Super Admin" },
+      target.id,
+      {
+        fullName: target.fullName,
+        username: "operator.changed",
+        role: "USER",
+        isActive: true,
+      },
+    );
+    expect(result.status).toBe("success");
+    expect(authTouched).toBe(false);
   });
 
   it("does not report reset or delete success when audit-backed RPC fails", async () => {
@@ -275,7 +294,6 @@ describe("account-management", () => {
         getAccount: async () => ({
           ...target,
           username: "deleted_0123456789abcdef0123456789abcdef",
-          email: null,
           isActive: false,
           mustChangePassword: true,
         }),

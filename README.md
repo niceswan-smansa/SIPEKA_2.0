@@ -56,3 +56,9 @@ truth produk.
 Direct Data API write tetap ditolak. Mutation memakai RPC `phase3_*` dengan actor dari session,
 validasi database, dan audit OPERATIONAL dalam transaction yang sama. Editor detail siswa memakai
 engine preview/apply Phase 4 yang sama; tidak ada mutation presensi kedua.
+
+# Identity
+
+Login SIPEKA menggunakan username dan password saja. Email pengguna tidak
+disimpan atau dikirim; Supabase Auth memakai synthetic identity tersembunyi
+server-side. Tidak ada signup publik atau recovery email.

@@ -88,3 +88,10 @@ ditombstone tanpa menghapus attendance/enrollment history. Tidak ada direct Data
 `operational-audit` adalah read repository session/RLS terpisah dari account audit. PWA worker hanya
 cache manifest, logo, dan offline fallback; seluruh navigation serta protected/API response tetap
 network-only. Headers aplikasi dideklarasikan terpusat di `next.config.ts`.
+
+# Account identity boundary
+
+Username adalah identity aplikasi. Resolver server-only memetakan username ke
+synthetic Supabase Auth identity dan langsung melakukan password sign-in.
+React, browser, shared barrel, audit, serta read model account tidak menerima
+synthetic identity. Perubahan username hanya menyentuh profile/audit.

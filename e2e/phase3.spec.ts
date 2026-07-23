@@ -6,7 +6,7 @@ import { expect, test, type Page } from "@playwright/test";
 type Credentials = {
   password: string;
   users: {
-    admin: { email: string };
+    admin: { username: string };
     user: { username: string };
   };
 };
@@ -16,7 +16,7 @@ const credentials = () =>
 
 async function login(page: Page, identifier: string) {
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(identifier);
+  await page.getByLabel("Username").fill(identifier);
   await page.getByLabel("Password", { exact: true }).fill(credentials().password);
   await page.getByRole("button", { name: "Masuk" }).click();
 }
@@ -29,7 +29,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   const nisn = `E2E-N-P3-${suffix}`;
   const name = `Nabila Sintetis ${suffix}`;
 
-  await login(page, credentials().users.admin.email);
+  await login(page, credentials().users.admin.username);
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto("/manajemen-kelas");
   await expect(page.getByRole("heading", { name: "X-1", exact: true })).toBeVisible();

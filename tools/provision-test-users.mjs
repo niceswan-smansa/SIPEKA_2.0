@@ -1,8 +1,8 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { loadAdminConfiguration, upsertAuthUser } from "./lib/supabase-admin.mjs";
+import { loadAdminConfiguration } from "./lib/supabase-admin.mjs";
 
 const password = process.env.SIPEKA_TEST_PASSWORD ?? `Aa1!${randomBytes(18).toString("base64url")}`;
 const nextPassword = `Bb2!${randomBytes(18).toString("base64url")}`;
@@ -11,7 +11,6 @@ if (password.length < 12) throw new Error("SIPEKA_TEST_PASSWORD minimal 12 karak
 
 const definitions = [
   {
-    email: "phase1.super@sipeka.test",
     fullName: "Super Admin Phase 1 Sintetis",
     isActive: true,
     key: "superAdmin",
@@ -20,7 +19,6 @@ const definitions = [
     username: "phase1.super",
   },
   {
-    email: "phase1.admin@sipeka.test",
     fullName: "Admin Phase 1 Sintetis",
     isActive: true,
     key: "admin",
@@ -29,7 +27,6 @@ const definitions = [
     username: "phase1.admin",
   },
   {
-    email: "phase1.user@sipeka.test",
     fullName: "User Phase 1 Sintetis",
     isActive: true,
     key: "user",
@@ -38,7 +35,6 @@ const definitions = [
     username: "phase1.user",
   },
   {
-    email: "phase1.inactive@sipeka.test",
     fullName: "Akun Nonaktif Phase 1 Sintetis",
     isActive: false,
     key: "inactive",
@@ -47,7 +43,6 @@ const definitions = [
     username: "phase1.inactive",
   },
   {
-    email: "phase1.change@sipeka.test",
     fullName: "Akun Ganti Password Phase 1 Sintetis",
     isActive: true,
     key: "mustChange",
@@ -61,10 +56,36 @@ const { client, url } = loadAdminConfiguration();
 const credentials = { nextPassword, password, url, users: {} };
 
 for (const definition of definitions) {
-  const user = await upsertAuthUser(client, { email: definition.email, password });
+  const { data: existingProfile, error: profileLookupError } = await client
+    .from("profiles")
+    .select("id")
+    .eq("username", definition.username)
+    .maybeSingle();
+  if (profileLookupError) throw profileLookupError;
+  let user;
+  if (existingProfile) {
+    const { data, error } = await client.auth.admin.updateUserById(existingProfile.id, {
+      email_confirm: true,
+      password,
+    });
+    if (error) throw error;
+    if (!data.user || data.user.id !== existingProfile.id) {
+      throw new Error("Auth fixture update tidak menghasilkan user canonical.");
+    }
+    user = data.user;
+  } else {
+    const { data, error } = await client.auth.admin.createUser({
+      email: `fixture-${randomUUID()}@invalid.local`,
+      email_confirm: true,
+      password,
+    });
+    if (error) throw error;
+    if (!data.user) throw new Error("Auth fixture create tidak menghasilkan user.");
+    user = data.user;
+  }
   const { error } = await client.from("profiles").upsert(
     {
-      email: definition.email,
+      email: null,
       full_name: definition.fullName,
       id: user.id,
       is_active: definition.isActive,
@@ -77,7 +98,6 @@ for (const definition of definitions) {
   if (error) throw error;
 
   credentials.users[definition.key] = {
-    email: definition.email,
     id: user.id,
     username: definition.username,
   };

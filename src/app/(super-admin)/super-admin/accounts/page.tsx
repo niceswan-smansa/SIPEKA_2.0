@@ -67,7 +67,7 @@ export default async function AccountsPage({ searchParams }: Props) {
       ) : null}
       <Card className="mb-5">
         <form className="grid gap-4 md:grid-cols-[1fr_180px_180px_auto] md:items-end" method="get">
-          <FormField id="account-search" label="Cari nama, username, atau email">
+          <FormField id="account-search" label="Cari nama atau username">
             <Input id="account-search" name="search" defaultValue={params.search} />
           </FormField>
           <FormField id="account-role" label="Role">

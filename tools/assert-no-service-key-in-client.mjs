@@ -2,9 +2,12 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const clientDirectory = resolve(".next/static");
-const forbidden = ["SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY].filter(
-  Boolean,
-);
+const forbidden = [
+  "SUPABASE_SERVICE_ROLE_KEY",
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  "@invalid.local",
+  "deleted+",
+].filter(Boolean);
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -25,4 +28,4 @@ for (const file of await collectFiles(clientDirectory)) {
   }
 }
 
-console.log("Client bundle tidak mengandung service-role marker.");
+console.log("Client bundle tidak mengandung service-role atau synthetic identity marker.");

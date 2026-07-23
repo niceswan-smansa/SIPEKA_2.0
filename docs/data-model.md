@@ -33,8 +33,8 @@ Migration Phase 1 membuat `profiles`, `academic_years`, `classes`, `students`,
 `student_enrollments`, `periods`, `attendance_records`, `attendance_revisions`, `audit_logs`,
 `attendance_batches`, `import_batches`, `promotion_batches`, dan `promotion_batch_items`.
 
-`profiles.id` mereferensikan `auth.users.id`. Username dan email dinormalisasi lowercase dan
-unik. Hanya satu `academic_years.is_active` yang diperbolehkan; class number dibatasi 1–10 dan
+`profiles.id` mereferensikan `auth.users.id`. Username dinormalisasi lowercase dan unik;
+`profiles.email` selalu `NULL`. Hanya satu `academic_years.is_active` yang diperbolehkan; class number dibatasi 1–10 dan
 class `ALUMNI` dilarang. NIS/NISN unik, satu enrollment current per siswa, dan attendance unik
 berdasarkan siswa/tanggal/jam. Trigger memvalidasi grade terhadap kelas aktif serta melarang alumni
 memiliki kelas aktif. `audit_logs` memiliki trigger append-only.
@@ -104,3 +104,9 @@ Import menyimpan metadata pada `import_batches`; payload row tidak disimpan sete
 Promotion menyimpan before/after grade, class, dan enrollment pada `promotion_batch_items`, sehingga
 rollback tidak menebak aturan turun grade. `ALUMNI` tidak memiliki current class; archive hanya
 menonaktifkan siswa dan tombstone mengganti identitas menjadi label non-PII, tanpa menghapus histori.
+
+# Account identity
+
+`profiles.email` selalu `NULL`; username lowercase dan unik adalah identity
+aplikasi. Supabase Auth menyimpan synthetic identity acak secara internal untuk
+password authentication dan tidak menjadi data domain.

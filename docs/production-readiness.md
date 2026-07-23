@@ -32,7 +32,7 @@ diblokir. Counts hanya untuk diagnosis mapping dan tidak boleh ditafsirkan sebag
 
 ## UAT
 
-- Auth: email/username, password change, inactive, dan ketiga role.
+- Auth: username-only, password change, inactive, dan ketiga role.
 - Account: create/edit/reset/deactivate/tombstone/audit.
 - Academic: satu active year, 30 class slots, student create/move/status/search.
 - Attendance: mixed status/period, Semua Jam, preview/update/delete/stale/idempotency.

@@ -18,7 +18,7 @@ function SubmitButton({ children }: { children: string }) {
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   return (
     <form action={loginAction} className="grid gap-5">
-      <FormField id="identifier" label="Username atau Email">
+      <FormField id="identifier" label="Username">
         <Input id="identifier" name="identifier" autoComplete="username" required />
       </FormField>
       <FormField id="password" label="Password">

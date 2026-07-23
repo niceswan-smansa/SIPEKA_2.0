@@ -9,7 +9,6 @@ import type { AuthenticationGateway } from "../domain/authentication";
 type ProfileRow = {
   id: string;
   username: string;
-  email: string | null;
   full_name: string;
   role: AppRole;
   is_active: boolean;
@@ -18,7 +17,6 @@ type ProfileRow = {
 
 function toProfile(row: ProfileRow): AccountProfile {
   return {
-    email: row.email,
     fullName: row.full_name,
     id: row.id,
     isActive: row.is_active,
@@ -40,21 +38,22 @@ export async function createSupabaseAuthenticationGateway(): Promise<Authenticat
     async getProfile(userId) {
       const { data, error } = await serverClient
         .from("profiles")
-        .select("id, username, email, full_name, role, is_active, must_change_password")
+        .select("id, username, full_name, role, is_active, must_change_password")
         .eq("id", userId)
         .maybeSingle();
 
       return error || !data ? null : toProfile(data);
     },
-    async resolveEmail(username) {
+    async resolveAuthIdentity(username) {
       const adminClient = createAdminSupabaseClient();
       const { data, error } = await adminClient
         .from("profiles")
-        .select("email")
+        .select("id")
         .eq("username", username)
         .maybeSingle();
-
-      return error ? null : (data?.email ?? null);
+      if (error || !data) return null;
+      const auth = await adminClient.auth.admin.getUserById(data.id);
+      return auth.error ? null : (auth.data.user?.email ?? null);
     },
     async recordLogin(userId) {
       const adminClient = createAdminSupabaseClient();
@@ -63,8 +62,11 @@ export async function createSupabaseAuthenticationGateway(): Promise<Authenticat
         .update({ last_login_at: new Date().toISOString() })
         .eq("id", userId);
     },
-    async signInWithPassword(email, password) {
-      const { data, error } = await serverClient.auth.signInWithPassword({ email, password });
+    async signInWithPassword(authIdentity, password) {
+      const { data, error } = await serverClient.auth.signInWithPassword({
+        email: authIdentity,
+        password,
+      });
       return error ? null : data.user.id;
     },
     async signOut() {

@@ -9,7 +9,7 @@ test.setTimeout(60_000);
 type Credentials = {
   password: string;
   users: {
-    admin: { email: string };
+    admin: { username: string };
     user: { username: string };
     superAdmin: { username: string };
   };
@@ -21,7 +21,7 @@ const today = () =>
 
 async function login(page: Page, identifier: string) {
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(identifier);
+  await page.getByLabel("Username").fill(identifier);
   await page.getByLabel("Password", { exact: true }).fill(credentials().password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/(dashboard|super-admin\/accounts)$/);
@@ -35,7 +35,7 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   const nis = `=P6-${suffix}`;
   const nisn = `+N-P6-${suffix}`;
 
-  await login(page, credentials().users.admin.email);
+  await login(page, credentials().users.admin.username);
   await page.goto("/manajemen-siswa");
   await page.locator("#create-full-name").fill(name);
   await page.locator("#create-nis").fill(nis);

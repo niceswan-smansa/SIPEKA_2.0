@@ -111,3 +111,11 @@ dan pemeriksaan cache protected.
 Lindungi `main`, wajibkan pull request dan satu approval, larang force-push, wajibkan branch up to
 date, serta jadikan seluruh job workflow `CI` sebagai required status checks. Aktifkan secret
 scanning dan dependency update alerts pada host Git.
+
+# Username-only Auth
+
+`npm run seed:test-users` membuat fixture synthetic dengan username dan
+password disposable; `.local/test-credentials.json` tidak memuat Auth identity.
+Gunakan `npm run test:auth-probe` dan `npm run test:auth-policy` setelah reset.
+Bootstrap/recovery SUPER_ADMIN memakai environment server-only tanpa email
+pengguna.

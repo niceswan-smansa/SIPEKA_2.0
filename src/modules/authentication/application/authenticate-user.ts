@@ -16,10 +16,10 @@ export async function authenticateUser(
   }
 
   try {
-    const email = identifier.includes("@") ? identifier : await gateway.resolveEmail(identifier);
-    if (!email) return { message: GENERIC_LOGIN_ERROR, ok: false };
+    const authIdentity = await gateway.resolveAuthIdentity(identifier);
+    if (!authIdentity) return { message: GENERIC_LOGIN_ERROR, ok: false };
 
-    const userId = await gateway.signInWithPassword(email, input.password);
+    const userId = await gateway.signInWithPassword(authIdentity, input.password);
     if (!userId) return { message: GENERIC_LOGIN_ERROR, ok: false };
 
     const profile = await gateway.getProfile(userId);

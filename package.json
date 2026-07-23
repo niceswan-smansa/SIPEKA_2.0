@@ -33,6 +33,7 @@
     "db:types:check": "node tools/generate-database-types.mjs --check",
     "seed:test-users": "node tools/provision-test-users.mjs",
     "test:auth-probe": "node tools/probe-test-auth.mjs",
+    "test:auth-policy": "node tools/assert-username-auth-policy.mjs",
     "bootstrap:super-admin": "node tools/bootstrap-super-admin.mjs",
     "check": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build"
   },

@@ -13,7 +13,7 @@ export async function loadAccessContext(): Promise<AccessContext> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, email, full_name, role, is_active, must_change_password")
+    .select("id, username, full_name, role, is_active, must_change_password")
     .eq("id", data.user.id)
     .maybeSingle();
 
@@ -22,7 +22,6 @@ export async function loadAccessContext(): Promise<AccessContext> {
   return {
     authenticated: true,
     profile: {
-      email: profile.email,
       fullName: profile.full_name,
       id: profile.id,
       isActive: profile.is_active,

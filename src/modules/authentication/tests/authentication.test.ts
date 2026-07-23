@@ -8,7 +8,6 @@ import { logoutUser } from "../application/logout-user";
 import { GENERIC_LOGIN_ERROR, type AuthenticationGateway } from "../domain/authentication";
 
 const activeUser: AccountProfile = {
-  email: "user.test@sipeka.test",
   fullName: "User Sintetis",
   id: "user-id",
   isActive: true,
@@ -22,7 +21,7 @@ function createGateway(overrides: Partial<AuthenticationGateway> = {}): Authenti
     completePasswordChange: vi.fn().mockResolvedValue(true),
     getProfile: vi.fn().mockResolvedValue(activeUser),
     recordLogin: vi.fn().mockResolvedValue(undefined),
-    resolveEmail: vi.fn().mockResolvedValue(activeUser.email),
+    resolveAuthIdentity: vi.fn().mockResolvedValue("hidden-identity@invalid.local"),
     signInWithPassword: vi.fn().mockResolvedValue(activeUser.id),
     signOut: vi.fn().mockResolvedValue(undefined),
     updatePassword: vi.fn().mockResolvedValue(true),
@@ -31,17 +30,17 @@ function createGateway(overrides: Partial<AuthenticationGateway> = {}): Authenti
 }
 
 describe("authentication application service", () => {
-  it("logs in with a normalized email without username lookup", async () => {
+  it("logs in with a normalized username", async () => {
     const gateway = createGateway();
     const result = await authenticateUser(gateway, {
-      identifier: " USER.TEST@SIPEKA.TEST ",
+      identifier: " USER.TEST ",
       password: "Disposable!123",
     });
 
     expect(result).toEqual({ ok: true, profile: activeUser });
-    expect(gateway.resolveEmail).not.toHaveBeenCalled();
+    expect(gateway.resolveAuthIdentity).toHaveBeenCalledWith("user.test");
     expect(gateway.signInWithPassword).toHaveBeenCalledWith(
-      "user.test@sipeka.test",
+      "hidden-identity@invalid.local",
       "Disposable!123",
     );
   });
@@ -54,12 +53,12 @@ describe("authentication application service", () => {
     });
 
     expect(result.ok).toBe(true);
-    expect(gateway.resolveEmail).toHaveBeenCalledWith("user.test");
+    expect(gateway.resolveAuthIdentity).toHaveBeenCalledWith("user.test");
   });
 
   it("uses one generic error for missing account and wrong password", async () => {
     const missing = await authenticateUser(
-      createGateway({ resolveEmail: vi.fn().mockResolvedValue(null) }),
+      createGateway({ resolveAuthIdentity: vi.fn().mockResolvedValue(null) }),
       {
         identifier: "missing",
         password: "Disposable!123",
@@ -67,7 +66,7 @@ describe("authentication application service", () => {
     );
     const wrongPassword = await authenticateUser(
       createGateway({ signInWithPassword: vi.fn().mockResolvedValue(null) }),
-      { identifier: activeUser.email!, password: "wrong" },
+      { identifier: "user.test", password: "wrong" },
     );
 
     expect(missing).toEqual({ message: GENERIC_LOGIN_ERROR, ok: false });
@@ -80,7 +79,7 @@ describe("authentication application service", () => {
     });
 
     const result = await authenticateUser(gateway, {
-      identifier: activeUser.email!,
+      identifier: "user.test",
       password: "Disposable!123",
     });
 

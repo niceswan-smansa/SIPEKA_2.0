@@ -33,22 +33,16 @@ function failureCode(
   return fallback;
 }
 
-function isDeletedTombstone(account: {
-  username: string;
-  email: string | null;
-  isActive: boolean;
-}) {
-  return (
-    !account.isActive && account.email === null && /^deleted_[a-f0-9]{32}$/.test(account.username)
-  );
+function isDeletedTombstone(account: { username: string; isActive: boolean }) {
+  return !account.isActive && /^deleted_[a-f0-9]{32}$/.test(account.username);
 }
 
 function tombstoneUsername(id: string) {
   return `deleted_${id.replaceAll("-", "").slice(0, 32)}`;
 }
 
-function tombstoneEmail(id: string) {
-  return `deleted+${id}@invalid.local`;
+function tombstoneEmail() {
+  return `deleted+${crypto.randomUUID()}@invalid.local`;
 }
 
 export function createAccountService(repository: AccountRepository) {
@@ -66,12 +60,9 @@ export function createAccountService(repository: AccountRepository) {
       const parsed = accountInputSchema.safeParse(input);
       if (!parsed.success) throw new Error("VALIDATION");
       ensureConfirmation(parsed.data.password, parsed.data.confirmation);
-      if (!parsed.data.email) throw new Error("VALIDATION");
-
       let authUser: { id: string } | null = null;
       try {
         authUser = await repository.createAuthUser({
-          email: parsed.data.email,
           password: parsed.data.password,
         });
       } catch {
@@ -83,7 +74,6 @@ export function createAccountService(repository: AccountRepository) {
         profile = await repository.insertProfileWithAudit({
           id: authUser.id,
           username: parsed.data.username,
-          email: parsed.data.email,
           fullName: parsed.data.fullName,
           role: parsed.data.role,
           isActive: parsed.data.isActive,
@@ -113,23 +103,12 @@ export function createAccountService(repository: AccountRepository) {
       assertManagedTarget(actor.id, target);
       const parsed = accountUpdateSchema.safeParse(input);
       if (!parsed.success) throw new Error("VALIDATION");
-      const emailChanged = parsed.data.email !== (target.email ?? "");
-
-      if (emailChanged && parsed.data.email) {
-        try {
-          await repository.updateAuthUser(id, { email: parsed.data.email });
-        } catch {
-          return failure("AUTH_PROVIDER_FAILURE");
-        }
-      }
-
       try {
         const updated = await repository.updateProfileWithAudit({
           actorId: actor.id,
           targetId: id,
           fullName: parsed.data.fullName,
           username: parsed.data.username,
-          email: parsed.data.email || null,
           role: parsed.data.role as ManagedRole,
           isActive: parsed.data.isActive,
           action: target.role === parsed.data.role ? "UPDATE" : "ROLE_CHANGE",
@@ -141,15 +120,7 @@ export function createAccountService(repository: AccountRepository) {
           account: updated,
         };
       } catch (error) {
-        let compensated = true;
-        if (emailChanged && target.email) {
-          try {
-            await repository.updateAuthUser(id, { email: target.email });
-          } catch {
-            compensated = false;
-          }
-        }
-        return failure(compensated ? failureCode(error, "AUDIT_FAILURE") : "PARTIAL_OPERATION");
+        return failure(failureCode(error, "AUDIT_FAILURE"));
       }
     },
 
@@ -197,7 +168,6 @@ export function createAccountService(repository: AccountRepository) {
           targetId: id,
           fullName: target.fullName,
           username: target.username,
-          email: target.email,
           role: target.role as ManagedRole,
           isActive,
           action: isActive ? "ACTIVATE" : "DEACTIVATE",
@@ -280,11 +250,11 @@ export function createAccountService(repository: AccountRepository) {
         return { status: "success", code: "ACCOUNT_DELETED" };
       }
 
-      const anonymizedEmail = tombstoneEmail(id);
-      // Supabase password policy requires mixed character classes; the prefix also makes retries deterministic.
+      // Supabase password policy requires mixed character classes.
       const password = `Aa1!${randomBytes(32).toString("base64url")}`;
       try {
-        await repository.updateAuthUser(id, { email: anonymizedEmail, password });
+        await repository.replaceAuthIdentity(id, tombstoneEmail());
+        await repository.updateAuthUser(id, { password });
       } catch {
         return failure("AUTH_PROVIDER_FAILURE");
       }

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-type Credentials = { password: string; users: { admin: { email: string } } };
+type Credentials = { password: string; users: { admin: { username: string } } };
 const credentials = () =>
   JSON.parse(readFileSync(resolve(".local/test-credentials.json"), "utf8")) as Credentials;
 const todayJakarta = () =>
@@ -18,7 +18,7 @@ test("ADMIN previews mixed attendance and All Jam writes one record per period",
   const nisn = `E2E-N-P4-${suffix}`;
 
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(credentials().users.admin.email);
+  await page.getByLabel("Username").fill(credentials().users.admin.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials().password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);

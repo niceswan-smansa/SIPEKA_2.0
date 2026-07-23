@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-type TestUser = { email: string; username: string };
+type TestUser = { username: string };
 
 type Credentials = {
   password: string;
@@ -23,7 +23,7 @@ function loadCredentials(): Credentials {
 
 async function login(page: Page, identifier: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Username atau Email").fill(identifier);
+  await page.getByLabel("Username").fill(identifier);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Masuk" }).click();
 }
@@ -48,11 +48,11 @@ test("USER logs in with username, reads operational placeholder, and cannot muta
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test("ADMIN logs in with email and is redirected away from Super Admin portal", async ({
+test("ADMIN logs in with username and is redirected away from Super Admin portal", async ({
   page,
 }) => {
   const credentials = loadCredentials();
-  await login(page, credentials.users.admin.email, credentials.password);
+  await login(page, credentials.users.admin.username, credentials.password);
   await expect(page).toHaveURL(/\/dashboard$/);
 
   await page.goto("/super-admin/accounts");
@@ -75,17 +75,17 @@ test("login failures stay generic for missing, wrong-password, and inactive acco
 
   await login(page, "missing.account", credentials.password);
   await expect(
-    page.getByText("Username/email atau password tidak valid.", { exact: true }),
+    page.getByText("Username atau password tidak valid.", { exact: true }),
   ).toBeVisible();
 
-  await login(page, credentials.users.user.email, "Wrong!Password123");
+  await login(page, credentials.users.user.username, "Wrong!Password123");
   await expect(
-    page.getByText("Username/email atau password tidak valid.", { exact: true }),
+    page.getByText("Username atau password tidak valid.", { exact: true }),
   ).toBeVisible();
 
   await login(page, credentials.users.inactive.username, credentials.password);
   await expect(
-    page.getByText("Username/email atau password tidak valid.", { exact: true }),
+    page.getByText("Username atau password tidak valid.", { exact: true }),
   ).toBeVisible();
 });
 
@@ -106,7 +106,7 @@ test("mandatory password change blocks protected routes until completion", async
 test("external redirect target is rejected after login", async ({ page }) => {
   const credentials = loadCredentials();
   await page.goto("/login?redirectTo=https://example.test/steal");
-  await page.getByLabel("Username atau Email").fill(credentials.users.admin.email);
+  await page.getByLabel("Username").fill(credentials.users.admin.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Masuk" }).click();
 

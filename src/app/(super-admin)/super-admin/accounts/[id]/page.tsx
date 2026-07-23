@@ -67,10 +67,6 @@ export default async function AccountDetailPage({ params, searchParams }: Props)
             <p className="font-semibold">{account.username}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-slate-500">Email</p>
-            <p>{account.email ?? "Tidak diisi"}</p>
-          </div>
-          <div>
             <p className="text-xs uppercase text-slate-500">Role</p>
             <Badge>{account.role}</Badge>
           </div>
@@ -107,9 +103,6 @@ export default async function AccountDetailPage({ params, searchParams }: Props)
           </FormField>
           <FormField id="username" label="Username">
             <Input id="username" name="username" defaultValue={account.username} required />
-          </FormField>
-          <FormField id="email" label="Email">
-            <Input id="email" name="email" type="email" defaultValue={account.email ?? ""} />
           </FormField>
           <FormField id="role" label="Role">
             <Select id="role" name="role" defaultValue={account.role}>

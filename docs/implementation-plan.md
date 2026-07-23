@@ -3066,4 +3066,11 @@ Project production-ready bila:
 15. Audit operasional terpisah dari account audit.
 16. PWA online-only dengan offline blocker.
 17. Seluruh tanggal bisnis menggunakan Asia/Jakarta dan tipe PostgreSQL DATE untuk tanggal presensi.
+# Product amendment: username-only identity
+
+ADR 0010 supersedes earlier references to user email and “Username atau
+Email”. All roles login with username/password only. `profiles.email` remains
+`NULL`; a random confirmed synthetic Auth email is a server-only implementation
+detail. There is no public signup, email verification/recovery, magic link,
+email OTP, change-email, or application MFA.
 
