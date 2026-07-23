@@ -15,6 +15,7 @@ const searchSchema = z.object({
   status: z.enum(["active", "inactive", "all"]).optional(),
   yearEntered: z.coerce.number().int().min(1900).max(2200).optional(),
   page: z.coerce.number().int().min(1).max(100000).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 export type StudentSearchParams = z.infer<typeof searchSchema>;
@@ -25,6 +26,7 @@ export function parseStudentSearchParams(input: Record<string, string | undefine
 } {
   const compact = Object.fromEntries(Object.entries(input).filter(([, value]) => value !== ""));
   const params = searchSchema.parse(compact);
+
   return {
     params,
     query: {
@@ -34,7 +36,7 @@ export function parseStudentSearchParams(input: Record<string, string | undefine
       ...(params.status && params.status !== "all" ? { active: params.status === "active" } : {}),
       ...(params.yearEntered ? { yearEntered: params.yearEntered } : {}),
       page: params.page,
-      pageSize: 20,
+      pageSize: params.pageSize,
     },
   };
 }
