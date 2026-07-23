@@ -217,6 +217,8 @@ web3 = 30
 # secret = ""
 
 [auth.email]
+# Keep password sign-in available while public registration remains disabled.
+enabled = true
 # Allow/disallow new user signups via email to your project.
 enable_signup = false
 # If enabled, a user will be required to confirm any email change on both the old, and new email
