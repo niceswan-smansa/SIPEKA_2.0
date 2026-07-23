@@ -953,6 +953,7 @@ export type Database = {
         };
         Returns: Json;
       };
+      phase5_get_dashboard: { Args: { p_selected_date: string }; Returns: Json };
     };
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "USER";

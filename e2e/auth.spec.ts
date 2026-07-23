@@ -40,7 +40,7 @@ test("USER logs in with username, reads operational placeholder, and cannot muta
   await login(page, credentials.users.user.username, credentials.password);
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText("Guard aktif untuk akun USER")).toBeVisible();
+  await expect(page.getByText("Siswa Tidak Hadir", { exact: true })).toBeVisible();
   const response = await page.request.post("/api/test/mutation");
   expect(response.status()).toBe(403);
 

@@ -281,7 +281,8 @@ export function createAccountService(repository: AccountRepository) {
       }
 
       const anonymizedEmail = tombstoneEmail(id);
-      const password = randomBytes(32).toString("base64url");
+      // Supabase password policy requires mixed character classes; the prefix also makes retries deterministic.
+      const password = `Aa1!${randomBytes(32).toString("base64url")}`;
       try {
         await repository.updateAuthUser(id, { email: anonymizedEmail, password });
       } catch {

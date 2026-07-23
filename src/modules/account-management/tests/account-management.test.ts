@@ -185,6 +185,7 @@ describe("account-management", () => {
     await service.deleteAccount({ id: "actor", fullName: "Super Admin" }, target.id);
     expect(updates[0]).toMatchObject({ tombstoneUsername: expect.stringMatching(/^deleted_/) });
     expect(randomizedCredential).not.toBe("");
+    expect(randomizedCredential).toMatch(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])/);
     expect(JSON.stringify(audits)).not.toContain(randomizedCredential);
   });
 

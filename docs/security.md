@@ -95,3 +95,10 @@ RPC preview/apply memanggil helper ADMIN aktif berdasarkan `auth.uid()`, memakai
 tidak dapat dipakai actor/scope/payload lain, kadaluarsa setelah sepuluh menit, sekali pakai, dan
 ditolak bila snapshot attendance berubah. Direct table mutation, revision write, token-table read,
 serta audit write tetap tidak tersedia bagi client.
+
+## Phase 5 dashboard
+
+Dashboard tidak mempunyai jalur mutation. Query statistik diberikan hanya kepada role runtime
+`authenticated`, tetap memeriksa profile aktif dan role operasional dari database, menggunakan RLS
+session biasa, dan menolak `SUPER_ADMIN` serta anonymous. Service role tidak digunakan untuk read
+dashboard.

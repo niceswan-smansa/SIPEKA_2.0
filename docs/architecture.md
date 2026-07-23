@@ -55,3 +55,10 @@ token pada actor, kelas, tanggal, payload canonical, snapshot database, expiry, 
 Apply mengunci scope kelas/tanggal, membaca ulang snapshot, lalu menulis attendance, revision, batch,
 dan audit dalam satu transaction. React hanya mengelola draft; diff serta summary authoritative tetap
 berasal dari PostgreSQL.
+
+## Phase 5 dashboard read model
+
+Dashboard memakai satu RPC `SECURITY INVOKER` untuk menghasilkan summary serta seri harian,
+mingguan, dan bulanan berdasarkan tanggal terpilih. RPC menggunakan session/RLS operasional dan
+agregasi `count(distinct student_id)`; komponen grafik hanya menerima read model dan menyediakan
+tabel alternatif yang dapat dibaca tanpa visualisasi.
