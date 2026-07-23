@@ -1,11 +1,22 @@
-const CACHE = "sipeka-static-v1";
+const CACHE = "sipeka-static-v2";
 const STATIC = ["/offline.html", "/manifest.webmanifest", "/assets/smansa-logo.webp"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC)));
   self.skipWaiting();
 });
-self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener("activate", (event) =>
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((key) => key.startsWith("sipeka-") && key !== CACHE).map(caches.delete),
+        ),
+      )
+      .then(() => self.clients.claim()),
+  ),
+);
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;

@@ -4,6 +4,7 @@ import {
   createSupabaseOperationalAuditRepository,
 } from "@/modules/operational-audit";
 import { Card, EmptyState, Input, PageHeader, Pagination } from "@/shared/ui";
+import { formatJakartaDateTime } from "@/shared/domain/dates";
 
 export default async function OperationalAuditPage({
   searchParams,
@@ -16,6 +17,12 @@ export default async function OperationalAuditPage({
     createSupabaseOperationalAuditRepository(),
   ).list(params);
   const page = Number(params.page ?? 1);
+  const makeHref = (nextPage: number) => {
+    const query = new URLSearchParams({ page: String(nextPage) });
+    if (params.search) query.set("search", params.search);
+    if (params.action) query.set("action", params.action);
+    return `/riwayat-aktivitas?${query}`;
+  };
   return (
     <>
       <PageHeader
@@ -38,9 +45,7 @@ export default async function OperationalAuditPage({
           <Card key={item.id}>
             <div className="flex flex-wrap justify-between gap-2 text-sm">
               <span className="font-semibold">{item.action}</span>
-              <time dateTime={item.createdAt}>
-                {new Date(item.createdAt).toLocaleString("id-ID")}
-              </time>
+              <time dateTime={item.createdAt}>{formatJakartaDateTime(item.createdAt)}</time>
             </div>
             <p className="mt-2 text-sm">
               {item.actor} · {item.entityType} · {item.entityId ?? "—"}
@@ -58,7 +63,12 @@ export default async function OperationalAuditPage({
           </Card>
         ))}
       </div>
-      <Pagination page={page} totalPages={Math.max(1, Math.ceil(result.total / 20))} />
+      <Pagination
+        page={page}
+        totalPages={Math.max(1, Math.ceil(result.total / 20))}
+        {...(page > 1 ? { previousHref: makeHref(page - 1) } : {})}
+        {...(page * 20 < result.total ? { nextHref: makeHref(page + 1) } : {})}
+      />
     </>
   );
 }

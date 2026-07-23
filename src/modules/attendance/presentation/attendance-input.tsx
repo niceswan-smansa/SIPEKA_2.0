@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { Alert, Badge, Button, Card, Checkbox, FormField, Input, Select } from "@/shared/ui";
 
@@ -15,6 +16,7 @@ import {
 import { applyAttendanceAction, previewAttendanceAction } from "./actions";
 
 type Draft = Record<number, { status: AttendanceStatus; note: string } | null>;
+type Message = { tone: "success" | "error" | "info"; text: string };
 
 function initialDraft(student: AttendanceStudent): Draft {
   const result: Draft = {};
@@ -29,6 +31,7 @@ function label(status: AttendanceStatus) {
 }
 
 export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
+  const router = useRouter();
   const items = initial.items;
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
     Object.fromEntries(initial.items.map((student) => [student.id, initialDraft(student)])),
@@ -38,7 +41,7 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
   const [bulkStatus, setBulkStatus] = useState<AttendanceStatus>("IZIN");
   const [bulkPeriod, setBulkPeriod] = useState("all");
   const [preview, setPreview] = useState<AttendancePreview | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   const [pending, startTransition] = useTransition();
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -47,14 +50,15 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
       `${item.fullName} ${item.nis} ${item.nisn}`.toLowerCase().includes(needle),
     );
   }, [items, search]);
-
   const updateDraft = (studentId: string, period: number, value: Draft[number]) => {
+    setPreview(null);
     setDrafts((current) => ({
       ...current,
       [studentId]: { ...current[studentId], [period]: value },
     }));
   };
   const applyBulk = () => {
+    setPreview(null);
     const periods =
       bulkPeriod === "all" ? Array.from({ length: 10 }, (_, i) => i + 1) : [Number(bulkPeriod)];
     setDrafts((current) => {
@@ -68,6 +72,7 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
     });
   };
   const clearBulk = () => {
+    setPreview(null);
     const periods =
       bulkPeriod === "all" ? Array.from({ length: 10 }, (_, i) => i + 1) : [Number(bulkPeriod)];
     setDrafts((current) => {
@@ -92,8 +97,8 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
       try {
         const result = await previewAttendanceAction(payload());
         setPreview(result);
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Preview presensi gagal.");
+      } catch {
+        setMessage({ tone: "error", text: "Preview presensi belum dapat dibuat." });
       }
     });
   };
@@ -102,26 +107,45 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
     startTransition(async () => {
       try {
         const result = await applyAttendanceAction(payload(), preview.token);
-        setMessage(
-          `Presensi berhasil disimpan. Data baru: ${result.new}, diperbarui: ${result.update}, dihapus: ${result.delete}.`,
-        );
+        setMessage({
+          tone: "success",
+          text: `Presensi berhasil disimpan. Data baru: ${result.new}, diperbarui: ${result.update}, dihapus: ${result.delete}.`,
+        });
         setPreview(null);
+        router.refresh();
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Penyimpanan presensi gagal.");
+        const code = error instanceof Error ? error.message : "";
+        setMessage({
+          tone: code.includes("STALE")
+            ? "info"
+            : code.includes("TOKEN_USED") || code.includes("TOKEN_EXPIRED")
+              ? "info"
+              : "error",
+          text: code.includes("STALE")
+            ? "Data telah berubah. Buat preview baru sebelum menyimpan."
+            : code.includes("TOKEN_USED")
+              ? "Preview ini sudah digunakan. Buat preview baru."
+              : code.includes("TOKEN_EXPIRED")
+                ? "Preview telah kedaluwarsa. Buat preview baru."
+                : "Penyimpanan presensi belum dapat diselesaikan.",
+        });
       }
     });
   };
 
   return (
     <div className="grid gap-5">
-      {message ? <Alert tone="error">{message}</Alert> : null}
+      {message ? <Alert tone={message.tone}>{message.text}</Alert> : null}
       <Card>
         <div className="flex flex-wrap items-end gap-3">
           <FormField id="attendance-search" label="Cari siswa">
             <Input
               id="attendance-search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPreview(null);
+              }}
               placeholder="Nama, NIS, atau NISN"
             />
           </FormField>
@@ -250,8 +274,10 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
               <Input
                 aria-label={`Catatan ${student.fullName}`}
                 placeholder="Catatan"
+                maxLength={500}
                 value={Object.values(drafts[student.id] ?? {}).find(Boolean)?.note ?? ""}
                 onChange={(event) => {
+                  setPreview(null);
                   const next = { ...(drafts[student.id] ?? {}) };
                   for (const period of Object.keys(next))
                     if (next[Number(period)])

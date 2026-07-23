@@ -167,6 +167,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
         <Card className="mt-5">
           <h2 className="mb-4 text-lg font-bold">Koreksi beberapa jam</h2>
           <StudentAttendanceEditor
+            key={attendance.periods.map((period) => `${period.id}:${period.updatedAt}`).join("|")}
             studentId={student.id}
             classId={selectedClassId}
             attendanceDate={selectedDate}

@@ -36,6 +36,7 @@ export function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
       <Input {...props} type={visible ? "text" : "password"} className="pr-16" />
       <button
         type="button"
+        aria-pressed={visible}
         aria-label={visible ? "Sembunyikan password" : "Tampilkan password"}
         onClick={() => setVisible((value) => !value)}
         className="absolute inset-y-0 right-2 px-2 text-xs font-semibold text-slate-600"
@@ -144,8 +145,13 @@ export function Dialog({
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    if (open) dialogRef.current?.focus();
+    if (open) {
+      returnFocusRef.current = document.activeElement as HTMLElement | null;
+      dialogRef.current?.focus();
+      return () => returnFocusRef.current?.focus();
+    }
   }, [open]);
   if (!open) return null;
   return (
@@ -156,6 +162,9 @@ export function Dialog({
       aria-label={title}
       onKeyDown={(event) => {
         if (event.key === "Escape") onClose();
+      }}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
       }}
     >
       <div
@@ -305,7 +314,7 @@ export function Toast({
   return (
     <div
       className={`fixed bottom-4 right-4 z-40 rounded-lg px-4 py-3 text-sm text-white shadow-lg ${tone === "success" ? "bg-emerald-700" : "bg-red-700"}`}
-      role="status"
+      role={tone === "error" ? "alert" : "status"}
     >
       {children}
     </div>

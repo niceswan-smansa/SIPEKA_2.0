@@ -69,7 +69,12 @@ export default async function AttendanceInputPage({ searchParams }: Props) {
       {!selectedClass || !initial ? (
         <Alert tone="info">Belum ada kelas aktif pada tahun ajaran aktif.</Alert>
       ) : (
-        <AttendanceInput initial={initial} />
+        <AttendanceInput
+          key={initial.items
+            .flatMap((student) => student.attendance.map((item) => `${item.id}:${item.version}`))
+            .join("|")}
+          initial={initial}
+        />
       )}
     </>
   );

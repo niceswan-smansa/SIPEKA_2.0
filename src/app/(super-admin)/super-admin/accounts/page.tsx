@@ -17,6 +17,7 @@ import {
   Select,
   Table,
 } from "@/shared/ui";
+import { formatJakartaDateTime } from "@/shared/domain/dates";
 
 type Props = {
   searchParams: Promise<{
@@ -41,8 +42,13 @@ export default async function AccountsPage({ searchParams }: Props) {
       : {}),
   });
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
-  const makeHref = (nextPage: number) =>
-    `/super-admin/accounts?page=${nextPage}${params.search ? `&search=${encodeURIComponent(params.search)}` : ""}`;
+  const makeHref = (nextPage: number) => {
+    const query = new URLSearchParams({ page: String(nextPage) });
+    if (params.search) query.set("search", params.search);
+    if (params.role) query.set("role", params.role);
+    if (params.active) query.set("active", params.active);
+    return `/super-admin/accounts?${query}`;
+  };
   return (
     <>
       <PageHeader
@@ -117,7 +123,7 @@ export default async function AccountsPage({ searchParams }: Props) {
                   </td>
                   <td className="p-3 text-slate-600">
                     {account.lastLoginAt
-                      ? new Date(account.lastLoginAt).toLocaleString("id-ID")
+                      ? formatJakartaDateTime(account.lastLoginAt)
                       : "Belum tercatat"}
                   </td>
                   <td className="p-3 text-right">

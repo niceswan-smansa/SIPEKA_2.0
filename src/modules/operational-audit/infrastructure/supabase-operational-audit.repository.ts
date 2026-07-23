@@ -4,6 +4,17 @@ import { createServerSupabaseClient } from "@/infrastructure/supabase/server";
 
 import type { OperationalAuditRepository } from "../domain/operational-audit";
 
+const sensitiveStudentKeys = new Set(["nis", "nisn", "full_name", "normalized_name"]);
+function sanitize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitize);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([key, nested]) =>
+      sensitiveStudentKeys.has(key) ? [] : [[key, sanitize(nested)]],
+    ),
+  );
+}
+
 export function createSupabaseOperationalAuditRepository(): OperationalAuditRepository {
   return {
     async list(filter) {
@@ -21,9 +32,7 @@ export function createSupabaseOperationalAuditRepository(): OperationalAuditRepo
       if (filter.action) query = query.ilike("action", `%${filter.action}%`);
       if (filter.search) {
         const escaped = filter.search.replace(/[%_]/g, "\\$&");
-        query = query.or(
-          `actor_name_snapshot.ilike.%${escaped}%,entity_type.ilike.%${escaped}%,entity_id.ilike.%${escaped}%`,
-        );
+        query = query.ilike("actor_name_snapshot", `%${escaped}%`);
       }
       const { data, count, error } = await query;
       if (error) throw error;
@@ -36,9 +45,9 @@ export function createSupabaseOperationalAuditRepository(): OperationalAuditRepo
           action: row.action,
           entityType: row.entity_type,
           entityId: row.entity_id,
-          beforeData: row.before_data,
-          afterData: row.after_data,
-          metadata: row.metadata,
+          beforeData: sanitize(row.before_data),
+          afterData: sanitize(row.after_data),
+          metadata: sanitize(row.metadata),
         })),
       };
     },

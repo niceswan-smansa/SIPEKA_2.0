@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   applyAttendanceAction,
@@ -15,6 +16,7 @@ import { Alert, Button, FormField, Input, Select } from "@/shared/ui";
 import type { StudentPeriodAttendance } from "../domain/student-attendance";
 
 type Draft = Record<number, { status: AttendanceStatus; note: string } | null>;
+type Message = { tone: "success" | "error" | "info"; text: string };
 const labels: Record<AttendanceStatus, string> = {
   IZIN: "Izin",
   SAKIT: "Sakit",
@@ -32,13 +34,14 @@ export function StudentAttendanceEditor({
   attendanceDate: string;
   periods: StudentPeriodAttendance[];
 }) {
+  const router = useRouter();
   const [draft, setDraft] = useState<Draft>(() =>
     Object.fromEntries(
       periods.map((item) => [item.periodNumber, { status: item.status, note: item.note ?? "" }]),
     ),
   );
   const [preview, setPreview] = useState<AttendancePreview | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   const [pending, startTransition] = useTransition();
   const existing = periods.map((item) => ({
     id: item.id,
@@ -58,7 +61,7 @@ export function StudentAttendanceEditor({
         setMessage(null);
         setPreview(await previewAttendanceAction(payload()));
       } catch {
-        setMessage("Preview koreksi presensi gagal.");
+        setMessage({ tone: "error", text: "Preview koreksi presensi belum dapat dibuat." });
       }
     });
   const applyNow = () =>
@@ -67,20 +70,24 @@ export function StudentAttendanceEditor({
       try {
         const result = await applyAttendanceAction(payload(), preview.token);
         setPreview(null);
-        setMessage(
-          `Koreksi tersimpan: ${result.new} baru, ${result.update} diperbarui, ${result.delete} dihapus.`,
-        );
-      } catch {
-        setMessage("Koreksi presensi gagal atau data sudah berubah.");
+        setMessage({
+          tone: "success",
+          text: `Koreksi tersimpan: ${result.new} baru, ${result.update} diperbarui, ${result.delete} dihapus.`,
+        });
+        router.refresh();
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "";
+        setMessage({
+          tone: code.includes("STALE") ? "info" : "error",
+          text: code.includes("STALE")
+            ? "Data telah berubah. Buat preview baru."
+            : "Koreksi presensi belum dapat diselesaikan.",
+        });
       }
     });
   return (
     <div className="grid gap-3">
-      {message ? (
-        <Alert tone={message.startsWith("Koreksi tersimpan") ? "success" : "error"}>
-          {message}
-        </Alert>
-      ) : null}
+      {message ? <Alert tone={message.tone}>{message.text}</Alert> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         {Array.from({ length: 10 }, (_, index) => {
           const period = index + 1;
@@ -92,7 +99,8 @@ export function StudentAttendanceEditor({
                 <Select
                   id={`student-period-${period}`}
                   value={value?.status ?? ""}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    setPreview(null);
                     setDraft((current) => ({
                       ...current,
                       [period]: event.target.value
@@ -101,8 +109,8 @@ export function StudentAttendanceEditor({
                             note: value?.note ?? "",
                           }
                         : null,
-                    }))
-                  }
+                    }));
+                  }}
                 >
                   <option value="">Hadir (tanpa record)</option>
                   {ATTENDANCE_STATUSES.map((status) => (
@@ -116,13 +124,15 @@ export function StudentAttendanceEditor({
                 <FormField id={`student-note-${period}`} label="Catatan" className="mt-2">
                   <Input
                     id={`student-note-${period}`}
+                    maxLength={500}
                     value={value.note}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      setPreview(null);
                       setDraft((current) => ({
                         ...current,
                         [period]: { ...value, note: event.target.value },
-                      }))
-                    }
+                      }));
+                    }}
                   />
                 </FormField>
               ) : null}
