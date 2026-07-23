@@ -6,7 +6,9 @@ const local = loadLocalSupabaseEnvironment();
 const child = spawn("next", ["dev"], {
   env: {
     ...process.env,
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local.PUBLISHABLE_KEY ?? local.ANON_KEY,
+    // GoTrue's local compatibility path is most stable with the JWT anon key.
+    // Hosted environments continue to use the configured publishable key.
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: local.ANON_KEY ?? local.PUBLISHABLE_KEY,
     NEXT_PUBLIC_SUPABASE_URL: local.API_URL,
     SUPABASE_SERVICE_ROLE_KEY: local.SECRET_KEY ?? local.SERVICE_ROLE_KEY,
   },
