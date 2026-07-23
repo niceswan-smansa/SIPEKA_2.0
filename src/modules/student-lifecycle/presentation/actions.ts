@@ -11,6 +11,10 @@ import { createSupabaseStudentLifecycleRepository } from "../infrastructure/supa
 const text = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : "");
 const service = () => createStudentLifecycleService(createSupabaseStudentLifecycleRepository());
 
+function rethrowRedirect(error: unknown) {
+  if (error && typeof error === "object" && "digest" in error) throw error;
+}
+
 export async function importStudentsAction(formData: FormData) {
   await requirePageAccess("ADMIN_MUTATION");
   try {
@@ -23,7 +27,7 @@ export async function importStudentsAction(formData: FormData) {
     });
     redirect(`/import-siswa?success=${created}`);
   } catch (error) {
-    if (error && typeof error === "object" && "digest" in error) throw error;
+    rethrowRedirect(error);
     redirect("/import-siswa?error=IMPORT_FAILED");
   }
 }
@@ -35,7 +39,7 @@ export async function promoteStudentsAction(formData: FormData) {
     revalidatePath("/");
     redirect(`/naik-turun-grade?success=${count}`);
   } catch (error) {
-    if (error && typeof error === "object" && "digest" in error) throw error;
+    rethrowRedirect(error);
     redirect("/naik-turun-grade?error=PROMOTION_FAILED");
   }
 }
@@ -47,7 +51,7 @@ export async function previewPromotionAction(formData: FormData) {
     await service().previewPromotion(academicYearId);
     redirect(`/naik-turun-grade?preview=${encodeURIComponent(academicYearId)}`);
   } catch (error) {
-    if (error && typeof error === "object" && "digest" in error) throw error;
+    rethrowRedirect(error);
     redirect("/naik-turun-grade?error=PREVIEW_FAILED");
   }
 }
@@ -59,19 +63,31 @@ export async function rollbackPromotionAction(formData: FormData) {
     revalidatePath("/");
     redirect(`/naik-turun-grade?rollback=${count}`);
   } catch (error) {
-    if (error && typeof error === "object" && "digest" in error) throw error;
+    rethrowRedirect(error);
     redirect("/naik-turun-grade?error=ROLLBACK_FAILED");
   }
 }
 
 export async function archiveAlumniAction(formData: FormData) {
   await requirePageAccess("ADMIN_MUTATION");
-  await service().archive(text(formData.get("studentId")));
-  revalidatePath("/alumni");
+  try {
+    await service().archive(text(formData.get("studentId")));
+    revalidatePath("/alumni");
+    redirect("/alumni?success=archived");
+  } catch (error) {
+    rethrowRedirect(error);
+    redirect("/alumni?error=archive");
+  }
 }
 
 export async function tombstoneAlumniAction(formData: FormData) {
   await requirePageAccess("ADMIN_MUTATION");
-  await service().tombstone(text(formData.get("studentId")));
-  revalidatePath("/alumni");
+  try {
+    await service().tombstone(text(formData.get("studentId")));
+    revalidatePath("/alumni");
+    redirect("/alumni?success=tombstoned");
+  } catch (error) {
+    rethrowRedirect(error);
+    redirect("/alumni?error=tombstone");
+  }
 }
