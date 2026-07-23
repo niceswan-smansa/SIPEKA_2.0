@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 import { defaultPathForRole, requirePageAccess, sanitizeRedirect } from "@/modules/authorization";
@@ -9,6 +10,7 @@ import { authenticateUser } from "../application/authenticate-user";
 import { changePassword } from "../application/change-password";
 import { logoutUser } from "../application/logout-user";
 import { createSupabaseAuthenticationGateway } from "../infrastructure/supabase-authentication.gateway";
+import { allowRateLimited } from "@/shared/security/rate-limit";
 
 const loginSchema = z.object({
   identifier: z.string().trim().min(1).max(254),
@@ -29,6 +31,15 @@ export async function loginAction(formData: FormData) {
   });
 
   if (!parsed.success) redirect("/login?error=invalid");
+  const requestHeaders = await headers();
+  const address = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const accountKey = parsed.data.identifier.trim().toLowerCase();
+  if (
+    !allowRateLimited(`login-address:${address}`, 50) ||
+    !allowRateLimited(`login-account:${address}:${accountKey}`)
+  ) {
+    redirect("/login?error=invalid");
+  }
 
   const result = await authenticateUser(await createSupabaseAuthenticationGateway(), parsed.data);
   if (!result.ok) redirect("/login?error=invalid");

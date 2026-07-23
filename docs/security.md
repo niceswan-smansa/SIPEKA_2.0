@@ -122,3 +122,10 @@ NIS/NISN sebelum RPC. RPC mengulang validasi pada server dan rollback seluruh si
 satu row atau audit gagal. Promotion/rollback/archive/tombstone hanya ADMIN aktif melalui
 `SECURITY DEFINER` RPC dan actor berasal dari `auth.uid()`. Tombstone alumni tidak menghapus attendance,
 enrollment, atau audit; direct batch/table writes tetap ditolak.
+
+## Phase 8 hardening
+
+Protected route memakai `private, no-store`. CSP melarang framing, production mengaktifkan HSTS, dan
+nosniff/referrer/permissions headers berlaku global. Login rate limit memakai address server dan
+identifier canonical; deployment multi-instance harus memakai edge/distributed store. Service worker
+tidak cache HTML protected, API, siswa, attendance, account, audit, report, atau export.

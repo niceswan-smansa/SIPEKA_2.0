@@ -1,0 +1,22 @@
+{
+  "name": "SIPEKA — Sistem Presensi SMANSA Pamekasan",
+  "short_name": "SIPEKA",
+  "description": "Sistem Presensi SMANSA Pamekasan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f4c81",
+  "icons": [
+    {
+      "src": "/assets/smansa-logo.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "/dashboard" },
+    { "name": "Cari Siswa", "url": "/siswa" },
+    { "name": "Input Presensi", "url": "/presensi/input" }
+  ]
+}

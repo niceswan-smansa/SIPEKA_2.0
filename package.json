@@ -23,6 +23,7 @@
     "test:e2e": "npm run db:reset && npm run seed:test-users && playwright test",
     "test:bundle": "node tools/assert-no-service-key-in-client.mjs",
     "test:assets": "node tools/assert-assets.mjs",
+    "test:pwa": "node tools/assert-pwa.mjs",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",

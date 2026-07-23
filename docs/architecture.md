@@ -82,3 +82,9 @@ mencatat audit summary, dan mengirim response `private, no-store`.
 satu transaksi. Promotion menyimpan snapshot di `promotion_batches`/`promotion_batch_items`;
 rollback hanya mengembalikan snapshot bila state saat ini masih cocok. Alumni diarsipkan atau
 ditombstone tanpa menghapus attendance/enrollment history. Tidak ada direct Data API write.
+
+## Phase 8 audit dan online-only shell
+
+`operational-audit` adalah read repository session/RLS terpisah dari account audit. PWA worker hanya
+cache manifest, logo, dan offline fallback; seluruh navigation serta protected/API response tetap
+network-only. Headers aplikasi dideklarasikan terpusat di `next.config.ts`.

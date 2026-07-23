@@ -225,6 +225,8 @@ export function ConfirmDialog({
     </Dialog>
   );
 }
+
+export { PwaRegister } from "./pwa-register";
 export function DropdownMenu({ label, children }: { label: string; children: ReactNode }) {
   return (
     <details className="relative">

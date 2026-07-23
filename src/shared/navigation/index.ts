@@ -16,7 +16,7 @@ const OPERATIONAL: NavigationItem[] = [
   { label: "Naik/Turun Grade", href: "/naik-turun-grade", available: true },
   { label: "Alumni", href: "/alumni", available: true },
   { label: "Laporan", href: "/reports", available: false, readOnly: true },
-  { label: "Riwayat Aktivitas", href: "/activity", available: false },
+  { label: "Riwayat Aktivitas", href: "/riwayat-aktivitas", available: true },
   { label: "Profil", href: "/profile", available: false },
 ];
 

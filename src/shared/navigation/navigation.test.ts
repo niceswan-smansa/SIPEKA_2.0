@@ -29,6 +29,7 @@ describe("role-aware navigation", () => {
       "/import-siswa",
       "/naik-turun-grade",
       "/alumni",
+      "/riwayat-aktivitas",
     ]);
   });
 });

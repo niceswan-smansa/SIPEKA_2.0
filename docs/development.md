@@ -100,6 +100,12 @@ rollback snapshot. `/alumni` mempertahankan histori; archive/tombstone adalah op
 RPC catalog: `phase7_import_students`, `phase7_promote_academic_year`,
 `phase7_rollback_promotion`, `phase7_archive_alumni`, dan `phase7_tombstone_alumni`.
 
+## Phase 8 checks
+
+`npm run test:pwa` memeriksa manifest, icon, dan offline fallback. `/riwayat-aktivitas` hanya ADMIN
+dan memakai RLS scope OPERATIONAL. Perubahan header/PWA wajib menjalankan build, E2E, bundle scan,
+dan pemeriksaan cache protected.
+
 ## Branch protection yang disarankan
 
 Lindungi `main`, wajibkan pull request dan satu approval, larang force-push, wajibkan branch up to

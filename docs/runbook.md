@@ -122,3 +122,9 @@ invalid/duplicate harus dibatalkan; RPC menjamin zero rows bila transaction gaga
 mengaktifkan tahun tujuan bersama perpindahan current enrollment dan menyimpan snapshot. Rollback
 ditolak bila siswa berubah setelah batch. Alumni archive mempertahankan histori; tombstone hanya
 mengganti identitas dan tidak menghapus attendance/enrollment.
+
+## PWA dan cache
+
+Jika offline, hanya `/offline.html` ditampilkan. Jangan menambahkan protected route ke daftar static
+cache `public/sw.js`; tidak ada offline queue atau background sync. Setelah perubahan service worker,
+naikkan nama cache, jalankan `npm run test:pwa`, dan verifikasi response protected tetap `no-store`.
