@@ -3,6 +3,7 @@ import {
   createSupabaseAccountRepository,
 } from "@/modules/account-management";
 import { requirePageAccess } from "@/modules/authorization";
+import { formatJakartaDateTime } from "@/shared/domain/dates";
 import {
   Card,
   EmptyState,
@@ -15,8 +16,10 @@ import {
 } from "@/shared/ui";
 
 type Props = { searchParams: Promise<{ page?: string; action?: string; search?: string }> };
+
 export default async function AccountAuditPage({ searchParams }: Props) {
   await requirePageAccess("SUPER_ADMIN");
+
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
   const result = await createAccountService(createSupabaseAccountRepository()).listAccountAudit({
@@ -25,19 +28,27 @@ export default async function AccountAuditPage({ searchParams }: Props) {
     ...(params.search ? { search: params.search } : {}),
   });
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
-  const makeHref = (nextPage: number) =>
-    `/super-admin/account-audit?page=${nextPage}${params.action ? `&action=${params.action}` : ""}${params.search ? `&search=${encodeURIComponent(params.search)}` : ""}`;
+
+  const makeHref = (nextPage: number) => {
+    const query = new URLSearchParams({ page: String(nextPage) });
+    if (params.action) query.set("action", params.action);
+    if (params.search) query.set("search", params.search);
+    return `/super-admin/account-audit?${query}`;
+  };
+
   return (
     <>
       <PageHeader
         title="Riwayat Akun"
         description="Audit ACCOUNT bersifat append-only dan hanya terlihat oleh SUPER_ADMIN."
       />
+
       <Card className="mb-5">
         <form className="grid gap-4 md:grid-cols-[1fr_220px_auto] md:items-end" method="get">
           <FormField id="audit-search" label="Cari actor atau target">
             <Input id="audit-search" name="search" defaultValue={params.search} />
           </FormField>
+
           <FormField id="audit-action" label="Tindakan">
             <Select id="audit-action" name="action" defaultValue={params.action ?? ""}>
               <option value="">Semua tindakan</option>
@@ -60,6 +71,7 @@ export default async function AccountAuditPage({ searchParams }: Props) {
               ))}
             </Select>
           </FormField>
+
           <button
             className="min-h-10 rounded-lg bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white"
             type="submit"
@@ -68,6 +80,7 @@ export default async function AccountAuditPage({ searchParams }: Props) {
           </button>
         </form>
       </Card>
+
       {result.items.length === 0 ? (
         <EmptyState>Belum ada riwayat akun.</EmptyState>
       ) : (
@@ -87,7 +100,7 @@ export default async function AccountAuditPage({ searchParams }: Props) {
             <tbody>
               {result.items.map((entry) => (
                 <tr key={entry.id} className="border-b border-slate-100">
-                  <td className="p-3">{new Date(entry.createdAt).toLocaleString("id-ID")}</td>
+                  <td className="p-3">{formatJakartaDateTime(entry.createdAt)}</td>
                   <td className="p-3">{entry.actorName}</td>
                   <td className="p-3 font-semibold">{entry.action}</td>
                   <td className="p-3 font-mono text-xs">{entry.entityId ?? "—"}</td>
@@ -107,6 +120,7 @@ export default async function AccountAuditPage({ searchParams }: Props) {
               ))}
             </tbody>
           </Table>
+
           <div className="mt-5">
             <Pagination
               page={result.page}
