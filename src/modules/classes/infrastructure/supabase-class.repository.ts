@@ -1,52 +1,45 @@
 import "server-only";
 
 import { createServerSupabaseClient } from "@/infrastructure/supabase/server";
+import { z } from "zod";
 
 import type { ClassRecord, ClassRepository, OperationalGrade } from "../domain/classes";
+
+const classRowsSchema = z.array(
+  z.object({
+    id: z.uuid(),
+    academic_year_id: z.uuid(),
+    academic_year_name: z.string(),
+    academic_year_active: z.boolean(),
+    grade: z.enum(["X", "XI", "XII"]),
+    class_number: z.number().int().min(1).max(10),
+    homeroom_teacher: z.string().nullable(),
+    notes: z.string().nullable(),
+    is_active: z.boolean(),
+    active_student_count: z.coerce.number().int().nonnegative(),
+  }),
+);
 
 export function createSupabaseClassRepository(): ClassRepository {
   return {
     async list(query = {}) {
       const client = await createServerSupabaseClient();
-      let classRequest = client
-        .from("classes")
-        .select(
-          "id, academic_year_id, grade, class_number, homeroom_teacher, notes, is_active, academic_years!inner(name, is_active)",
-        )
-        .order("academic_year_id", { ascending: false })
-        .order("grade", { ascending: true })
-        .order("class_number", { ascending: true });
-      if (query.academicYearId)
-        classRequest = classRequest.eq("academic_year_id", query.academicYearId);
-      if (query.grade) classRequest = classRequest.eq("grade", query.grade);
-
-      const [classesResult, enrollmentResult] = await Promise.all([
-        classRequest,
-        client
-          .from("student_enrollments")
-          .select("class_id, students!inner(is_active)")
-          .eq("is_current", true)
-          .eq("students.is_active", true),
-      ]);
-      if (classesResult.error) throw classesResult.error;
-      if (enrollmentResult.error) throw enrollmentResult.error;
-
-      const counts = new Map<string, number>();
-      for (const row of enrollmentResult.data ?? []) {
-        if (row.class_id) counts.set(row.class_id, (counts.get(row.class_id) ?? 0) + 1);
-      }
-
-      return (classesResult.data ?? []).map((row) => ({
+      const { data, error } = await client.rpc("phase10_list_classes", {
+        ...(query.academicYearId ? { p_academic_year_id: query.academicYearId } : {}),
+        ...(query.grade ? { p_grade: query.grade } : {}),
+      });
+      if (error) throw error;
+      return classRowsSchema.parse(data ?? []).map((row) => ({
         id: row.id,
         academicYearId: row.academic_year_id,
-        academicYearName: row.academic_years.name,
-        academicYearActive: row.academic_years.is_active,
-        grade: row.grade as OperationalGrade,
+        academicYearName: row.academic_year_name,
+        academicYearActive: row.academic_year_active,
+        grade: row.grade,
         classNumber: row.class_number,
         homeroomTeacher: row.homeroom_teacher,
         notes: row.notes,
         isActive: row.is_active,
-        activeStudentCount: counts.get(row.id) ?? 0,
+        activeStudentCount: row.active_student_count,
       }));
     },
     async update(input) {

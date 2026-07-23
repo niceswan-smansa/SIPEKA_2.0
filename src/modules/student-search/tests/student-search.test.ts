@@ -26,4 +26,14 @@ describe("student search query", () => {
   it("rejects invalid page boundaries", () => {
     expect(() => parseStudentSearchParams({ page: "0" })).toThrow();
   });
+
+  it("accepts alumni and maps status all to no active filter", () => {
+    const parsed = parseStudentSearchParams({
+      grade: "ALUMNI",
+      status: "all",
+      pageSize: "50",
+    });
+    expect(parsed.query.grade).toBe("ALUMNI");
+    expect(parsed.query.active).toBeUndefined();
+  });
 });

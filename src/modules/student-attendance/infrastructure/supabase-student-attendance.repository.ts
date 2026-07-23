@@ -54,7 +54,7 @@ export function createSupabaseStudentAttendanceRepository(): StudentAttendanceRe
     },
     async getReport(studentId, startDate, endDate) {
       const client = await createServerSupabaseClient();
-      const { data, error } = await client.rpc("phase6_get_student_report", {
+      const { data, error } = await client.rpc("phase10_get_student_report", {
         p_student_id: studentId,
         p_start_date: startDate,
         p_end_date: endDate,

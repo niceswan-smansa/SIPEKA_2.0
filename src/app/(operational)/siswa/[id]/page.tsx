@@ -14,30 +14,24 @@ import {
 } from "@/modules/student-attendance";
 import { createStudentService, createSupabaseStudentRepository } from "@/modules/students";
 import { Badge, Card, PageHeader, Table } from "@/shared/ui";
+import { formatJakartaDateTime, isIsoDate, isMonthStart } from "@/shared/domain/dates";
+import { z } from "zod";
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ date?: string; month?: string }>;
 };
-const validDate = (value: string | undefined) => /^\d{4}-\d{2}-\d{2}$/.test(value ?? "");
-
 export default async function StudentDetailPage({ params, searchParams }: Props) {
   const profile = await requirePageAccess("OPERATIONAL");
-  const { id } = await params;
+  const id = z.uuid().parse((await params).id);
   const query = await searchParams;
-  const selectedDate = validDate(query.date) ? query.date! : todayJakarta();
-  const month = /^\d{4}-\d{2}-01$/.test(query.month ?? "")
-    ? query.month!
-    : monthStart(selectedDate);
-  const [student, attendance] = await Promise.all([
-    createStudentService(createSupabaseStudentRepository()).getDetail(id),
-    createStudentAttendanceService(createSupabaseStudentAttendanceRepository()).get(
-      id,
-      selectedDate,
-      month,
-    ),
-  ]);
+  const selectedDate = isIsoDate(query.date) ? query.date : todayJakarta();
+  const month = isMonthStart(query.month) ? query.month : monthStart(selectedDate);
+  const student = await createStudentService(createSupabaseStudentRepository()).getDetail(id);
   if (!student) notFound();
+  const attendance = await createStudentAttendanceService(
+    createSupabaseStudentAttendanceRepository(),
+  ).get(id, selectedDate, month);
   const className =
     student.classNumber && student.currentGrade !== "ALUMNI"
       ? classDisplayName(student.currentGrade, student.classNumber)
@@ -145,7 +139,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                     </td>
                     <td>{period?.note ?? "—"}</td>
                     <td>{period?.updatedByName ?? "—"}</td>
-                    <td>{period?.updatedAt ?? "—"}</td>
+                    <td>{period?.updatedAt ? formatJakartaDateTime(period.updatedAt) : "—"}</td>
                   </tr>
                 );
               })}
@@ -202,7 +196,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
             <tbody>
               {attendance.revisions.map((item) => (
                 <tr key={String(item.id)}>
-                  <td>{String(item.created_at)}</td>
+                  <td>{formatJakartaDateTime(String(item.created_at))}</td>
                   <td>{String(item.operation)}</td>
                   <td>{String(item.actor_name)}</td>
                   <td>

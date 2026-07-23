@@ -1,4 +1,5 @@
 import { z } from "zod";
+export { todayJakarta } from "@/shared/domain/dates";
 
 export const ATTENDANCE_STATUSES = ["IZIN", "SAKIT", "TANPA_KETERANGAN"] as const;
 export type AttendanceStatus = (typeof ATTENDANCE_STATUSES)[number];
@@ -69,10 +70,6 @@ export interface AttendanceRepository {
   ): Promise<ClassAttendance>;
   preview(input: AttendanceBatchInput): Promise<AttendancePreview>;
   apply(input: AttendanceBatchInput & { token: string }): Promise<AttendanceApplyResult>;
-}
-
-export function todayJakarta() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
 }
 
 export function buildOperations(

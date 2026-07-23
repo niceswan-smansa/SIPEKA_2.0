@@ -42,7 +42,10 @@ export function StudentAttendanceCalendar({
           type="button"
           aria-label="Bulan sebelumnya"
           className="bg-slate-200 text-slate-800 hover:bg-slate-300"
-          onClick={() => navigate(moveMonth(normalizedMonth, -1))}
+          onClick={() => {
+            const nextDate = moveMonth(selectedDate, -1);
+            navigate(monthStart(nextDate), nextDate);
+          }}
         >
           ←
         </Button>
@@ -51,7 +54,10 @@ export function StudentAttendanceCalendar({
           type="button"
           aria-label="Bulan berikutnya"
           className="bg-slate-200 text-slate-800 hover:bg-slate-300"
-          onClick={() => navigate(moveMonth(normalizedMonth, 1))}
+          onClick={() => {
+            const nextDate = moveMonth(selectedDate, 1);
+            navigate(monthStart(nextDate), nextDate);
+          }}
         >
           →
         </Button>

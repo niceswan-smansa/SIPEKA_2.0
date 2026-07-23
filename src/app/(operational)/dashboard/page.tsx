@@ -8,18 +8,15 @@ import {
   todayJakarta,
 } from "@/modules/dashboard";
 import { Card, PageHeader } from "@/shared/ui";
+import { isIsoDate, isMonthStart } from "@/shared/domain/dates";
 
 type Props = { searchParams: Promise<{ date?: string; month?: string }> };
 
 export default async function DashboardPage({ searchParams }: Props) {
   await requirePageAccess("OPERATIONAL");
   const params = await searchParams;
-  const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? "")
-    ? params.date!
-    : todayJakarta();
-  const visibleMonth = /^\d{4}-\d{2}-01$/.test(params.month ?? "")
-    ? params.month!
-    : `${selectedDate.slice(0, 7)}-01`;
+  const selectedDate = isIsoDate(params.date) ? params.date : todayJakarta();
+  const visibleMonth = isMonthStart(params.month) ? params.month : `${selectedDate.slice(0, 7)}-01`;
   const data = await createDashboardService(createSupabaseDashboardRepository()).get(selectedDate);
   const cards = [
     ["Siswa Tidak Hadir", data.summary.total],

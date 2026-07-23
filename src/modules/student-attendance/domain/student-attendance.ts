@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import type { AttendanceStatus } from "@/modules/attendance";
+import {
+  isReportRangeWithinDays,
+  monthStart as sharedMonthStart,
+  moveMonth as sharedMoveMonth,
+} from "@/shared/domain/dates";
 
 export type StudentPeriodAttendance = {
   id: string;
@@ -32,19 +37,16 @@ export type StudentReportRow = {
 
 export const reportRangeSchema = z
   .object({ startDate: z.iso.date(), endDate: z.iso.date() })
-  .refine((value) => value.startDate <= value.endDate, { message: "REPORT_DATE_RANGE_INVALID" });
+  .refine((value) => isReportRangeWithinDays(value.startDate, value.endDate), {
+    message: "REPORT_DATE_RANGE_INVALID",
+  });
 
 export function monthStart(value: string) {
-  const match = /^(\d{4})-(\d{2})/.exec(value);
-  if (!match) throw new Error("INVALID_MONTH");
-  return `${match[1]!}-${match[2]!}-01`;
+  return sharedMonthStart(value.length === 7 ? `${value}-01` : value);
 }
 
 export function moveMonth(value: string, delta: number) {
-  const start = monthStart(value);
-  const [year, month] = start.split("-").map(Number) as [number, number, number];
-  const target = new Date(Date.UTC(year, month - 1 + delta, 1));
-  return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, "0")}-01`;
+  return sharedMoveMonth(value, delta);
 }
 
 export interface StudentAttendanceRepository {

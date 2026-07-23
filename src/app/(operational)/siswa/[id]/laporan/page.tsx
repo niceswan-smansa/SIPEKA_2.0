@@ -9,6 +9,7 @@ import {
 } from "@/modules/student-attendance";
 import { createStudentService, createSupabaseStudentRepository } from "@/modules/students";
 import { Card, PageHeader, Table } from "@/shared/ui";
+import { z } from "zod";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -16,18 +17,14 @@ type Props = {
 };
 export default async function StudentReportPage({ params, searchParams }: Props) {
   await requirePageAccess("OPERATIONAL");
-  const { id } = await params;
+  const id = z.uuid().parse((await params).id);
   const query = await searchParams;
   const range = reportRangeSchema.parse({ startDate: query.from, endDate: query.to });
-  const [student, rows] = await Promise.all([
-    createStudentService(createSupabaseStudentRepository()).getDetail(id),
-    createStudentAttendanceService(createSupabaseStudentAttendanceRepository()).getReport(
-      id,
-      range.startDate,
-      range.endDate,
-    ),
-  ]);
+  const student = await createStudentService(createSupabaseStudentRepository()).getDetail(id);
   if (!student) notFound();
+  const rows = await createStudentAttendanceService(
+    createSupabaseStudentAttendanceRepository(),
+  ).getReport(id, range.startDate, range.endDate);
   const totals = {
     days: new Set(rows.map((row) => row.date)).size,
     hours: rows.length,

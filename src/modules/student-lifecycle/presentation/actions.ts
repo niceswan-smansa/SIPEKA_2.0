@@ -40,6 +40,18 @@ export async function promoteStudentsAction(formData: FormData) {
   }
 }
 
+export async function previewPromotionAction(formData: FormData) {
+  await requirePageAccess("ADMIN_MUTATION");
+  const academicYearId = text(formData.get("academicYearId"));
+  try {
+    await service().previewPromotion(academicYearId);
+    redirect(`/naik-turun-grade?preview=${encodeURIComponent(academicYearId)}`);
+  } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
+    redirect("/naik-turun-grade?error=PREVIEW_FAILED");
+  }
+}
+
 export async function rollbackPromotionAction(formData: FormData) {
   await requirePageAccess("ADMIN_MUTATION");
   try {

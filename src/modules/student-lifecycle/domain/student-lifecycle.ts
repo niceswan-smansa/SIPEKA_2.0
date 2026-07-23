@@ -71,6 +71,15 @@ export function previewStudentCsv(source: string): ImportPreviewRow[] {
   if (records.length < 1 || records.length > 500) throw new Error("CSV_ROW_LIMIT");
 
   const rows = records.map((values, index) => {
+    if (values.length !== 4)
+      return {
+        nis: values[0]?.trim() || null,
+        nisn: values[1]?.trim() || null,
+        name: values[2]?.trim() ?? "",
+        gender: (values[3]?.trim().toUpperCase() ?? "") as "L" | "P",
+        row: index + 2,
+        errors: ["Setiap baris harus memiliki tepat empat kolom."],
+      };
     const parsed = rowSchema.safeParse({
       nis: values[0],
       nisn: values[1],
@@ -104,10 +113,33 @@ export function previewStudentCsv(source: string): ImportPreviewRow[] {
 
 export const importPayloadSchema = z.object({
   classId: z.uuid(),
-  fileName: z.string().trim().min(1).max(160),
+  fileName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(160)
+    .regex(/^[^/\\\0]+\.csv$/i),
   yearEntered: z.coerce.number().int().min(2000).max(2200),
   rows: z.array(rowSchema).min(1).max(500),
 });
+
+export const lifecycleIdSchema = z.uuid();
+
+export const promotionPreviewSchema = z.object({
+  from_year_id: z.uuid(),
+  from_year_name: z.string(),
+  to_year_id: z.uuid(),
+  to_year_name: z.string(),
+  total: z.coerce.number().int().nonnegative(),
+  x_to_xi: z.coerce.number().int().nonnegative(),
+  xi_to_xii: z.coerce.number().int().nonnegative(),
+  xii_to_alumni: z.coerce.number().int().nonnegative(),
+  missing_destination_classes: z.array(
+    z.object({ grade: z.enum(["XI", "XII"]), class_number: z.number().int().min(1).max(10) }),
+  ),
+  safe_to_apply: z.boolean(),
+});
+export type PromotionPreview = z.infer<typeof promotionPreviewSchema>;
 
 export function csvTemplate() {
   return "NIS,NISN,NAMA,JENIS_KELAMIN\n10001,0091234567,Nabila Putri,P\n10002,0091234568,Ahmad Fauzan,L\n";

@@ -13,6 +13,7 @@ export { createSupabaseStudentLifecycleRepository } from "./infrastructure/supab
 export {
   archiveAlumniAction,
   importStudentsAction,
+  previewPromotionAction,
   promoteStudentsAction,
   rollbackPromotionAction,
   tombstoneAlumniAction,

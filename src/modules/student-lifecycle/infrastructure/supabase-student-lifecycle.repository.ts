@@ -3,6 +3,7 @@ import "server-only";
 import { createServerSupabaseClient } from "@/infrastructure/supabase/server";
 
 import type { StudentLifecycleRepository } from "../application/student-lifecycle-service";
+import { promotionPreviewSchema } from "../domain/student-lifecycle";
 
 export function createSupabaseStudentLifecycleRepository(): StudentLifecycleRepository {
   return {
@@ -24,6 +25,14 @@ export function createSupabaseStudentLifecycleRepository(): StudentLifecycleRepo
       });
       if (error || !data) throw error ?? new Error("PROMOTION_FAILED");
       return Number((data as Record<string, unknown>).promoted);
+    },
+    async previewPromotion(toAcademicYearId) {
+      const client = await createServerSupabaseClient();
+      const { data, error } = await client.rpc("phase10_preview_promotion", {
+        p_to_academic_year_id: toAcademicYearId,
+      });
+      if (error || !data) throw error ?? new Error("PROMOTION_PREVIEW_FAILED");
+      return promotionPreviewSchema.parse(data);
     },
     async rollback(batchId) {
       const client = await createServerSupabaseClient();

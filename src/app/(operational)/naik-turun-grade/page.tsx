@@ -7,6 +7,7 @@ import {
   createStudentLifecycleService,
   createSupabaseStudentLifecycleRepository,
   promoteStudentsAction,
+  previewPromotionAction,
   rollbackPromotionAction,
 } from "@/modules/student-lifecycle";
 import { Alert, Button, Card, PageHeader, Select } from "@/shared/ui";
@@ -22,6 +23,11 @@ export default async function PromotionPage({
   const batches = await createStudentLifecycleService(
     createSupabaseStudentLifecycleRepository(),
   ).listPromotionBatches();
+  const preview = params.preview
+    ? await createStudentLifecycleService(
+        createSupabaseStudentLifecycleRepository(),
+      ).previewPromotion(params.preview)
+    : null;
   return (
     <>
       <PageHeader
@@ -40,7 +46,7 @@ export default async function PromotionPage({
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <Card>
           <h2 className="font-bold">Aktifkan tahun melalui promotion</h2>
-          <form action={promoteStudentsAction} className="mt-4 grid gap-3">
+          <form action={previewPromotionAction} className="mt-4 grid gap-3">
             <Select name="academicYearId" required>
               <option value="">Pilih tahun tujuan nonaktif</option>
               {years
@@ -51,8 +57,31 @@ export default async function PromotionPage({
                   </option>
                 ))}
             </Select>
-            <Button type="submit">Preview dan jalankan promotion</Button>
+            <Button type="submit">Preview promotion</Button>
           </form>
+          {preview ? (
+            <div className="mt-4 rounded-lg border p-4">
+              <p className="font-semibold">
+                {preview.from_year_name} → {preview.to_year_name}
+              </p>
+              <ul className="mt-2 text-sm">
+                <li>Total: {preview.total}</li>
+                <li>X → XI: {preview.x_to_xi}</li>
+                <li>XI → XII: {preview.xi_to_xii}</li>
+                <li>XII → Alumni: {preview.xii_to_alumni}</li>
+              </ul>
+              {preview.missing_destination_classes.length ? (
+                <Alert tone="error">
+                  Kelas tujuan belum lengkap. Promotion belum dapat dijalankan.
+                </Alert>
+              ) : (
+                <form action={promoteStudentsAction} className="mt-3">
+                  <input type="hidden" name="academicYearId" value={preview.to_year_id} />
+                  <Button type="submit">Konfirmasi dan jalankan promotion</Button>
+                </form>
+              )}
+            </div>
+          ) : null}
         </Card>
         <Card>
           <h2 className="font-bold">Riwayat batch</h2>

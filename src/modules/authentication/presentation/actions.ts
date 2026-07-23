@@ -38,8 +38,8 @@ export async function loginAction(formData: FormData) {
   const address = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   const accountKey = parsed.data.identifier.trim().toLowerCase();
   if (
-    !allowRateLimited(`login-address:${address}`, 50) ||
-    !allowRateLimited(`login-account:${address}:${accountKey}`)
+    !(await allowRateLimited(address, "login-address", 50)) ||
+    !(await allowRateLimited(`${address}\0${accountKey}`, "login-account"))
   ) {
     redirect("/login?error=invalid");
   }

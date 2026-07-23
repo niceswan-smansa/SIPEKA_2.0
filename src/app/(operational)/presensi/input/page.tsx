@@ -11,13 +11,14 @@ import {
   classDisplayName,
 } from "@/modules/classes";
 import { Alert, Button, Card, FormField, PageHeader, Select } from "@/shared/ui";
+import { isIsoDate } from "@/shared/domain/dates";
 
 type Props = { searchParams: Promise<{ classId?: string; date?: string }> };
 
 export default async function AttendanceInputPage({ searchParams }: Props) {
   await requirePageAccess("ADMIN_MUTATION");
   const params = await searchParams;
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? "") ? params.date! : todayJakarta();
+  const date = isIsoDate(params.date) ? params.date : todayJakarta();
   const classes = (await createClassService(createSupabaseClassRepository()).list()).filter(
     (item) => item.academicYearActive && item.isActive,
   );

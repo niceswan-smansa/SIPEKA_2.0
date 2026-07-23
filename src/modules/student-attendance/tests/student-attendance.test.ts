@@ -10,4 +10,13 @@ describe("student attendance", () => {
       reportRangeSchema.safeParse({ startDate: "2026-07-02", endDate: "2026-07-01" }).success,
     ).toBe(false);
   });
+
+  it("accepts 366 inclusive days and rejects 367", () => {
+    expect(
+      reportRangeSchema.safeParse({ startDate: "2026-01-01", endDate: "2027-01-01" }).success,
+    ).toBe(true);
+    expect(
+      reportRangeSchema.safeParse({ startDate: "2026-01-01", endDate: "2027-01-02" }).success,
+    ).toBe(false);
+  });
 });

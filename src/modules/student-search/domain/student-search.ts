@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { StudentListQuery } from "@/modules/students";
-import { OPERATIONAL_GRADES } from "@/shared/domain/grades";
+import { ALL_GRADES } from "@/shared/domain/grades";
 
 const searchSchema = z.object({
   q: z
@@ -10,9 +10,9 @@ const searchSchema = z.object({
     .max(80)
     .transform((value) => value.replace(/\s+/g, " "))
     .default(""),
-  grade: z.enum(OPERATIONAL_GRADES).optional(),
+  grade: z.enum(ALL_GRADES).optional(),
   classId: z.uuid().optional(),
-  status: z.enum(["active", "inactive"]).optional(),
+  status: z.enum(["active", "inactive", "all"]).optional(),
   yearEntered: z.coerce.number().int().min(1900).max(2200).optional(),
   page: z.coerce.number().int().min(1).max(100000).default(1),
 });
@@ -31,7 +31,7 @@ export function parseStudentSearchParams(input: Record<string, string | undefine
       ...(params.q ? { search: params.q } : {}),
       ...(params.grade ? { grade: params.grade } : {}),
       ...(params.classId ? { classId: params.classId } : {}),
-      ...(params.status ? { active: params.status === "active" } : {}),
+      ...(params.status && params.status !== "all" ? { active: params.status === "active" } : {}),
       ...(params.yearEntered ? { yearEntered: params.yearEntered } : {}),
       page: params.page,
       pageSize: 20,

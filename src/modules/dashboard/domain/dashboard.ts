@@ -1,4 +1,5 @@
 import { z } from "zod";
+export { todayJakarta } from "@/shared/domain/dates";
 
 export type DashboardSummary = {
   total: number;
@@ -22,10 +23,6 @@ export type DashboardData = {
 };
 
 export const dashboardDateSchema = z.iso.date();
-
-export function todayJakarta() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
-}
 
 export interface DashboardRepository {
   get(selectedDate: string): Promise<DashboardData>;

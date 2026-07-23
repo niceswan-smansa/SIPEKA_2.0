@@ -1,4 +1,9 @@
-import { importPayloadSchema, type ImportRow } from "../domain/student-lifecycle";
+import {
+  importPayloadSchema,
+  lifecycleIdSchema,
+  type ImportRow,
+  type PromotionPreview,
+} from "../domain/student-lifecycle";
 
 export interface StudentLifecycleRepository {
   importStudents(input: {
@@ -8,6 +13,7 @@ export interface StudentLifecycleRepository {
     rows: ImportRow[];
   }): Promise<number>;
   promote(toAcademicYearId: string): Promise<number>;
+  previewPromotion(toAcademicYearId: string): Promise<PromotionPreview>;
   rollback(batchId: string): Promise<number>;
   archive(studentId: string): Promise<void>;
   tombstone(studentId: string): Promise<void>;
@@ -27,10 +33,13 @@ export function createStudentLifecycleService(repository: StudentLifecycleReposi
     async importStudents(input: unknown) {
       return repository.importStudents(importPayloadSchema.parse(input));
     },
-    promote: (toAcademicYearId: string) => repository.promote(toAcademicYearId),
-    rollback: (batchId: string) => repository.rollback(batchId),
-    archive: (studentId: string) => repository.archive(studentId),
-    tombstone: (studentId: string) => repository.tombstone(studentId),
+    previewPromotion: (toAcademicYearId: string) =>
+      repository.previewPromotion(lifecycleIdSchema.parse(toAcademicYearId)),
+    promote: (toAcademicYearId: string) =>
+      repository.promote(lifecycleIdSchema.parse(toAcademicYearId)),
+    rollback: (batchId: string) => repository.rollback(lifecycleIdSchema.parse(batchId)),
+    archive: (studentId: string) => repository.archive(lifecycleIdSchema.parse(studentId)),
+    tombstone: (studentId: string) => repository.tombstone(lifecycleIdSchema.parse(studentId)),
     listPromotionBatches: () => repository.listPromotionBatches(),
   };
 }

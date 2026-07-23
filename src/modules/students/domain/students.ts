@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { OPERATIONAL_GRADES, type OperationalGrade } from "@/shared/domain/grades";
+import { OPERATIONAL_GRADES, type Grade, type OperationalGrade } from "@/shared/domain/grades";
 
 export type StudentRecord = {
   id: string;
@@ -32,7 +32,7 @@ export type StudentDetail = StudentRecord & { enrollments: EnrollmentHistory[] }
 
 export type StudentListQuery = {
   search?: string;
-  grade?: OperationalGrade;
+  grade?: Grade;
   classId?: string;
   active?: boolean;
   yearEntered?: number;
