@@ -12,6 +12,7 @@ describe("student search query", () => {
       yearEntered: "2026",
       page: "2",
     });
+
     expect(parsed.query).toMatchObject({
       search: "nabil",
       grade: "XI",
@@ -25,15 +26,18 @@ describe("student search query", () => {
 
   it("rejects invalid page boundaries", () => {
     expect(() => parseStudentSearchParams({ page: "0" })).toThrow();
+    expect(() => parseStudentSearchParams({ pageSize: "51" })).toThrow();
   });
 
-  it("accepts alumni and maps status all to no active filter", () => {
+  it("accepts alumni, maps status all, and honors the requested page size", () => {
     const parsed = parseStudentSearchParams({
       grade: "ALUMNI",
       status: "all",
       pageSize: "50",
     });
+
     expect(parsed.query.grade).toBe("ALUMNI");
     expect(parsed.query.active).toBeUndefined();
+    expect(parsed.query.pageSize).toBe(50);
   });
 });
