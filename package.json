@@ -40,7 +40,8 @@
     "test:auth-probe": "node tools/probe-test-auth.mjs",
     "test:auth-policy": "node tools/assert-username-auth-policy.mjs",
     "bootstrap:super-admin": "node tools/bootstrap-super-admin.mjs",
-    "check": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build"
+    "check": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build",
+    "assets:brand": "node tools/generate-brand-assets.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.0",
@@ -64,6 +65,7 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.11",
     "prettier": "3.9.6",
+    "sharp": "^0.35.3",
     "supabase": "2.109.1",
     "tailwindcss": "^4.3.3",
     "typescript": "6.0.3",
