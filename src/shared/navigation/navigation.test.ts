@@ -9,6 +9,7 @@ describe("role-aware navigation", () => {
       "/super-admin/account-audit",
     ]);
   });
+
   it("does not expose mutation labels to USER", () => {
     const labels = getNavigationForRole("USER").map((item) => item.label);
     expect(labels).toEqual(["Dashboard", "Cari Siswa", "Laporan", "Profil"]);
@@ -16,10 +17,12 @@ describe("role-aware navigation", () => {
     expect(labels).not.toContain("Manajemen Siswa");
     expect(labels).not.toContain("Manajemen Kelas");
   });
+
   it("exposes available operational mutation routes only to ADMIN", () => {
     const routes = getNavigationForRole("ADMIN")
       .filter((item) => item.available)
       .map((item) => item.href);
+
     expect(routes).toEqual([
       "/dashboard",
       "/presensi/input",
@@ -31,5 +34,11 @@ describe("role-aware navigation", () => {
       "/alumni",
       "/riwayat-aktivitas",
     ]);
+  });
+
+  it("provides a vector icon for every navigation item", () => {
+    for (const role of ["SUPER_ADMIN", "ADMIN", "USER"] as const) {
+      expect(getNavigationForRole(role).every((item) => item.icon.length > 0)).toBe(true);
+    }
   });
 });
