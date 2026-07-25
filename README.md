@@ -1,72 +1,139 @@
 # SIPEKA
 
-SIPEKA adalah Sistem Presensi SMANSA Pamekasan. Repository ini mencakup detail presensi dan laporan
-individual Phase 6 di atas fondasi Auth/RLS, portal akun, manajemen siswa, input presensi, dan
-dashboard Phase 1–5.
+**SIPEKA — Sistem Presensi SMANSA Pamekasan** adalah aplikasi presensi berbasis web untuk
+pengelolaan siswa, presensi per jam pelajaran, dashboard, laporan Excel, import CSV, kenaikan grade,
+alumni, akun, dan audit operasional.
 
-## Mulai
+Production: **https://www.sipekasmansa.online/**
 
-Prasyarat: Node.js 24.x dan Docker (atau rootless Podman) untuk Supabase lokal.
+## Fitur utama
+
+- Login username-only dengan role `USER`, `ADMIN`, dan `SUPER_ADMIN`.
+- Manajemen tahun ajaran, 30 slot kelas tetap, siswa, status, pencarian, dan perpindahan kelas.
+- Presensi 10 jam pelajaran dengan preview transaksi, bulk status, dan bulk Hadir.
+- Dashboard tanggal/bulan, detail siswa, kalender, statistik hari/jam, dan histori revisi.
+- Laporan individual serta workbook per grade untuk periode bulanan atau rentang tanggal.
+- Import CSV all-or-none, promotion X→XI→XII→Alumni, rollback snapshot, arsip, dan tombstone.
+- Audit akun dan audit operasional yang terpisah.
+- PWA online-only; fungsi operasional membutuhkan koneksi.
+
+NIS dan NISN bersifat **opsional**. UUID internal merupakan identity canonical. Identifier yang
+diisi tetap harus valid dan unik.
+
+## Batas akses
+
+| Area                                    |  USER | ADMIN | SUPER_ADMIN |
+| --------------------------------------- | ----: | ----: | ----------: |
+| Dashboard, daftar/detail siswa          |  Baca |  Baca |       Tidak |
+| Input/koreksi presensi                  | Tidak |    Ya |       Tidak |
+| Kelas, siswa, import, promotion, alumni | Tidak |    Ya |       Tidak |
+| Export Excel                            | Tidak |    Ya |       Tidak |
+| Portal dan audit akun                   | Tidak | Tidak |          Ya |
+
+Mutation bisnis tidak dilakukan melalui direct Data API. Semua mutation memakai RPC transaksional,
+actor dari session, validasi database, RLS/grant, dan audit.
+
+## Teknologi
+
+- Next.js 16, React 19, TypeScript 6
+- Supabase lokal/staging/production
+- Vitest, pgTAP, Playwright
+- Vercel
+- ExcelJS
+
+Prasyarat lokal: Node.js 24.x dan Docker atau rootless Podman.
+
+## Setup lokal
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npx supabase start
 npm run db:reset
 npm run seed:test-users
-npm run dev
+npm run dev:local
 ```
 
-Turunan asset publik dibuat dari sumber lokal read-only dan diverifikasi dengan `npm run test:assets`.
-Import CSV, promotion/rollback, alumni, audit operasional, dan PWA online-only tersedia. Workbook
-existing hanya dibaca oleh dry-run local yang menghasilkan summary redacted; belum diimpor.
-
-Jangan mengganti placeholder dengan kredensial produksi. File data siswa lokal bersifat read-only
-dan harus tetap di lokasi yang diabaikan Git.
+Jangan memasukkan credential production atau data siswa production ke repository/lokal. Semua
+fixture pengujian harus sintetis.
 
 ## Quality gates
 
 ```bash
+npm run test:dependency-policy
 npm run format
 npm run lint
 npm run typecheck
 npm run test
+npm run test:coverage
+npm run test:migration-policy
+npm run test:assets
+npm run test:pwa
 npm run test:db
+npm run db:types:check
+npm run test:auth-policy
 npm run test:e2e
+npm run test:e2e:cross-browser
+npm run test:performance
 npm run build
 npm run test:bundle
-npm run test:pwa
-npm run db:types:check
-npm audit
 ```
 
-`npm run test:e2e` hanya menjalankan Playwright dan tidak mereset database. Reset fixture hanya
-melalui `npm run test:e2e:reset` pada database localhost disposable dengan flag dan sentinel
-eksplisit.
+- `test:e2e` menjalankan seluruh functional suite pada Chromium.
+- `test:e2e:cross-browser` menjalankan smoke read-only pada Firefox dan WebKit.
+- `test:performance` mengirim authenticated concurrent read requests ke Supabase lokal.
+- `test:e2e` tidak mereset database. Gunakan `test:e2e:reset` hanya pada database localhost
+  disposable dengan flag dan sentinel yang diwajibkan.
+- Coverage awal: lines/statements/functions 70%, branches 60% pada domain, application, dan shared
+  core. Angka ini adalah baseline minimum, bukan target akhir.
 
-Lihat `docs/development.md` untuk setup lengkap dan `docs/implementation-plan.md` untuk source of
-truth produk.
+Rincian lengkap terdapat di [`docs/testing.md`](docs/testing.md).
 
-## Route operasional
+## Import dan data lama
 
-- `/manajemen-kelas` — ADMIN: tahun ajaran dan 30 slot X-1 sampai XII-10.
-- `/manajemen-siswa` — ADMIN: mutasi siswa melalui RPC transaksional.
-- `/presensi/input` — ADMIN: preview dan apply presensi transaksional.
-- `/dashboard` — ADMIN/USER: statistik siswa unik berdasarkan tanggal.
-- `/siswa` dan `/siswa/[id]` — ADMIN/USER: pencarian, detail, kalender, statistik, dan histori.
-- `/siswa/[id]/laporan` — ADMIN/USER: laporan individual read-only; export Excel hanya ADMIN.
-- `/import-siswa`, `/naik-turun-grade`, `/alumni`, `/riwayat-aktivitas` — ADMIN.
+Template CSV:
 
-Direct Data API write tetap ditolak. Mutation memakai RPC `phase3_*` dengan actor dari session,
-validasi database, dan audit OPERATIONAL dalam transaction yang sama. Editor detail siswa memakai
-engine preview/apply Phase 4 yang sama; tidak ada mutation presensi kedua.
+```text
+NIS,NISN,NAMA,JENIS_KELAMIN
+10001,0091234567,Nabila Putri,P
+,,Siswa Tanpa Identifier,L
+```
 
-# Identity
+Dry-run workbook lokal:
 
-Login SIPEKA menggunakan username dan password saja. Email pengguna tidak
-disimpan atau dikirim; Supabase Auth memakai synthetic identity tersembunyi
-server-side. Tidak ada signup publik atau recovery email.
+```bash
+npm run migration:dry-run
+```
 
-NIS dan NISN siswa bersifat opsional; UUID internal tetap identity canonical.
-Bootstrap workbook existing hanya dijalankan lokal melalui
-`npm run migration:real-local:apply` dan menghasilkan reconciliation redacted.
+Output hanya berupa summary redacted di `.local/migration-dry-run.json`. NIS/NISN kosong dicatat,
+tetapi bukan invalid. Nama, gender, mapping kelas, dan keunikan identifier non-kosong tetap wajib.
+
+## Deployment
+
+Push ke `main` memicu CI dan deployment Vercel. Deployment tidak dianggap sehat hanya karena build
+berhasil: quality, database, Chromium E2E, Firefox/WebKit smoke, auth-policy, dan performance smoke
+harus lulus.
+
+Smoke production non-destruktif:
+
+```bash
+SMOKE_BASE_URL=https://www.sipekasmansa.online npm run smoke:production
+```
+
+Jangan menjalankan mutation/load test terhadap production.
+
+## Security dan dependency
+
+- Public signup dan recovery email tidak tersedia.
+- Synthetic Auth identity tidak ditampilkan kepada pengguna.
+- Service-role key dilarang masuk client bundle.
+- Dependency policy menolak semua high/critical.
+- Exception moderate rantai `ExcelJS → uuid` didokumentasikan di
+  [`docs/dependency-security.md`](docs/dependency-security.md).
+
+## Dokumentasi
+
+- [`docs/development.md`](docs/development.md) — setup dan workflow development.
+- [`docs/testing.md`](docs/testing.md) — matriks test dan debugging.
+- [`docs/production-readiness.md`](docs/production-readiness.md) — deploy, UAT, backup, dan incident.
+- [`docs/runbook.md`](docs/runbook.md) — operasi dan recovery.

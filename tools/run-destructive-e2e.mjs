@@ -19,6 +19,6 @@ for (const [command, args] of [
   ["npm", ["run", "db:reset"]],
   ["node", ["tools/refresh-local-gateway.mjs"]],
   ["npm", ["run", "seed:test-users"]],
-  ["npx", ["playwright", "test"]],
+  ["npm", ["run", "test:e2e"]],
 ])
   execFileSync(command, args, { stdio: "inherit" });

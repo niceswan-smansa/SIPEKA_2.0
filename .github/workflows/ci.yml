@@ -15,7 +15,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,11 +23,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=critical
+      - run: npm run test:dependency-policy
       - run: npm run format
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
+      - run: npm run test:coverage
+      - run: npm run test:migration-policy
       - run: npm run test:assets
       - run: npm run test:pwa
       - run: npm run build
@@ -58,7 +60,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -66,13 +68,40 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox webkit
       - run: npx supabase start
-      - run: npm run db:reset
-      - run: node tools/refresh-local-gateway.mjs
-      - run: npm run seed:test-users
-      - run: npm run probe:test-auth
-      - run: npm run test:e2e
+
+      - name: Chromium functional suite
+        run: |
+          npm run db:reset
+          node tools/refresh-local-gateway.mjs
+          npm run seed:test-users
+          npm run probe:test-auth
+          npm run test:auth-policy
+          npm run test:e2e
+
+      - name: Firefox and WebKit read-only smoke
+        run: |
+          npm run db:reset
+          node tools/refresh-local-gateway.mjs
+          npm run seed:test-users
+          npm run probe:test-auth
+          npm run test:auth-policy
+          npm run test:e2e:cross-browser
+
+      - name: Authenticated performance smoke
+        env:
+          PERF_CONCURRENCY: "4"
+          PERF_ROUNDS: "2"
+          PERF_P95_MS: "10000"
+        run: |
+          npm run db:reset
+          node tools/refresh-local-gateway.mjs
+          npm run seed:test-users
+          npm run probe:test-auth
+          npm run test:auth-policy
+          npm run test:performance
+
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

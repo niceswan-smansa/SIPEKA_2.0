@@ -1,58 +1,79 @@
 # Production Readiness
 
+Status diperbarui: 25 Juli 2026.
+
+## Status saat ini
+
+- Production live: `https://www.sipekasmansa.online/`.
+- Deployment: Vercel dari branch `main`.
+- Database/Auth: Supabase environment terpisah dari lokal.
+- Production smoke non-destruktif tersedia dan telah digunakan.
+- CI menjalankan quality, coverage, dependency policy, database, auth-policy, Chromium E2E,
+  Firefox/WebKit smoke, dan performance smoke lokal.
+- Data sintetis digunakan untuk test; PII production tidak boleh disalin ke lokal.
+
+Status live tidak menggantikan UAT, backup, monitoring, atau incident readiness.
+
 ## Environment
 
-Gunakan project Supabase terpisah untuk local, staging, dan production. Jangan menyalin PII production
-ke local. Staging default memakai data sintetis. Vercel memakai region `sin1`; environment wajib
-memuat URL Supabase, publishable key, dan service-role key server-only. Public signup harus off dan
-redirect URL dibatasi ke domain deployment.
+Environment Vercel wajib memuat URL Supabase, publishable key, dan service-role key server-only.
+Public signup harus nonaktif, redirect URL dibatasi ke domain deployment, dan preview deployment
+harus diproteksi.
 
-Staging sudah tersedia; username bootstrap berasal dari environment dan staging saat ini memakai
-`superadmin.dev`. Ini bukan klaim production siap atau sudah dideploy. Production tetap memerlukan
-CI hijau dan UAT manual. Migration hardening bersifat additive; rollback kode tidak menghapus object
-database baru.
+Secret, project ID, credential, dan dump database tidak boleh disimpan di repository.
 
-## Deployment
+## Deployment checklist
 
-1. Buat backup dan catat restore point.
-2. Jalankan migration pada staging dari database kosong, generate types, full gate, lalu UAT.
-3. Verifikasi RLS/RPC grants, Auth redirect, signup off, backup/PITR, dan region.
-4. Hubungkan Vercel, isi encrypted variables per environment, aktifkan preview protection.
-5. Deploy saved commit; jalankan `SMOKE_BASE_URL=https://... npm run smoke:production`.
-6. Jangan menjalankan smoke mutation pada data nyata.
+1. Pastikan CI commit yang akan dideploy hijau.
+2. Pastikan migration sudah diuji dari database lokal kosong dan types sinkron.
+3. Catat restore point/backup sebelum migration atau mutation berisiko.
+4. Deploy commit tersimpan dari `main`.
+5. Jalankan:
+   `SMOKE_BASE_URL=https://www.sipekasmansa.online npm run smoke:production`
+6. Lakukan UAT role USER/ADMIN/SUPER_ADMIN tanpa membuat data palsu berlebihan.
+7. Verifikasi audit, log error, dan fungsi export.
+8. Jangan menjalankan load test atau destructive E2E terhadap production.
 
-Credential Vercel/Supabase dan domain tidak tersedia di repository; production deployment belum
-dijalankan dan tidak boleh diklaim selesai sebelum langkah eksternal tersebut dilakukan.
+## Data siswa dan identifier
 
-## Existing-data migration
+NIS dan NISN opsional. Missing NIS/NISN bukan row invalid. UUID internal tetap identity canonical.
 
-`npm run migration:dry-run` membaca workbook lokal secara read-only dan hanya menulis summary
-redacted ke `.local/migration-dry-run.json`. Tidak ada nama/NIS/NISN pada terminal/report. Lengkapi
-`config/student-source-mapping.local.json` dari template setelah pemilik data mengonfirmasi sheet ke
-grade/class. Jangan menebak mapping XI/XII yang ambigu. Apply production hanya setelah dry-run tanpa
-invalid/duplicate, backup tersedia, dan staging disetujui.
+Dry-run workbook tetap harus menolak atau menandai nama kosong, gender invalid, identifier non-kosong
+duplikat/invalid, mapping grade/kelas ambigu, dan sheet yang tidak dapat dipetakan dengan aman.
 
-Dry-run 2026-07-23 menemukan invalid row dan ambiguity pada workbook ketiga; production import
-diblokir. Counts hanya untuk diagnosis mapping dan tidak boleh ditafsirkan sebagai jumlah siswa.
+Apply data nyata hanya dilakukan setelah dry-run redacted, mapping disetujui pemilik data, backup
+tersedia, dan hasil staging diterima.
 
 ## UAT
 
 - Auth: username-only, password change, inactive, dan ketiga role.
 - Account: create/edit/reset/deactivate/tombstone/audit.
 - Academic: satu active year, 30 class slots, student create/move/status/search.
-- Attendance: mixed status/period, Semua Jam, preview/update/delete/stale/idempotency.
+- Attendance: mixed status/period, Semua Jam, bulk Hadir, preview/update/delete/idempotency.
 - Dashboard/detail: selected date, unique counts, calendar, stats day/hour, revisions.
-- Report: print/Excel, formula-safe, ADMIN export, USER read-only.
+- Report: print/Excel, formula-safe, bulanan/custom, ADMIN export, USER read-only.
 - Import/promotion: invalid zero-write, batch, promotion, rollback snapshot, alumni history.
-- Audit/PWA/security: account/operational isolation, install, offline blocked, no cached PII,
-  headers, keyboard/focus, chart alternatives, responsive layouts.
+- Audit/PWA/security: account/operational isolation, online-only, no cached PII, headers, responsive.
 
 ## Backup dan recovery
 
-- Database: encrypted provider backup/PITR; uji restore ke project isolasi sebelum cutover.
-- Auth/profile: reconcile ID/status tanpa menyalin credential ke log.
-- Attendance/import/promotion: gunakan batch/audit/revision; jangan direct-update untuk recovery.
-- Partial account operation: ikuti `docs/runbook.md`.
-- Secrets: rotasi service role, Auth secrets, dan deployment token setelah insiden; redeploy.
-- Incident: hentikan mutation, pertahankan audit, cabut credential, nilai exposure, restore, lalu
-  dokumentasikan correlation ID tanpa PII.
+Repository tidak dapat membuktikan bahwa backup/PITR provider aktif; ini harus diverifikasi di
+dashboard Supabase oleh pemilik project.
+
+Catat metode dan retensi backup/PITR, pihak yang boleh restore, restore point terakhir, tanggal
+restore drill terakhir, serta RPO/RTO yang disepakati.
+
+Restore harus diuji ke project terisolasi terlebih dahulu. Setelah restore, verifikasi login, profil,
+siswa, enrollment, presensi, audit, promotion batch, dan export sebelum cutover.
+
+## Incident
+
+1. Hentikan mutation berisiko.
+2. Pertahankan audit dan correlation ID tanpa PII.
+3. Cabut/rotasi credential yang mungkin terpapar.
+4. Nilai rentang data dan akun terdampak.
+5. Pulihkan ke environment terisolasi bila diperlukan.
+6. Verifikasi data dan aplikasi.
+7. Redeploy commit aman dan dokumentasikan insiden.
+
+Lihat `docs/runbook.md` untuk prosedur operasional rinci.

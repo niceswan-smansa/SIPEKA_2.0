@@ -7,7 +7,8 @@
   },
   "overrides": {
     "postcss": "8.5.22",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "brace-expansion@^5.0.0": "5.0.8"
   },
   "scripts": {
     "dev": "next dev",
@@ -20,7 +21,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "supabase test db",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=chromium",
     "test:e2e:reset": "node tools/run-destructive-e2e.mjs",
     "test:bundle": "node tools/assert-no-service-key-in-client.mjs",
     "test:assets": "node tools/assert-assets.mjs",
@@ -41,7 +42,15 @@
     "test:auth-policy": "node tools/assert-username-auth-policy.mjs",
     "bootstrap:super-admin": "node tools/bootstrap-super-admin.mjs",
     "check": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build",
-    "assets:brand": "node tools/generate-brand-assets.mjs"
+    "assets:brand": "node tools/generate-brand-assets.mjs",
+    "test:coverage": "vitest run --coverage",
+    "test:dependency-policy": "node tools/assert-dependency-policy.mjs",
+    "test:migration-policy": "node tools/test-student-migration-policy.mjs",
+    "test:e2e:cross-browser": "playwright test --project=firefox-smoke --project=webkit-smoke",
+    "test:performance": "playwright test --project=performance",
+    "patch:brace-expansion": "node tools/patch-brace-expansion-legacy.mjs",
+    "postinstall": "npm run patch:brace-expansion",
+    "prebuild": "npm run patch:brace-expansion"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.0",
@@ -53,7 +62,8 @@
     "recharts": "^3.10.0",
     "server-only": "0.0.1",
     "ws": "8.21.1",
-    "zod": "4.4.3"
+    "zod": "4.4.3",
+    "brace-expansion-safe": "npm:brace-expansion@5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
@@ -62,6 +72,7 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@types/ws": "8.18.1",
+    "@vitest/coverage-v8": "4.1.10",
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.11",
     "prettier": "3.9.6",
