@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 
 import { Alert, Badge, Button, Card, Checkbox, FormField, Input, Select } from "@/shared/ui";
 
@@ -12,12 +11,14 @@ import {
   type AttendanceStatus,
   type AttendanceStudent,
   type ClassAttendance,
+  type ExistingAttendance,
 } from "../domain/attendance";
 import { attendanceFailureMessage } from "../domain/attendance-errors";
 import { applyAttendanceAction, previewAttendanceAction } from "./actions";
 
 type Draft = Record<number, { status: AttendanceStatus; note: string } | null>;
 type Message = { tone: "success" | "error" | "info"; text: string };
+type BulkStatus = AttendanceStatus | "HADIR";
 
 function initialDraft(student: AttendanceStudent): Draft {
   const result: Draft = {};
@@ -31,15 +32,40 @@ function label(status: AttendanceStatus) {
   return { IZIN: "Izin", SAKIT: "Sakit", TANPA_KETERANGAN: "Tanpa Keterangan" }[status];
 }
 
+function draftAsExisting(
+  studentId: string,
+  draft: Draft,
+  previous: ExistingAttendance[],
+): ExistingAttendance[] {
+  return Object.entries(draft).flatMap(([periodKey, value]) => {
+    if (!value) return [];
+
+    const periodNumber = Number(periodKey);
+    const current = previous.find((item) => item.periodNumber === periodNumber);
+
+    return [
+      {
+        id: current?.id ?? `local-${studentId}-${periodNumber}`,
+        periodNumber,
+        status: value.status,
+        note: value.note || null,
+        version: current?.version ?? 0,
+      },
+    ];
+  });
+}
+
 export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
-  const router = useRouter();
   const items = initial.items;
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
     Object.fromEntries(initial.items.map((student) => [student.id, initialDraft(student)])),
   );
+  const [baseline, setBaseline] = useState<Record<string, ExistingAttendance[]>>(() =>
+    Object.fromEntries(initial.items.map((student) => [student.id, student.attendance])),
+  );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
-  const [bulkStatus, setBulkStatus] = useState<AttendanceStatus>("IZIN");
+  const [bulkStatus, setBulkStatus] = useState<BulkStatus>("IZIN");
   const [bulkPeriod, setBulkPeriod] = useState("all");
   const [preview, setPreview] = useState<AttendancePreview | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
@@ -66,8 +92,12 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
       const next = { ...current };
       for (const id of selected) {
         next[id] = { ...next[id] };
-        for (const period of periods)
-          next[id][period] = { status: bulkStatus, note: next[id][period]?.note ?? "" };
+        for (const period of periods) {
+          next[id][period] =
+            bulkStatus === "HADIR"
+              ? null
+              : { status: bulkStatus, note: next[id][period]?.note ?? "" };
+        }
       }
       return next;
     });
@@ -88,9 +118,9 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
   const operations = useMemo(
     () =>
       items.flatMap((student) =>
-        buildOperations(student.id, drafts[student.id] ?? {}, student.attendance),
+        buildOperations(student.id, drafts[student.id] ?? {}, baseline[student.id] ?? []),
       ),
-    [drafts, items],
+    [baseline, drafts, items],
   );
   const payload = () => ({
     classId: initial.classId,
@@ -127,8 +157,19 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
         tone: "success",
         text: `Presensi berhasil disimpan. Data baru: ${response.data.new}, diperbarui: ${response.data.update}, dihapus: ${response.data.delete}.`,
       });
+      setBaseline((current) =>
+        Object.fromEntries(
+          items.map((student) => [
+            student.id,
+            draftAsExisting(
+              student.id,
+              drafts[student.id] ?? {},
+              current[student.id] ?? student.attendance,
+            ),
+          ]),
+        ),
+      );
       setPreview(null);
-      router.refresh();
     });
   };
 
@@ -152,8 +193,9 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
             <Select
               id="bulk-status"
               value={bulkStatus}
-              onChange={(event) => setBulkStatus(event.target.value as AttendanceStatus)}
+              onChange={(event) => setBulkStatus(event.target.value as BulkStatus)}
             >
+              <option value="HADIR">Hadir</option>
               {ATTENDANCE_STATUSES.map((status) => (
                 <option key={status} value={status}>
                   {label(status)}

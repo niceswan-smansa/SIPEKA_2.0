@@ -9,7 +9,7 @@ const credentials = () =>
 const todayJakarta = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
 
-test("ADMIN previews mixed attendance and All Jam writes one record per period", async ({
+test("ADMIN previews mixed attendance, applies All Jam, and restores bulk Hadir", async ({
   page,
 }) => {
   const suffix = Date.now().toString().slice(-7);
@@ -57,4 +57,18 @@ test("ADMIN previews mixed attendance and All Jam writes one record per period",
   await expect(page.getByText(/Baru 8/)).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi dan Simpan" }).click();
   await expect(page.getByText(/Presensi berhasil disimpan/)).toBeVisible();
+  await page.waitForLoadState("networkidle");
+
+  await page.getByLabel("Status terpilih").selectOption("HADIR");
+  const selectAllForPresent = page.getByLabel("Pilih Semua Siswa");
+  if (!(await selectAllForPresent.isChecked())) await selectAllForPresent.check();
+  await expect(selectAllForPresent).toBeChecked();
+
+  await page.getByRole("button", { name: "Terapkan Status" }).click();
+  const presentPreviewButton = page.getByRole("button", { name: "Preview Presensi" });
+  await expect(presentPreviewButton).toBeEnabled();
+  await presentPreviewButton.click();
+  await expect(page.getByText(/Dihapus 10/)).toBeVisible();
+  await page.getByRole("button", { name: "Konfirmasi dan Simpan" }).click();
+  await expect(page.getByText(/dihapus: 10/i)).toBeVisible();
 });
