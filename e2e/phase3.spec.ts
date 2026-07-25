@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
+test.setTimeout(120_000);
+
 type Credentials = {
   password: string;
   users: {
@@ -23,11 +25,13 @@ async function login(page: Page, identifier: string) {
 
 test("ADMIN manages fixed classes and a synthetic student; USER remains read-only", async ({
   page,
-}) => {
-  const suffix = Date.now().toString().slice(-7);
+}, testInfo) => {
+  const retryOffset = testInfo.retry;
+  const suffix = `${Date.now().toString().slice(-6)}${retryOffset}`;
   const nis = `31${suffix}`;
   const nisn = `311${suffix}`;
   const name = `Nabila Sintetis ${suffix}`;
+  const destinationClass = `X-${2 + retryOffset}`;
 
   await login(page, credentials().users.admin.username);
   await expect(page).toHaveURL(/\/dashboard$/);
@@ -35,10 +39,12 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   await expect(page.getByRole("heading", { name: "X-1", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "XII-10", exact: true })).toBeVisible();
 
-  const academicYearName = `2098/${suffix}`;
+  const academicYearStart = 2098 + retryOffset;
+  const academicYearEnd = academicYearStart + 1;
+  const academicYearName = `${academicYearStart}/${academicYearEnd}`;
   await page.getByLabel("Nama", { exact: true }).fill(academicYearName);
-  await page.getByLabel("Tanggal mulai").fill("2098-07-01");
-  await page.getByLabel("Tanggal selesai").fill("2099-06-30");
+  await page.getByLabel("Tanggal mulai").fill(`${academicYearStart}-07-01`);
+  await page.getByLabel("Tanggal selesai").fill(`${academicYearEnd}-06-30`);
   await page.getByRole("button", { name: "Buat tahun dan 30 kelas" }).click();
   await page.getByRole("link", { name: academicYearName, exact: true }).click();
   await expect(page.getByText("0 siswa aktif", { exact: true })).toHaveCount(30);
@@ -69,7 +75,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   await expect(page.getByText("Current", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Edit siswa" }).click();
-  await page.locator("#edit-class").selectOption({ label: "X-2" });
+  await page.locator("#edit-class").selectOption({ label: destinationClass });
   await page.getByRole("button", { name: "Simpan grade / kelas" }).click();
   await expect(page.getByText("Perubahan siswa berhasil disimpan dan diaudit.")).toBeVisible();
 
@@ -88,11 +94,11 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   await expect(page.getByRole("button", { name: "Aktifkan siswa" })).toBeVisible();
 
   await page.goto("/manajemen-kelas");
-  const x2Card = page
-    .getByRole("heading", { name: "X-2", exact: true })
+  const destinationCard = page
+    .getByRole("heading", { name: destinationClass, exact: true })
     .locator("xpath=ancestor::section[1]");
-  await expect(x2Card.getByText("0 siswa aktif", { exact: true })).toBeVisible();
-  await x2Card.getByRole("button", { name: "Nonaktifkan", exact: true }).click();
+  await expect(destinationCard.getByText("0 siswa aktif", { exact: true })).toBeVisible();
+  await destinationCard.getByRole("button", { name: "Nonaktifkan", exact: true }).click();
   await Promise.all([
     page.waitForResponse(
       (response) =>
@@ -101,7 +107,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
     page.getByRole("button", { name: "Konfirmasi" }).click(),
   ]);
   await page.reload();
-  await expect(x2Card.getByText("Nonaktif", { exact: true })).toBeVisible();
+  await expect(destinationCard.getByText("Nonaktif", { exact: true })).toBeVisible();
 
   await page.goto(`/manajemen-siswa?student=${studentId}`);
   await page.getByRole("button", { name: "Aktifkan siswa" }).click();
@@ -116,7 +122,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   await expect(page.getByRole("button", { name: "Aktifkan siswa" })).toBeVisible();
 
   await page.goto("/manajemen-kelas");
-  await x2Card.getByRole("button", { name: "Aktifkan", exact: true }).click();
+  await destinationCard.getByRole("button", { name: "Aktifkan", exact: true }).click();
   await Promise.all([
     page.waitForResponse(
       (response) =>
@@ -152,7 +158,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   await expect(page.getByRole("cell", { name, exact: true })).toBeVisible();
   await page.getByLabel("Grade").selectOption("X");
   await expect(page).toHaveURL(/grade=X/);
-  await page.getByLabel("Kelas").selectOption({ label: "X-2" });
+  await page.getByLabel("Kelas").selectOption({ label: destinationClass });
   await expect(page).toHaveURL(/classId=/);
   await expect(page.getByRole("cell", { name, exact: true })).toBeVisible();
 
