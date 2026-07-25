@@ -81,25 +81,34 @@ jobs:
           npm run test:e2e
 
       - name: Firefox and WebKit read-only smoke
+        env:
+          PLAYWRIGHT_BASE_URL: https://localhost:3443
+          PLAYWRIGHT_WEBSERVER_COMMAND: node tools/run-local-next-production.mjs start
+          PLAYWRIGHT_WEBSERVER_URL: https://localhost:3443
         run: |
           npm run db:reset
           node tools/refresh-local-gateway.mjs
           npm run seed:test-users
           npm run probe:test-auth
           npm run test:auth-policy
+          node tools/run-local-next-production.mjs build
           npm run test:e2e:cross-browser
 
       - name: Authenticated performance smoke
         env:
           PERF_CONCURRENCY: "4"
-          PERF_ROUNDS: "2"
           PERF_P95_MS: "10000"
+          PERF_ROUNDS: "2"
+          PLAYWRIGHT_BASE_URL: https://localhost:3443
+          PLAYWRIGHT_WEBSERVER_COMMAND: node tools/run-local-next-production.mjs start
+          PLAYWRIGHT_WEBSERVER_URL: https://localhost:3443
         run: |
           npm run db:reset
           node tools/refresh-local-gateway.mjs
           npm run seed:test-users
           npm run probe:test-auth
           npm run test:auth-policy
+          node tools/run-local-next-production.mjs build
           npm run test:performance
 
       - if: failure()
