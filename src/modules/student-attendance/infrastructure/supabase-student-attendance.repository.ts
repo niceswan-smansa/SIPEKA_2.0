@@ -13,14 +13,24 @@ export function createSupabaseStudentAttendanceRepository(): StudentAttendanceRe
   return {
     async get(studentId, selectedDate, month) {
       const client = await createServerSupabaseClient();
-      const { data, error } = await client.rpc("phase6_get_student_attendance", {
-        p_student_id: studentId,
-        p_selected_date: selectedDate,
-        p_month: month,
-      });
-      if (error || !data) throw error ?? new Error("STUDENT_ATTENDANCE_READ_FAILED");
-      const value = data as unknown as Record<string, unknown>;
+      const [attendanceResponse, classResponse] = await Promise.all([
+        client.rpc("phase6_get_student_attendance", {
+          p_student_id: studentId,
+          p_selected_date: selectedDate,
+          p_month: month,
+        }),
+        client.rpc("phase11_get_student_class_on_date", {
+          p_student_id: studentId,
+          p_attendance_date: selectedDate,
+        }),
+      ]);
+      if (attendanceResponse.error || !attendanceResponse.data) {
+        throw attendanceResponse.error ?? new Error("STUDENT_ATTENDANCE_READ_FAILED");
+      }
+      if (classResponse.error) throw classResponse.error;
+      const value = attendanceResponse.data as unknown as Record<string, unknown>;
       return {
+        selectedClassId: classResponse.data ? String(classResponse.data) : null,
         periods: ((value.periods as Record<string, unknown>[]) ?? []).map((item) => ({
           id: String(item.id),
           periodNumber: Number(item.period_number),

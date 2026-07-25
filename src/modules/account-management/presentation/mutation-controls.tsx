@@ -37,6 +37,7 @@ export function AccountMutationControls({
     } finally {
       setPassword("");
       setConfirmation("");
+      setDialog(null);
       setPending(false);
     }
   };

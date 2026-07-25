@@ -22,6 +22,7 @@ export default async function PromotionPage({
   const params = await searchParams;
   const service = createStudentLifecycleService(createSupabaseStudentLifecycleRepository());
   const years = await createAcademicYearService(createSupabaseAcademicYearRepository()).list();
+  const activeYear = years.find((year) => year.isActive);
   const batches = await service.listPromotionBatches();
   const preview = params.preview ? await service.previewPromotion(params.preview) : null;
 
@@ -52,7 +53,9 @@ export default async function PromotionPage({
             <Select name="academicYearId" required>
               <option value="">Pilih tahun tujuan nonaktif</option>
               {years
-                .filter((year) => !year.isActive)
+                .filter(
+                  (year) => !year.isActive && (!activeYear || year.startDate > activeYear.endDate),
+                )
                 .map((year) => (
                   <option key={year.id} value={year.id}>
                     {year.name}

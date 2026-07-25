@@ -74,7 +74,7 @@ test("student attendance detail reuses attendance mutation and exports a safe re
     `/api/students/${studentId}/report?from=${month}-01&to=${today()}`,
   );
   expect(response.ok()).toBe(true);
-  expect(response.headers()["cache-control"]).toBe("no-store");
+  expect(response.headers()["cache-control"]).toContain("no-store");
   const workbook = new ExcelJS.Workbook();
   const report = await response.body();
   await workbook.xlsx.load(report as unknown as Parameters<typeof workbook.xlsx.load>[0]);

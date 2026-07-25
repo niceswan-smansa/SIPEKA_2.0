@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import {
   applyAttendanceAction,
+  attendanceFailureMessage,
   ATTENDANCE_STATUSES,
   buildOperations,
   previewAttendanceAction,
@@ -43,48 +44,60 @@ export function StudentAttendanceEditor({
   const [preview, setPreview] = useState<AttendancePreview | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
   const [pending, startTransition] = useTransition();
-  const existing = periods.map((item) => ({
-    id: item.id,
-    periodNumber: item.periodNumber,
-    status: item.status,
-    note: item.note,
-    version: 1,
-  }));
+  const existing = useMemo(
+    () =>
+      periods.map((item) => ({
+        id: item.id,
+        periodNumber: item.periodNumber,
+        status: item.status,
+        note: item.note,
+        version: 1,
+      })),
+    [periods],
+  );
+  const operations = useMemo(
+    () => buildOperations(studentId, draft, existing),
+    [draft, existing, studentId],
+  );
   const payload = () => ({
     classId,
     attendanceDate,
-    operations: buildOperations(studentId, draft, existing),
+    operations,
   });
-  const previewNow = () =>
+  const previewNow = () => {
+    setMessage(null);
+    if (operations.length === 0) {
+      setPreview(null);
+      setMessage({ tone: "info", text: "Tidak ada perubahan presensi yang perlu dipreview." });
+      return;
+    }
     startTransition(async () => {
-      try {
-        setMessage(null);
-        setPreview(await previewAttendanceAction(payload()));
-      } catch {
-        setMessage({ tone: "error", text: "Preview koreksi presensi belum dapat dibuat." });
-      }
-    });
-  const applyNow = () =>
-    preview &&
-    startTransition(async () => {
-      try {
-        const result = await applyAttendanceAction(payload(), preview.token);
+      const response = await previewAttendanceAction(payload());
+      if (!response.ok) {
         setPreview(null);
-        setMessage({
-          tone: "success",
-          text: `Koreksi tersimpan: ${result.new} baru, ${result.update} diperbarui, ${result.delete} dihapus.`,
-        });
-        router.refresh();
-      } catch (error) {
-        const code = error instanceof Error ? error.message : "";
-        setMessage({
-          tone: code.includes("STALE") ? "info" : "error",
-          text: code.includes("STALE")
-            ? "Data telah berubah. Buat preview baru."
-            : "Koreksi presensi belum dapat diselesaikan.",
-        });
+        setMessage(attendanceFailureMessage(response.code, response.referenceId));
+        return;
       }
+      setPreview(response.data);
     });
+  };
+  const applyNow = () => {
+    if (!preview) return;
+    startTransition(async () => {
+      const response = await applyAttendanceAction(payload(), preview.token);
+      if (!response.ok) {
+        setPreview(null);
+        setMessage(attendanceFailureMessage(response.code, response.referenceId));
+        return;
+      }
+      setPreview(null);
+      setMessage({
+        tone: "success",
+        text: `Koreksi tersimpan: ${response.data.new} baru, ${response.data.update} diperbarui, ${response.data.delete} dihapus.`,
+      });
+      router.refresh();
+    });
+  };
   return (
     <div className="grid gap-3">
       {message ? <Alert tone={message.tone}>{message.text}</Alert> : null}
@@ -140,7 +153,7 @@ export function StudentAttendanceEditor({
           );
         })}
       </div>
-      <Button type="button" disabled={pending} onClick={previewNow}>
+      <Button type="button" disabled={pending || operations.length === 0} onClick={previewNow}>
         Preview koreksi
       </Button>
       {preview ? (

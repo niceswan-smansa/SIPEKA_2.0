@@ -13,6 +13,7 @@ import {
   type AttendanceStudent,
   type ClassAttendance,
 } from "../domain/attendance";
+import { attendanceFailureMessage } from "../domain/attendance-errors";
 import { applyAttendanceAction, previewAttendanceAction } from "./actions";
 
 type Draft = Record<number, { status: AttendanceStatus; note: string } | null>;
@@ -84,52 +85,50 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
       return next;
     });
   };
+  const operations = useMemo(
+    () =>
+      items.flatMap((student) =>
+        buildOperations(student.id, drafts[student.id] ?? {}, student.attendance),
+      ),
+    [drafts, items],
+  );
   const payload = () => ({
     classId: initial.classId,
     attendanceDate: initial.attendanceDate,
-    operations: items.flatMap((student) =>
-      buildOperations(student.id, drafts[student.id] ?? {}, student.attendance),
-    ),
+    operations,
   });
   const previewNow = () => {
     setMessage(null);
+    if (operations.length === 0) {
+      setPreview(null);
+      setMessage({ tone: "info", text: "Tidak ada perubahan presensi yang perlu dipreview." });
+      return;
+    }
     startTransition(async () => {
-      try {
-        const result = await previewAttendanceAction(payload());
-        setPreview(result);
-      } catch {
-        setMessage({ tone: "error", text: "Preview presensi belum dapat dibuat." });
+      const response = await previewAttendanceAction(payload());
+      if (!response.ok) {
+        setPreview(null);
+        setMessage(attendanceFailureMessage(response.code, response.referenceId));
+        return;
       }
+      setPreview(response.data);
     });
   };
   const applyNow = () => {
     if (!preview || preview.summary.invalid > 0 || preview.summary.stale > 0) return;
     startTransition(async () => {
-      try {
-        const result = await applyAttendanceAction(payload(), preview.token);
-        setMessage({
-          tone: "success",
-          text: `Presensi berhasil disimpan. Data baru: ${result.new}, diperbarui: ${result.update}, dihapus: ${result.delete}.`,
-        });
+      const response = await applyAttendanceAction(payload(), preview.token);
+      if (!response.ok) {
         setPreview(null);
-        router.refresh();
-      } catch (error) {
-        const code = error instanceof Error ? error.message : "";
-        setMessage({
-          tone: code.includes("STALE")
-            ? "info"
-            : code.includes("TOKEN_USED") || code.includes("TOKEN_EXPIRED")
-              ? "info"
-              : "error",
-          text: code.includes("STALE")
-            ? "Data telah berubah. Buat preview baru sebelum menyimpan."
-            : code.includes("TOKEN_USED")
-              ? "Preview ini sudah digunakan. Buat preview baru."
-              : code.includes("TOKEN_EXPIRED")
-                ? "Preview telah kedaluwarsa. Buat preview baru."
-                : "Penyimpanan presensi belum dapat diselesaikan.",
-        });
+        setMessage(attendanceFailureMessage(response.code, response.referenceId));
+        return;
       }
+      setMessage({
+        tone: "success",
+        text: `Presensi berhasil disimpan. Data baru: ${response.data.new}, diperbarui: ${response.data.update}, dihapus: ${response.data.delete}.`,
+      });
+      setPreview(null);
+      router.refresh();
     });
   };
 
@@ -292,8 +291,9 @@ export function AttendanceInput({ initial }: { initial: ClassAttendance }) {
           ) : null}
         </div>
       </Card>
-      <div className="flex justify-end">
-        <Button type="button" onClick={previewNow} disabled={pending}>
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-sm text-slate-500">{operations.length} perubahan</span>
+        <Button type="button" onClick={previewNow} disabled={pending || operations.length === 0}>
           Preview Presensi
         </Button>
       </div>

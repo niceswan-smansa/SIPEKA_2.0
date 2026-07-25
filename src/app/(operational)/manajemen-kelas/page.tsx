@@ -37,7 +37,10 @@ const errors: Record<string, string> = {
   ACADEMIC_YEAR_DUPLICATE: "Nama tahun ajaran sudah digunakan.",
   ACADEMIC_YEAR_INVALID: "Rentang tanggal tahun ajaran tidak valid.",
   ACADEMIC_YEAR_SWITCH_REQUIRES_PROMOTION:
-    "Tahun ajaran belum dapat diganti karena masih ada siswa aktif. Pergantian penuh dilakukan melalui workflow naik grade pada fase berikutnya.",
+    "Tahun ajaran belum dapat diganti karena masih ada siswa aktif. Pergantian penuh dilakukan melalui workflow naik grade.",
+  ACADEMIC_YEAR_OVERLAP: "Rentang tahun ajaran bertumpang tindih dengan tahun lain.",
+  ACADEMIC_YEAR_RANGE_CONFLICT:
+    "Rentang tidak dapat dipersempit karena sudah ada enrollment atau presensi di luar tanggal baru.",
   CLASS_HAS_ACTIVE_STUDENTS: "Kelas dengan siswa aktif tidak dapat dinonaktifkan.",
   CLASS_UPDATE_FAILED: "Metadata kelas tidak dapat diperbarui.",
 };

@@ -42,11 +42,17 @@ test("ADMIN previews mixed attendance and All Jam writes one record per period",
   await expect(page.getByText(/Baru 2/)).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi dan Simpan" }).click();
   await expect(page.getByText(/Presensi berhasil disimpan/)).toBeVisible();
+  await page.waitForLoadState("networkidle");
 
-  await page.getByLabel("Pilih Semua Siswa").check();
   await page.getByLabel("Status terpilih").selectOption("TANPA_KETERANGAN");
   await page.getByLabel("Jam terpilih").selectOption("all");
-  await page.getByRole("button", { name: "Terapkan Status" }).click();
+
+  const selectAll = page.getByLabel("Pilih Semua Siswa");
+  const applyBulk = page.getByRole("button", { name: "Terapkan Status" });
+  await selectAll.check();
+  await expect(selectAll).toBeChecked();
+  await expect(applyBulk).toBeEnabled();
+  await applyBulk.click();
   await page.getByRole("button", { name: "Preview Presensi" }).click();
   await expect(page.getByText(/Baru 8/)).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi dan Simpan" }).click();

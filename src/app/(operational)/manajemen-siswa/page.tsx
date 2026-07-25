@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { z } from "zod";
 
 import { requirePageAccess } from "@/modules/authorization";
 import {
@@ -65,8 +66,11 @@ export default async function StudentManagementPage({ searchParams }: Props) {
     ...params,
     status: params.status ?? "active",
   });
-  const selectedStudent = params.student
-    ? await createStudentService(createSupabaseStudentRepository()).getDetail(params.student)
+  const selectedStudentId = z.uuid().safeParse(params.student);
+  const selectedStudent = selectedStudentId.success
+    ? await createStudentService(createSupabaseStudentRepository()).getDetail(
+        selectedStudentId.data,
+      )
     : null;
   const totalPages = Math.max(1, Math.ceil(search.result.total / search.result.pageSize));
   const pageHref = (page: number) => {

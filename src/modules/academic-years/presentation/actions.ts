@@ -22,6 +22,8 @@ const failureCode = (error: unknown) => {
       "ACADEMIC_YEAR_DUPLICATE",
       "ACADEMIC_YEAR_INVALID",
       "ACADEMIC_YEAR_SWITCH_REQUIRES_PROMOTION",
+      "ACADEMIC_YEAR_OVERLAP",
+      "ACADEMIC_YEAR_RANGE_CONFLICT",
     ].find((code) => message.includes(code)) ?? "ACADEMIC_YEAR_FAILED"
   );
 };

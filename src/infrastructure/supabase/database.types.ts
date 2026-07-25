@@ -903,6 +903,10 @@ export type Database = {
         Args: { p_to_academic_year_id: string };
         Returns: Json;
       };
+      phase11_get_student_class_on_date: {
+        Args: { p_attendance_date: string; p_student_id: string };
+        Returns: string;
+      };
       phase3_activate_academic_year: {
         Args: { p_id: string; p_request_id?: string };
         Returns: Json;

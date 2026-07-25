@@ -19,6 +19,7 @@ export type StudentPeriodAttendance = {
   updatedByName: string;
 };
 export type StudentAttendanceData = {
+  selectedClassId: string | null;
   periods: StudentPeriodAttendance[];
   calendar: Array<{ date: string; statuses: AttendanceStatus[] }>;
   stats: Record<string, number>;

@@ -1,4 +1,8 @@
 import {
+  createAcademicYearService,
+  createSupabaseAcademicYearRepository,
+} from "@/modules/academic-years";
+import {
   AttendanceInput,
   createAttendanceService,
   createSupabaseAttendanceRepository,
@@ -38,8 +42,15 @@ export default async function AttendanceInputPage({ searchParams }: Props) {
 
   const params = await searchParams;
   const date = isIsoDate(params.date) ? params.date : todayJakarta();
-  const classes = (await createClassService(createSupabaseClassRepository()).list()).filter(
-    (item) => item.academicYearActive && item.isActive,
+  const [allClasses, academicYears] = await Promise.all([
+    createClassService(createSupabaseClassRepository()).list(),
+    createAcademicYearService(createSupabaseAcademicYearRepository()).list(),
+  ]);
+  const selectedYear = academicYears.find((year) => date >= year.startDate && date <= year.endDate);
+  const classes = allClasses.filter(
+    (item) =>
+      item.academicYearId === selectedYear?.id &&
+      (item.isActive || selectedYear?.isActive === false),
   );
   const selectedClass = classes.find((item) => item.id === params.classId) ?? classes[0];
   const initial = selectedClass
@@ -89,8 +100,10 @@ export default async function AttendanceInputPage({ searchParams }: Props) {
         </form>
       </Card>
 
-      {!selectedClass || !initial ? (
-        <Alert tone="info">Belum ada kelas aktif pada tahun ajaran aktif.</Alert>
+      {!selectedYear ? (
+        <Alert tone="info">Tanggal tidak berada dalam tahun ajaran yang terdaftar.</Alert>
+      ) : !selectedClass || !initial ? (
+        <Alert tone="info">Belum ada kelas yang dapat dipakai untuk tanggal tersebut.</Alert>
       ) : (
         <AttendanceInput key={attendanceInputKey(initial)} initial={initial} />
       )}

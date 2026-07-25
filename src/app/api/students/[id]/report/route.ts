@@ -53,8 +53,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     );
     const rows = await attendanceService.getReport(id, range.startDate, range.endDate);
 
-    await attendanceService.recordExport(id, range.startDate, range.endDate, rows.length);
-
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Presensi");
     sheet.addRow([
@@ -91,6 +89,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     const output = await workbook.xlsx.writeBuffer();
+
+    await attendanceService.recordExport(id, range.startDate, range.endDate, rows.length);
 
     return new NextResponse(output, {
       headers: {

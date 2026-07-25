@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-test("SUPER_ADMIN creates, edits, resets, deactivates, and audits a synthetic account", async ({
+test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a synthetic account", async ({
   page,
 }) => {
   const credentials = JSON.parse(readFileSync(resolve(".local/test-credentials.json"), "utf8")) as {
@@ -41,11 +41,11 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, and audits a synthetic ac
   await page.getByLabel("Konfirmasi password").fill(credentials.password);
   await page.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(page).toHaveURL(/success=reset/);
+  await expect(page.getByRole("dialog", { name: "Password sementara" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: /Force Logout/ }).click();
-  await page.getByRole("button", { name: "Konfirmasi" }).click();
-  await expect(page.getByText(/Sesi akun belum dapat dicabut secara langsung/)).toBeVisible();
-  await expect(page.getByText("Operasi akun berhasil diproses.")).toHaveCount(0);
+  await expect(
+    page.getByText("Pencabutan seluruh sesi belum didukung penyedia autentikasi."),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Nonaktifkan" }).click();
   await page.keyboard.press("Escape");
@@ -84,10 +84,4 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, and audits a synthetic ac
     `/super-admin/account-audit?action=CREATE&search=${encodeURIComponent(username)}`,
   );
   await expect(page.getByRole("cell", { name: "CREATE", exact: true }).first()).toBeVisible();
-  await page.goto(
-    `/super-admin/account-audit?action=FORCE_LOGOUT_FAILED&search=${encodeURIComponent(username)}`,
-  );
-  await expect(
-    page.getByRole("cell", { name: "FORCE_LOGOUT_FAILED", exact: true }).first(),
-  ).toBeVisible();
 });

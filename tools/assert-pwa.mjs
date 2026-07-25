@@ -45,7 +45,8 @@ if (!worker.includes(".keys()") || !worker.includes('key.startsWith("sipeka-")')
 }
 
 const staticMatch = worker.match(/const STATIC = (\[[\s\S]*?\]);/);
-const staticRoutes = staticMatch ? JSON.parse(staticMatch[1]) : [];
+const staticSource = staticMatch?.[1].replace(/,\s*]/g, "]");
+const staticRoutes = staticSource ? JSON.parse(staticSource) : [];
 
 for (const icon of manifest.icons) {
   if (!staticRoutes.includes(icon.src)) {

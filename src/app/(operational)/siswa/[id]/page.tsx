@@ -45,12 +45,10 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
       ? classDisplayName(student.currentGrade, student.classNumber)
       : "Tidak ada";
 
-  const selectedClassId = attendance.periods[0]?.classId ?? student.currentClassId;
+  const selectedClassId =
+    attendance.selectedClassId ?? attendance.periods[0]?.classId ?? student.currentClassId;
   const editable =
-    profile.role === "ADMIN" &&
-    selectedDate <= todayJakarta() &&
-    selectedClassId === student.currentClassId &&
-    selectedClassId !== null;
+    profile.role === "ADMIN" && selectedDate <= todayJakarta() && selectedClassId !== null;
 
   const range = {
     from: month,

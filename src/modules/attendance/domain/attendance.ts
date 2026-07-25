@@ -15,7 +15,7 @@ export const attendanceOperationSchema = z.object({
 export const attendanceBatchSchema = z.object({
   classId: z.uuid(),
   attendanceDate: z.iso.date(),
-  operations: z.array(attendanceOperationSchema).max(3000),
+  operations: z.array(attendanceOperationSchema).min(1).max(3000),
 });
 
 export type AttendanceOperation = z.infer<typeof attendanceOperationSchema>;

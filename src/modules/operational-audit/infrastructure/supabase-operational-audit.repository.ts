@@ -31,8 +31,10 @@ export function createSupabaseOperationalAuditRepository(): OperationalAuditRepo
         .range((filter.page - 1) * filter.pageSize, filter.page * filter.pageSize - 1);
       if (filter.action) query = query.ilike("action", `%${filter.action}%`);
       if (filter.search) {
-        const escaped = filter.search.replace(/[%_]/g, "\\$&");
-        query = query.ilike("actor_name_snapshot", `%${escaped}%`);
+        const safe = filter.search.replace(/[(),%*_]/g, " ").trim();
+        if (safe) {
+          query = query.or(`actor_name_snapshot.ilike.%${safe}%,entity_id.ilike.%${safe}%`);
+        }
       }
       const { data, count, error } = await query;
       if (error) throw error;

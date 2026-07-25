@@ -22,6 +22,16 @@ describe("attendance domain", () => {
     );
   });
 
+  it("rejects an empty attendance batch", () => {
+    expect(
+      attendanceBatchSchema.safeParse({
+        classId: "00000000-0000-4000-8000-000000000001",
+        attendanceDate: "2026-07-23",
+        operations: [],
+      }).success,
+    ).toBe(false);
+  });
+
   it("limits periods and accepts only official statuses", () => {
     expect(
       attendanceBatchSchema.safeParse({
