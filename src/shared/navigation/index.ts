@@ -18,7 +18,7 @@ const OPERATIONAL: NavigationItem[] = [
   { label: "Import Siswa", href: "/import-siswa", available: true, icon: "import" },
   { label: "Naik/Turun Grade", href: "/naik-turun-grade", available: true, icon: "promotion" },
   { label: "Alumni", href: "/alumni", available: true, icon: "alumni" },
-  { label: "Laporan", href: "/reports", available: false, icon: "report", readOnly: true },
+  { label: "Laporan", href: "/reports", available: true, icon: "report" },
   { label: "Riwayat Aktivitas", href: "/riwayat-aktivitas", available: true, icon: "audit" },
   { label: "Profil", href: "/profile", available: false, icon: "profile" },
 ];
@@ -43,7 +43,5 @@ export function getNavigationForRole(role: AppRole): NavigationItem[] {
 
   return role === "ADMIN"
     ? OPERATIONAL
-    : OPERATIONAL.filter((item) =>
-        ["Dashboard", "Cari Siswa", "Laporan", "Profil"].includes(item.label),
-      );
+    : OPERATIONAL.filter((item) => ["Dashboard", "Cari Siswa", "Profil"].includes(item.label));
 }

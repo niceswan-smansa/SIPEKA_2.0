@@ -907,6 +907,26 @@ export type Database = {
         Args: { p_attendance_date: string; p_student_id: string };
         Returns: string;
       };
+      phase12_get_grade_attendance_export: {
+        Args: {
+          p_end_date: string;
+          p_grade: Database["public"]["Enums"]["grade_level"];
+          p_start_date: string;
+        };
+        Returns: Json;
+      };
+      phase12_record_grade_attendance_export: {
+        Args: {
+          p_class_count: number;
+          p_end_date: string;
+          p_grade: Database["public"]["Enums"]["grade_level"];
+          p_impacted_student_count: number;
+          p_request_id?: string;
+          p_start_date: string;
+          p_student_count: number;
+        };
+        Returns: undefined;
+      };
       phase3_activate_academic_year: {
         Args: { p_id: string; p_request_id?: string };
         Returns: Json;

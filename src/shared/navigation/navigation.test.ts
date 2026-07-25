@@ -12,7 +12,7 @@ describe("role-aware navigation", () => {
 
   it("does not expose mutation labels to USER", () => {
     const labels = getNavigationForRole("USER").map((item) => item.label);
-    expect(labels).toEqual(["Dashboard", "Cari Siswa", "Laporan", "Profil"]);
+    expect(labels).toEqual(["Dashboard", "Cari Siswa", "Profil"]);
     expect(labels).not.toContain("Input Presensi");
     expect(labels).not.toContain("Manajemen Siswa");
     expect(labels).not.toContain("Manajemen Kelas");
@@ -32,6 +32,7 @@ describe("role-aware navigation", () => {
       "/import-siswa",
       "/naik-turun-grade",
       "/alumni",
+      "/reports",
       "/riwayat-aktivitas",
     ]);
   });
