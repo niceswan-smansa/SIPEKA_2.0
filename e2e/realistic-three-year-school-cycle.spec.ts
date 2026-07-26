@@ -9,7 +9,6 @@ import { resolve } from "node:path";
 import type { Database } from "../src/infrastructure/supabase/database.types";
 
 test.setTimeout(7_200_000);
-expect.configure({ timeout: 30_000 });
 const simulationEnabled = process.env.SIPEKA_REALISTIC_SCHOOL_SIMULATION === "true";
 
 type Grade = "X" | "XI" | "XII";
@@ -458,7 +457,9 @@ async function inputAttendanceAllClassesThroughUi(
     const [sick, permit, unexplained] = roster;
 
     await page.goto(`/presensi/input?date=${date}&classId=${item.id}`);
-    await expect(page.getByRole("heading", { name: "Input Presensi" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Input Presensi" })).toBeVisible({
+      timeout: 30_000,
+    });
 
     for (let period = 1; period <= 10; period += 1) {
       await page

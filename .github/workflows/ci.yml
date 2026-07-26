@@ -64,7 +64,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -83,14 +83,6 @@ jobs:
           npm run probe:test-auth
           npm run test:auth-policy
           npm run test:e2e
-
-      - name: Realistic three-year school simulation
-        env:
-          SIPEKA_E2E_DISPOSABLE: "true"
-        run: |
-          mkdir -p .local
-          printf 'disposable\n' > .local/e2e-disposable
-          npm run test:e2e:school-cycle
 
       - name: Firefox and WebKit read-only smoke
         env:
@@ -127,6 +119,40 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
+          path: |
+            playwright-report/**
+            test-results/**
+          retention-days: 7
+      - if: always()
+        run: npx supabase stop
+  realistic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx supabase start
+
+      - name: Realistic three-year school simulation
+        env:
+          SIPEKA_E2E_DISPOSABLE: "true"
+        run: |
+          mkdir -p .local
+          printf 'disposable\n' > .local/e2e-disposable
+          npm run test:e2e:school-cycle
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-realistic
           path: |
             playwright-report/**
             test-results/**
