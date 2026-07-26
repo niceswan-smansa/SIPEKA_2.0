@@ -52,6 +52,31 @@ npm run test:e2e
 
 Jangan arahkan destructive E2E ke host selain `127.0.0.1`/`localhost`.
 
+## Simulasi realistis sekolah tiga tahun
+
+Simulasi khusus ini menjalankan alur Admin melalui browser pada database lokal disposable:
+
+- 60 import kelas dilakukan satu per satu melalui halaman Import Siswa;
+- 90 class-day presensi disimpan melalui halaman Input Presensi;
+- 27 mutasi siswa dilakukan melalui Manajemen Siswa;
+- tiga promotion dilakukan melalui wizard Naik / Turun Grade;
+- Pencarian Kelas, alumni, audit, detail siswa, dan export Excel diverifikasi melalui UI;
+- fixture lokal mengisi 333.000 record presensi untuk 180 hari sekolah pada masing-masing dari tiga
+  tahun ajaran selesai, ditambah data awal tahun keempat.
+
+Fixture volume menggunakan service role lokal hanya untuk mempercepat pengisian hari-hari latar.
+Import, presensi representatif, mutasi, promotion, dan verifikasi tetap memakai UI/RPC aplikasi.
+Test menolak host non-local dan tidak boleh dijalankan terhadap staging atau production.
+
+```bash
+mkdir -p .local
+printf 'disposable\n' > .local/e2e-disposable
+SIPEKA_E2E_DISPOSABLE=true npm run test:e2e:school-cycle
+```
+
+Normal `npm run test:e2e` melewati file simulasi ini. CI menjalankannya sebagai langkah terpisah pada
+stack Supabase disposable.
+
 ## Performance smoke
 
 Default lokal: concurrency 5, rounds 3, p95 maksimum 6000 ms.

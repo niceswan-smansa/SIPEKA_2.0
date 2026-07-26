@@ -64,7 +64,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -83,6 +83,14 @@ jobs:
           npm run probe:test-auth
           npm run test:auth-policy
           npm run test:e2e
+
+      - name: Realistic three-year school simulation
+        env:
+          SIPEKA_E2E_DISPOSABLE: "true"
+        run: |
+          mkdir -p .local
+          printf 'disposable\n' > .local/e2e-disposable
+          npm run test:e2e:school-cycle
 
       - name: Firefox and WebKit read-only smoke
         env:

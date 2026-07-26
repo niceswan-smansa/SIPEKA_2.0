@@ -29,6 +29,14 @@ const definitions = [
     username: "phase1.admin",
   },
   {
+    fullName: "Admin Import Phase 7 Sintetis",
+    isActive: true,
+    key: "importAdmin",
+    mustChangePassword: false,
+    role: "ADMIN",
+    username: "phase7.import",
+  },
+  {
     fullName: "User Phase 1 Sintetis",
     isActive: true,
     key: "user",
