@@ -83,5 +83,8 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a syn
   await page.goto(
     `/super-admin/account-audit?action=CREATE&search=${encodeURIComponent(username)}`,
   );
-  await expect(page.getByRole("cell", { name: "CREATE", exact: true }).first()).toBeVisible();
+  const createAudit = page.getByRole("article").filter({ hasText: username }).first();
+  await expect(createAudit).toBeVisible();
+  await expect(createAudit.getByText("Membuat akun", { exact: true })).toBeVisible();
+  await expect(createAudit).toContainText(username);
 });

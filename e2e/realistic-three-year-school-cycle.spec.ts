@@ -1024,9 +1024,12 @@ test("ADMIN menjalankan simulasi realistis tiga tahun melalui UI dan data harian
   ]);
 
   await page.goto("/riwayat-aktivitas");
-  await page.getByPlaceholder("Filter action").fill("STUDENT_PROMOTION_APPLY");
-  await page.getByRole("button", { name: "Filter" }).click();
-  await expect(page.getByText("STUDENT_PROMOTION_APPLY", { exact: true }).first()).toBeVisible();
+  await page.getByLabel("Jenis aktivitas").fill("STUDENT_PROMOTION_APPLY");
+  await page.getByRole("button", { name: "Terapkan" }).click();
+  await expect(page).toHaveURL(/action=STUDENT_PROMOTION_APPLY/);
+  await expect(
+    page.getByRole("article").filter({ hasText: "Menjalankan kenaikan grade" }).first(),
+  ).toBeVisible();
 
   await attachMilestone(page, testInfo, "simulasi-final");
 

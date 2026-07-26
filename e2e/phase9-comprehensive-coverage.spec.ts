@@ -223,15 +223,17 @@ test("ADMIN exports a monthly grade workbook and filters its operational audit",
   ]);
 
   await page.goto("/riwayat-aktivitas");
-  await page.getByPlaceholder("Filter action").fill("GRADE_ATTENDANCE_EXPORT");
-  await page.getByRole("button", { name: "Filter" }).click();
+  await page.getByLabel("Jenis aktivitas").fill("GRADE_ATTENDANCE_EXPORT");
+  await page.getByRole("button", { name: "Terapkan" }).click();
 
   await expect(page).toHaveURL(/action=GRADE_ATTENDANCE_EXPORT/);
-  await expect(page.getByText("GRADE_ATTENDANCE_EXPORT", { exact: true }).first()).toBeVisible();
-
-  await page.locator("summary").filter({ hasText: "Detail aman" }).first().click();
-  await expect(page.locator("pre").first()).toContainText('"format": "xlsx"');
-  await expect(page.locator("pre").first()).toContainText('"academic_year_name"');
+  const exportAudit = page
+    .getByRole("article")
+    .filter({ hasText: "Grade Attendance Export" })
+    .first();
+  await expect(exportAudit).toBeVisible();
+  await expect(exportAudit).toContainText("Format: xlsx");
+  await expect(exportAudit).toContainText("Referensi: XI");
 });
 
 test("ADMIN promotes, rolls back, archives, tombstones, and audits lifecycle changes", async ({
@@ -347,9 +349,12 @@ test("ADMIN promotes, rolls back, archives, tombstones, and audits lifecycle cha
   await expect(page.getByRole("link", { name: xiiStudent.name, exact: true })).toHaveCount(0);
 
   await page.goto("/riwayat-aktivitas");
-  await page.getByPlaceholder("Filter action").fill("STUDENT_PROMOTION_ROLLBACK");
-  await page.getByRole("button", { name: "Filter" }).click();
-  await expect(page.getByText("STUDENT_PROMOTION_ROLLBACK", { exact: true }).first()).toBeVisible();
+  await page.getByLabel("Jenis aktivitas").fill("STUDENT_PROMOTION_ROLLBACK");
+  await page.getByRole("button", { name: "Terapkan" }).click();
+  await expect(page).toHaveURL(/action=STUDENT_PROMOTION_ROLLBACK/);
+  await expect(
+    page.getByRole("article").filter({ hasText: "Membatalkan kenaikan grade" }).first(),
+  ).toBeVisible();
 
   await previewAndApplyPromotion(page, targetYearName);
 
@@ -379,14 +384,16 @@ test("ADMIN promotes, rolls back, archives, tombstones, and audits lifecycle cha
   await expect(page.getByRole("link", { name: "Alumni dihapus", exact: true })).toBeVisible();
 
   await page.goto("/riwayat-aktivitas");
-  await page.getByPlaceholder("Filter action").fill("ALUMNI_TOMBSTONE");
-  await page.getByRole("button", { name: "Filter" }).click();
-  await expect(page.getByText("ALUMNI_TOMBSTONE", { exact: true }).first()).toBeVisible();
+  await page.getByLabel("Jenis aktivitas").fill("ALUMNI_TOMBSTONE");
+  await page.getByRole("button", { name: "Terapkan" }).click();
+  await expect(page).toHaveURL(/action=ALUMNI_TOMBSTONE/);
 
-  await page.locator("summary").filter({ hasText: "Detail aman" }).first().click();
-  const safeDetail = page.locator("pre").first();
-  await expect(safeDetail).toContainText('"tombstoned": true');
-  await expect(safeDetail).not.toContainText(xiiStudent.name);
-  await expect(safeDetail).not.toContainText(xiiStudent.nis);
-  await expect(safeDetail).not.toContainText(xiiStudent.nisn);
+  const tombstoneAudit = page
+    .getByRole("article")
+    .filter({ hasText: "Menghapus identitas alumni" })
+    .first();
+  await expect(tombstoneAudit).toBeVisible();
+  await expect(tombstoneAudit).not.toContainText(xiiStudent.name);
+  await expect(tombstoneAudit).not.toContainText(xiiStudent.nis);
+  await expect(tombstoneAudit).not.toContainText(xiiStudent.nisn);
 });
