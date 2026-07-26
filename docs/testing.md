@@ -74,8 +74,13 @@ printf 'disposable\n' > .local/e2e-disposable
 SIPEKA_E2E_DISPOSABLE=true npm run test:e2e:school-cycle
 ```
 
-Normal `npm run test:e2e` melewati file simulasi ini. CI menjalankannya sebagai langkah terpisah pada
-stack Supabase disposable.
+Normal `npm run test:e2e` melewati file simulasi ini. Simulasi tiga tahun dijalankan manual pada
+workstation pengembangan sebelum release besar atau setelah perubahan import, presensi, mutasi, dan
+promotion. Simulasi ini tidak menjadi gate GitHub-hosted per commit karena bersifat long-running,
+destructive terhadap database disposable, dan sensitif terhadap kapasitas proses browser runner.
+
+CI per commit tetap mewajibkan quality, database, Chromium functional, Firefox/WebKit read-only smoke,
+dan authenticated performance smoke.
 
 ## Performance smoke
 
