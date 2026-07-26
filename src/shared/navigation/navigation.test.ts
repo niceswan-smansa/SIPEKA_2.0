@@ -12,10 +12,10 @@ describe("role-aware navigation", () => {
 
   it("does not expose mutation labels to USER", () => {
     const labels = getNavigationForRole("USER").map((item) => item.label);
-    expect(labels).toEqual(["Dashboard", "Cari Siswa", "Profil"]);
+    expect(labels).toEqual(["Dashboard", "Pencarian", "Profil"]);
     expect(labels).not.toContain("Input Presensi");
     expect(labels).not.toContain("Manajemen Siswa");
-    expect(labels).not.toContain("Manajemen Kelas");
+    expect(labels).not.toContain("Pengaturan Tahun Ajaran & Kelas");
   });
 
   it("exposes available operational mutation routes only to ADMIN", () => {
@@ -26,7 +26,7 @@ describe("role-aware navigation", () => {
     expect(routes).toEqual([
       "/dashboard",
       "/presensi/input",
-      "/siswa",
+      "/pencarian",
       "/manajemen-siswa",
       "/manajemen-kelas",
       "/import-siswa",

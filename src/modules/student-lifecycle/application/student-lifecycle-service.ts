@@ -1,6 +1,8 @@
 import {
+  bulkImportPayloadSchema,
   importPayloadSchema,
   lifecycleIdSchema,
+  type BulkImportBatch,
   type ImportRow,
   type PromotionPreview,
 } from "../domain/student-lifecycle";
@@ -12,6 +14,7 @@ export interface StudentLifecycleRepository {
     yearEntered: number;
     rows: ImportRow[];
   }): Promise<number>;
+  importStudentsBulk?(input: BulkImportBatch[]): Promise<number>;
   promote(toAcademicYearId: string): Promise<number>;
   previewPromotion(toAcademicYearId: string): Promise<PromotionPreview>;
   rollback(batchId: string): Promise<number>;
@@ -32,6 +35,11 @@ export function createStudentLifecycleService(repository: StudentLifecycleReposi
   return {
     async importStudents(input: unknown) {
       return repository.importStudents(importPayloadSchema.parse(input));
+    },
+    async importStudentsBulk(input: unknown) {
+      const parsed = bulkImportPayloadSchema.parse(input);
+      if (!repository.importStudentsBulk) throw new Error("BULK_IMPORT_UNSUPPORTED");
+      return repository.importStudentsBulk(parsed);
     },
     previewPromotion: (toAcademicYearId: string) =>
       repository.previewPromotion(lifecycleIdSchema.parse(toAcademicYearId)),

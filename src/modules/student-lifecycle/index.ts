@@ -3,9 +3,12 @@ export {
   type StudentLifecycleRepository,
 } from "./application/student-lifecycle-service";
 export {
+  bulkImportBatchSchema,
+  bulkImportPayloadSchema,
   csvTemplate,
   importPayloadSchema,
   previewStudentCsv,
+  type BulkImportBatch,
   type ImportPreviewRow,
   type ImportRow,
 } from "./domain/student-lifecycle";

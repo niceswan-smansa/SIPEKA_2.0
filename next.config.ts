@@ -13,6 +13,11 @@ const supabaseWebSocket = supabaseOrigin?.replace(/^http/, "ws");
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   async headers() {
@@ -36,7 +41,7 @@ const nextConfig: NextConfig = {
       },
       {
         source:
-          "/(dashboard|manajemen-kelas|manajemen-siswa|presensi/:path*|siswa/:path*|import-siswa|naik-turun-grade|alumni|riwayat-aktivitas)(.*)",
+          "/(dashboard|manajemen-kelas|manajemen-siswa|pencarian|pengaturan-awal|presensi/:path*|siswa/:path*|import-siswa|naik-turun-grade|alumni|riwayat-aktivitas)(.*)",
         headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
       },
       {

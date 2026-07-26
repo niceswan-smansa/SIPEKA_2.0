@@ -9,5 +9,7 @@ export { createSupabaseAcademicYearRepository } from "./infrastructure/supabase-
 export {
   activateAcademicYearAction,
   createAcademicYearAction,
+  createInitialAcademicYearAction,
+  createPromotionAcademicYearAction,
   updateAcademicYearAction,
 } from "./presentation/actions";

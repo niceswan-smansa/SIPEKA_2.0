@@ -16,6 +16,7 @@ import {
   updateClassAction,
   type OperationalGrade,
 } from "@/modules/classes";
+import { todayJakarta } from "@/shared/domain/dates";
 import {
   Alert,
   Badge,
@@ -41,6 +42,11 @@ const errors: Record<string, string> = {
   ACADEMIC_YEAR_OVERLAP: "Rentang tahun ajaran bertumpang tindih dengan tahun lain.",
   ACADEMIC_YEAR_RANGE_CONFLICT:
     "Rentang tidak dapat dipersempit karena sudah ada enrollment atau presensi di luar tanggal baru.",
+  ACADEMIC_YEAR_CONFIRM_REQUIRED:
+    "Konfirmasi perubahan rentang wajib dicentang karena tahun ajaran sudah dimulai.",
+  ACADEMIC_YEAR_CORRECTION_TEXT_REQUIRED:
+    "Tahun ajaran yang sudah selesai hanya dapat dikoreksi setelah nama tahun diketik dengan tepat.",
+  ACADEMIC_YEAR_NOT_FOUND: "Tahun ajaran tidak ditemukan.",
   CLASS_HAS_ACTIVE_STUDENTS: "Kelas dengan siswa aktif tidak dapat dinonaktifkan.",
   CLASS_UPDATE_FAILED: "Metadata kelas tidak dapat diperbarui.",
 };
@@ -48,6 +54,7 @@ const errors: Record<string, string> = {
 export default async function ClassManagementPage({ searchParams }: Props) {
   await requirePageAccess("ADMIN_MUTATION");
   const params = await searchParams;
+  const today = todayJakarta();
   const yearService = createAcademicYearService(createSupabaseAcademicYearRepository());
   const years = await yearService.list();
   const selectedYear =
@@ -67,8 +74,8 @@ export default async function ClassManagementPage({ searchParams }: Props) {
   return (
     <>
       <PageHeader
-        title="Manajemen Kelas"
-        description="Tahun ajaran, 30 slot tetap, wali kelas, dan status kelas."
+        title="Pengaturan Tahun Ajaran & Kelas"
+        description="Area setup tahunan untuk rentang kalender, 30 slot tetap, wali kelas, dan status kelas."
       />
       {params.error ? (
         <Alert tone="error">{errors[params.error] ?? "Operasi tidak dapat diselesaikan."}</Alert>
@@ -77,10 +84,14 @@ export default async function ClassManagementPage({ searchParams }: Props) {
         <Alert tone="success">Perubahan berhasil disimpan dan diaudit.</Alert>
       ) : null}
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[360px_1fr]">
+      <div className="mt-5 grid gap-5 xl:grid-cols-[380px_1fr]">
         <div className="grid content-start gap-5">
           <Card>
-            <h2 className="mb-4 text-lg font-bold">Tambah tahun ajaran</h2>
+            <h2 className="mb-2 text-lg font-bold">Tambah tahun ajaran</h2>
+            <p className="mb-4 text-sm text-slate-600">
+              Untuk tahun berikutnya, cara paling mudah adalah membuatnya langsung dari wizard
+              Naik/Turun Grade. Form ini tetap tersedia untuk setup dan koreksi khusus.
+            </p>
             <UnsavedForm action={createAcademicYearAction} className="grid gap-4">
               <FormField id="year-name" label="Nama">
                 <Input id="year-name" name="name" placeholder="2027/2028" required />
@@ -91,8 +102,12 @@ export default async function ClassManagementPage({ searchParams }: Props) {
               <FormField id="year-end" label="Tanggal selesai">
                 <Input id="year-end" name="endDate" type="date" required />
               </FormField>
-              <label className="flex items-center gap-2 text-sm">
-                <input name="isActive" type="checkbox" /> Jadikan aktif
+              <label className="flex items-start gap-2 text-sm">
+                <input name="isActive" type="checkbox" className="mt-1" />
+                <span>
+                  Jadikan aktif. Gunakan hanya untuk tahun pertama tanpa siswa aktif; pergantian
+                  tahunan normal dilakukan melalui promotion.
+                </span>
               </label>
               <Button type="submit">Buat tahun dan 30 kelas</Button>
             </UnsavedForm>
@@ -101,50 +116,87 @@ export default async function ClassManagementPage({ searchParams }: Props) {
           <Card>
             <h2 className="mb-4 text-lg font-bold">Daftar tahun ajaran</h2>
             <div className="grid gap-3">
-              {years.map((year) => (
-                <div key={year.id} className="rounded-xl border border-slate-200 p-3">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <Link
-                      className="font-bold text-[var(--brand)]"
-                      href={`/manajemen-kelas?year=${year.id}`}
-                    >
-                      {year.name}
-                    </Link>
-                    <Badge tone={year.isActive ? "success" : "neutral"}>
-                      {year.isActive ? "Aktif" : "Tidak aktif"}
-                    </Badge>
-                  </div>
-                  <UnsavedForm action={updateAcademicYearAction} className="grid gap-2">
-                    <input type="hidden" name="id" value={year.id} />
-                    <Input name="name" defaultValue={year.name} aria-label={`Nama ${year.name}`} />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        name="startDate"
-                        type="date"
-                        defaultValue={year.startDate}
-                        aria-label={`Mulai ${year.name}`}
-                      />
-                      <Input
-                        name="endDate"
-                        type="date"
-                        defaultValue={year.endDate}
-                        aria-label={`Selesai ${year.name}`}
-                      />
+              {years.map((year) => {
+                const started = year.startDate <= today;
+                const ended = year.endDate < today;
+
+                return (
+                  <div key={year.id} className="rounded-xl border border-slate-200 p-3">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <Link
+                        className="font-bold text-[var(--brand)]"
+                        href={`/manajemen-kelas?year=${year.id}`}
+                      >
+                        {year.name}
+                      </Link>
+                      <Badge tone={year.isActive ? "success" : ended ? "neutral" : "warning"}>
+                        {year.isActive ? "Aktif" : ended ? "Selesai" : "Tidak aktif"}
+                      </Badge>
                     </div>
-                    <Button type="submit" className="bg-slate-700 hover:bg-slate-800">
-                      Simpan metadata
-                    </Button>
-                  </UnsavedForm>
-                  {!year.isActive ? (
-                    <form action={activateAcademicYearAction} className="mt-2">
+                    <UnsavedForm action={updateAcademicYearAction} className="grid gap-2">
                       <input type="hidden" name="id" value={year.id} />
-                      <Button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800">
-                        Aktifkan
+                      <Input
+                        name="name"
+                        defaultValue={year.name}
+                        aria-label={`Nama ${year.name}`}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          name="startDate"
+                          type="date"
+                          defaultValue={year.startDate}
+                          aria-label={`Mulai ${year.name}`}
+                        />
+                        <Input
+                          name="endDate"
+                          type="date"
+                          defaultValue={year.endDate}
+                          aria-label={`Selesai ${year.name}`}
+                        />
+                      </div>
+
+                      {started ? (
+                        <label className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-950">
+                          <input name="confirmRangeChange" type="checkbox" className="mt-0.5" />
+                          <span>
+                            Saya memahami perubahan rentang hanya dipakai untuk koreksi kalender dan
+                            dapat memengaruhi laporan. Database tetap akan menolak overlap atau data
+                            yang keluar dari rentang.
+                          </span>
+                        </label>
+                      ) : null}
+
+                      {ended ? (
+                        <FormField
+                          id={`confirmation-${year.id}`}
+                          label={`Ketik "${year.name}" bila mengubah tanggal tahun yang sudah selesai`}
+                        >
+                          <Input
+                            id={`confirmation-${year.id}`}
+                            name="confirmationText"
+                            autoComplete="off"
+                          />
+                        </FormField>
+                      ) : null}
+
+                      <Button type="submit" className="bg-slate-700 hover:bg-slate-800">
+                        Simpan metadata
                       </Button>
-                    </form>
-                  ) : null}
-                </div>
-              ))}
+                    </UnsavedForm>
+                    {!year.isActive ? (
+                      <form action={activateAcademicYearAction} className="mt-2">
+                        <input type="hidden" name="id" value={year.id} />
+                        <Button
+                          type="submit"
+                          className="w-full bg-emerald-700 hover:bg-emerald-800"
+                        >
+                          Aktifkan
+                        </Button>
+                      </form>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </Card>
         </div>

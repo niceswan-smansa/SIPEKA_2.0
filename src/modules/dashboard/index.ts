@@ -1,4 +1,9 @@
 export { createDashboardService } from "./application/dashboard-service";
+export {
+  getClassDashboard,
+  type ClassDashboardData,
+  type ClassDashboardStudent,
+} from "./infrastructure/supabase-class-dashboard.repository";
 export { createSupabaseDashboardRepository } from "./infrastructure/supabase-dashboard.repository";
 export {
   dashboardDateSchema,

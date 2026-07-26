@@ -9,11 +9,11 @@ Production: **https://www.sipekasmansa.online/**
 ## Fitur utama
 
 - Login username-only dengan role `USER`, `ADMIN`, dan `SUPER_ADMIN`.
-- Manajemen tahun ajaran, 30 slot kelas tetap, siswa, status, pencarian, dan perpindahan kelas.
+- Pengaturan awal dan wizard tahun ajaran, 30 slot kelas tetap, pencarian siswa/kelas, serta dashboard kelas.
 - Presensi 10 jam pelajaran dengan preview transaksi, bulk status, dan bulk Hadir.
 - Dashboard tanggal/bulan, detail siswa, kalender, statistik hari/jam, dan histori revisi.
 - Laporan individual serta workbook per grade untuk periode bulanan atau rentang tanggal.
-- Import CSV all-or-none, promotion X→XI→XII→Alumni, rollback snapshot, arsip, dan tombstone.
+- Import CSV bulk lintas kelas secara all-or-none, promotion X→XI→XII→Alumni, rollback snapshot, arsip, dan tombstone.
 - Audit akun dan audit operasional yang terpisah.
 - PWA online-only; fungsi operasional membutuhkan koneksi.
 

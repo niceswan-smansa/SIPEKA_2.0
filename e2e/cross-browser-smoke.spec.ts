@@ -118,7 +118,10 @@ test("ADMIN read-only page rendering and native controls work across browsers", 
     await expectHealthyPage(page, route);
 
   await navigateCrossBrowser(page, "/import-siswa");
-  await expect(page.locator('input[type="file"]')).toBeVisible();
+  await expect(page.getByLabel("Tahun ajaran aktif")).toBeVisible();
+  await page.getByLabel("Kelas tujuan").selectOption({ label: "X-1" });
+  await page.getByRole("button", { name: "Tambah file" }).click();
+  await expect(page.getByLabel("File CSV")).toBeVisible();
 
   await navigateCrossBrowser(page, "/reports");
   await expect(page.getByLabel("Jenis periode")).toBeVisible();

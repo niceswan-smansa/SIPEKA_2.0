@@ -18,13 +18,9 @@ function rethrowRedirect(error: unknown) {
 export async function importStudentsAction(formData: FormData) {
   await requirePageAccess("ADMIN_MUTATION");
   try {
-    const rows = JSON.parse(text(formData.get("rows"))) as unknown;
-    const created = await service().importStudents({
-      classId: text(formData.get("classId")),
-      fileName: text(formData.get("fileName")),
-      yearEntered: text(formData.get("yearEntered")),
-      rows,
-    });
+    const batches = JSON.parse(text(formData.get("batches"))) as unknown;
+    const created = await service().importStudentsBulk(batches);
+    revalidatePath("/");
     redirect(`/import-siswa?success=${created}`);
   } catch (error) {
     rethrowRedirect(error);

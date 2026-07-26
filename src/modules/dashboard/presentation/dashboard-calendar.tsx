@@ -9,9 +9,17 @@ import { monthGrid, moveMonth, todayJakarta } from "../domain/dashboard";
 export function DashboardCalendar({
   selectedDate,
   visibleMonth,
+  basePath = "/dashboard",
+  fixedParams = {},
+  minDate,
+  maxDate,
 }: {
   selectedDate: string;
   visibleMonth: string;
+  basePath?: string;
+  fixedParams?: Record<string, string>;
+  minDate?: string;
+  maxDate?: string;
 }) {
   const router = useRouter();
   const grid = monthGrid(visibleMonth);
@@ -21,8 +29,13 @@ export function DashboardCalendar({
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(grid.year, grid.month - 1, 1)));
-  const navigate = (month: string, date = selectedDate) =>
-    router.push(`/dashboard?date=${encodeURIComponent(date)}&month=${encodeURIComponent(month)}`);
+
+  const navigate = (month: string, date = selectedDate) => {
+    const query = new URLSearchParams(fixedParams);
+    query.set("date", date);
+    query.set("month", month);
+    router.push(`${basePath}?${query.toString()}`);
+  };
 
   return (
     <section aria-label="Kalender dashboard">
@@ -57,14 +70,25 @@ export function DashboardCalendar({
           const date = `${grid.year}-${String(grid.month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           const selected = date === selectedDate;
           const current = date === today;
+          const disabled = Boolean((minDate && date < minDate) || (maxDate && date > maxDate));
+
           return (
             <button
               key={date}
               type="button"
+              disabled={disabled}
               aria-current={selected ? "date" : undefined}
               aria-label={`${date}${current ? ", hari ini" : ""}`}
               onClick={() => navigate(visibleMonth, date)}
-              className={`min-h-10 rounded-lg border text-sm ${selected ? "border-[var(--brand)] bg-[var(--brand)] text-white" : current ? "border-[var(--brand)] bg-white text-[var(--brand)]" : "border-transparent hover:bg-slate-100"}`}
+              className={`min-h-10 rounded-lg border text-sm ${
+                disabled
+                  ? "cursor-not-allowed border-transparent text-slate-300"
+                  : selected
+                    ? "border-[var(--brand)] bg-[var(--brand)] text-white"
+                    : current
+                      ? "border-[var(--brand)] bg-white text-[var(--brand)]"
+                      : "border-transparent hover:bg-slate-100"
+              }`}
             >
               {day}
             </button>

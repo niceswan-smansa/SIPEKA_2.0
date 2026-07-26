@@ -115,6 +115,7 @@ test("USER and SUPER_ADMIN are blocked from every ADMIN-only operational route",
     "/manajemen-kelas",
     "/manajemen-siswa",
     "/naik-turun-grade",
+    "/pengaturan-awal",
     "/presensi/input",
     "/reports",
     "/riwayat-aktivitas",
@@ -129,7 +130,7 @@ test("USER and SUPER_ADMIN are blocked from every ADMIN-only operational route",
   await page.getByRole("button", { name: "Keluar" }).click();
   await login(page, "superAdmin");
 
-  for (const route of ["/dashboard", "/siswa", ...adminOnlyRoutes]) {
+  for (const route of ["/dashboard", "/pencarian", "/siswa", ...adminOnlyRoutes]) {
     await page.goto(route);
     await expect(page).toHaveURL(/\/super-admin\/accounts$/);
   }
@@ -143,8 +144,9 @@ test("ADMIN sees browser validation for malformed, invalid, and oversized CSV im
 
   await login(page, "admin");
   await page.goto("/import-siswa");
-  await page.locator('select[name="classId"]').selectOption({ label: "X-5" });
-  await page.locator('input[name="yearEntered"]').fill("2026");
+  await page.getByLabel("Tahun ajaran aktif").selectOption({ label: "2026/2027" });
+  await page.getByLabel("Kelas tujuan").selectOption({ label: "X-5" });
+  await page.getByRole("button", { name: "Tambah file" }).click();
 
   const fileInput = page.locator('input[type="file"]');
 
@@ -177,7 +179,7 @@ test("ADMIN sees browser validation for malformed, invalid, and oversized CSV im
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: /Konfirmasi import/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /Simpan bulk import/ })).toBeDisabled();
 
   await fileInput.setInputFiles({
     name: "terlalu-besar.csv",
@@ -262,12 +264,15 @@ test("ADMIN promotes, rolls back, archives, tombstones, and audits lifecycle cha
 
   await login(page, "admin");
 
-  await page.goto("/manajemen-kelas");
-  await page.getByLabel("Nama", { exact: true }).fill(targetYearName);
-  await page.getByLabel("Tanggal mulai").fill("2027-07-01");
-  await page.getByLabel("Tanggal selesai").fill("2028-06-30");
-  await page.getByRole("button", { name: "Buat tahun dan 30 kelas" }).click();
-  await expect(page.getByRole("link", { name: targetYearName, exact: true })).toBeVisible();
+  await page.goto("/naik-turun-grade");
+  await page.getByLabel("Nama tahun tujuan").fill(targetYearName);
+  await page.getByLabel("Tanggal mulai tahun tujuan").fill("2027-07-01");
+  await page.getByLabel("Tanggal selesai tahun tujuan").fill("2028-06-30");
+  await page.getByRole("button", { name: "Buat tahun tujuan dan preview" }).click();
+  await expect(page).toHaveURL(/\/naik-turun-grade\?preview=.*created=year-created/);
+  await expect(
+    page.getByText("Tahun tujuan dan 30 kelas berhasil dibuat.", { exact: false }),
+  ).toBeVisible();
 
   const xId = await createStudent(page, xStudent);
   const xiId = await createStudent(page, xiStudent);

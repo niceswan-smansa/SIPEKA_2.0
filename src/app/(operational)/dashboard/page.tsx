@@ -1,3 +1,9 @@
+import { redirect } from "next/navigation";
+
+import {
+  createAcademicYearService,
+  createSupabaseAcademicYearRepository,
+} from "@/modules/academic-years";
 import { requirePageAccess } from "@/modules/authorization";
 import {
   CategoryChart,
@@ -7,14 +13,32 @@ import {
   MonthlyChart,
   todayJakarta,
 } from "@/modules/dashboard";
-import { Card, PageHeader } from "@/shared/ui";
 import { isIsoDate, isMonthStart } from "@/shared/domain/dates";
+import { Alert, Card, PageHeader } from "@/shared/ui";
 
-type Props = { searchParams: Promise<{ date?: string; month?: string }> };
+type Props = { searchParams: Promise<{ date?: string; month?: string; setup?: string }> };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  await requirePageAccess("OPERATIONAL");
+  const profile = await requirePageAccess("OPERATIONAL");
   const params = await searchParams;
+  const years = await createAcademicYearService(createSupabaseAcademicYearRepository()).list();
+
+  if (years.length === 0) {
+    if (profile.role === "ADMIN") {
+      redirect("/pengaturan-awal");
+    }
+
+    return (
+      <>
+        <PageHeader title="Dashboard" description="SIPEKA belum dikonfigurasi." />
+        <Alert>
+          Belum ada tahun ajaran. Minta Admin menyelesaikan Pengaturan Awal sebelum data operasional
+          digunakan.
+        </Alert>
+      </>
+    );
+  }
+
   const selectedDate = isIsoDate(params.date) ? params.date : todayJakarta();
   const visibleMonth = isMonthStart(params.month) ? params.month : `${selectedDate.slice(0, 7)}-01`;
   const data = await createDashboardService(createSupabaseDashboardRepository()).get(selectedDate);
@@ -28,6 +52,11 @@ export default async function DashboardPage({ searchParams }: Props) {
   return (
     <>
       <PageHeader title="Dashboard" description={`Ringkasan presensi untuk ${selectedDate}.`} />
+      {params.setup === "complete" ? (
+        <Alert tone="success">
+          Pengaturan awal selesai. Tahun ajaran aktif dan 30 kelas telah dibuat.
+        </Alert>
+      ) : null}
       <div className="grid gap-5 xl:grid-cols-[340px_1fr]">
         <Card>
           <DashboardCalendar selectedDate={selectedDate} visibleMonth={visibleMonth} />

@@ -927,6 +927,14 @@ export type Database = {
         };
         Returns: undefined;
       };
+      phase13_get_class_dashboard: {
+        Args: { p_class_id: string; p_selected_date: string };
+        Returns: Json;
+      };
+      phase13_import_students_bulk: {
+        Args: { p_batches: Json; p_request_id?: string };
+        Returns: Json;
+      };
       phase3_activate_academic_year: {
         Args: { p_id: string; p_request_id?: string };
         Returns: Json;

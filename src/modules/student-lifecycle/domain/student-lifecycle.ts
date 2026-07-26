@@ -123,6 +123,47 @@ export const importPayloadSchema = z.object({
   rows: z.array(rowSchema).min(1).max(500),
 });
 
+export const bulkImportBatchSchema = z.object({
+  academicYearId: z.uuid(),
+  classId: z.uuid(),
+  fileName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(160)
+    .regex(/^[^/\\\0]+\.csv$/i),
+  rows: z.array(rowSchema).min(1).max(500),
+});
+
+export const bulkImportPayloadSchema = z
+  .array(bulkImportBatchSchema)
+  .min(1)
+  .max(30)
+  .superRefine((batches, context) => {
+    const rowCount = batches.reduce((total, batch) => total + batch.rows.length, 0);
+    if (rowCount > 5000) {
+      context.addIssue({
+        code: "custom",
+        message: "Jumlah seluruh baris import maksimum 5000.",
+      });
+    }
+
+    const scopes = new Set<string>();
+    batches.forEach((batch, index) => {
+      const key = `${batch.academicYearId}:${batch.classId}`;
+      if (scopes.has(key)) {
+        context.addIssue({
+          code: "custom",
+          message: "Satu kelas hanya boleh memiliki satu file dalam satu bulk import.",
+          path: [index, "classId"],
+        });
+      }
+      scopes.add(key);
+    });
+  });
+
+export type BulkImportBatch = z.infer<typeof bulkImportBatchSchema>;
+
 export const lifecycleIdSchema = z.uuid();
 
 export const promotionPreviewSchema = z.object({

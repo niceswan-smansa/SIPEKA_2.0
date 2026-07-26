@@ -18,6 +18,14 @@ export function createSupabaseStudentLifecycleRepository(): StudentLifecycleRepo
       if (error || !data) throw error ?? new Error("IMPORT_FAILED");
       return Number((data as Record<string, unknown>).created);
     },
+    async importStudentsBulk(input) {
+      const client = await createServerSupabaseClient();
+      const { data, error } = await client.rpc("phase13_import_students_bulk", {
+        p_batches: input,
+      });
+      if (error || !data) throw error ?? new Error("IMPORT_BULK_FAILED");
+      return Number((data as Record<string, unknown>).created);
+    },
     async promote(toAcademicYearId) {
       const client = await createServerSupabaseClient();
       const { data, error } = await client.rpc("phase7_promote_academic_year", {
