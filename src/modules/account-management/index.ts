@@ -19,6 +19,7 @@ export type {
 } from "./domain/accounts";
 export { createSupabaseAccountRepository } from "./infrastructure/supabase-account.repository";
 export {
+  clearOperationalAuditAction,
   createAccountAction,
   deleteAccountAction,
   forceLogoutAction,
@@ -27,3 +28,4 @@ export {
   updateAccountAction,
 } from "./presentation/actions";
 export { AccountMutationControls } from "./presentation/mutation-controls";
+export { OperationalAuditClearControl } from "./presentation/operational-audit-clear-control";

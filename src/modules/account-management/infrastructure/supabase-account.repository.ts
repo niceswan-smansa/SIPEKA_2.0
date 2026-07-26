@@ -225,6 +225,23 @@ export function createSupabaseAccountRepository(): AccountRepository {
       }));
       return { items, page, pageSize, total: count ?? 0 };
     },
+    async countOperationalAudit() {
+      const { count, error } = await client
+        .from("audit_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("scope", "OPERATIONAL");
+      if (error) throw error;
+      return count ?? 0;
+    },
+    async clearOperationalAudit(input) {
+      const { data, error } = await client.rpc("phase12_clear_operational_audit", {
+        p_actor_id: input.actorId,
+        p_confirmation: input.confirmation,
+        p_request_id: input.requestId,
+      });
+      if (error) throw error;
+      return Number(data ?? 0);
+    },
     async revokeSessions() {
       // Supabase Admin API accepts a JWT, not a user id. Profile guards provide immediate defense-in-depth.
       return { status: "unsupported", code: "SESSION_REVOCATION_UNSUPPORTED" } as const;

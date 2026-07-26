@@ -58,7 +58,7 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   await expect(
     page.getByText("Jam Sakit").locator("..").getByText("1", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("cell", { name: "CREATE", exact: true })).toHaveCount(2);
+  await expect(page.getByText("Ditambahkan", { exact: true })).toHaveCount(2);
 
   await page.locator("#student-period-1").selectOption("TANPA_KETERANGAN");
   await page.locator("#student-period-2").selectOption("");
@@ -66,8 +66,10 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   await expect(page.getByText(/Diperbarui 1 · Dihapus 1/)).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi koreksi" }).click();
   await page.reload();
-  await expect(page.getByRole("cell", { name: "UPDATE", exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "DELETE", exact: true })).toBeVisible();
+  await expect(page.getByText("Diperbarui", { exact: true })).toBeVisible();
+  await expect(page.getByText("Dikembalikan ke Hadir", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Jam 1: Izin → Tanpa Keterangan/)).toBeVisible();
+  await expect(page.getByText(/Jam 2: Sakit → Hadir/)).toBeVisible();
 
   const month = today().slice(0, 7);
   const response = await page.request.get(
@@ -85,6 +87,26 @@ test("student attendance detail reuses attendance mutation and exports a safe re
 
   await page.goto(`/siswa/${studentId}/laporan?from=${month}-01&to=${today()}`);
   await expect(page.getByRole("button", { name: "Cetak / Simpan PDF" })).toBeVisible();
+
+  const schoolSummaryTable = page
+    .getByRole("heading", { name: "Ringkasan selama bersekolah" })
+    .locator("xpath=following::table[1]");
+  const gradeX = schoolSummaryTable.locator("tbody tr").filter({
+    has: page.getByRole("cell", { name: "X", exact: true }),
+  });
+  await expect(gradeX.locator("td").nth(3)).toHaveText("1");
+  await expect(gradeX.locator("td").nth(4)).toHaveText("0");
+  await expect(gradeX.locator("td").nth(5)).toHaveText("0");
+  await expect(gradeX.locator("td").nth(6)).toHaveText("1");
+
+  for (const grade of ["XI", "XII"]) {
+    const row = schoolSummaryTable
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: grade, exact: true }) });
+    for (let column = 1; column <= 6; column += 1) {
+      await expect(row.locator("td").nth(column)).toHaveText("—");
+    }
+  }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("heading", { name: name })).toBeVisible();
 

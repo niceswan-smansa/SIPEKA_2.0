@@ -67,6 +67,8 @@ export const accountUpdateSchema = z.object({
   role: z.enum(MANAGED_ROLES),
   isActive: z.boolean(),
 });
+export const operationalAuditClearSchema = z.literal("HAPUS SEMUA RIWAYAT OPERASIONAL");
+
 export const passwordResetSchema = z
   .object({
     password: passwordSchema,
@@ -189,5 +191,11 @@ export interface AccountRepository {
     action?: string;
     search?: string;
   }): Promise<{ items: AccountAuditEntry[]; page: number; pageSize: number; total: number }>;
+  countOperationalAudit(): Promise<number>;
+  clearOperationalAudit(input: {
+    actorId: string;
+    confirmation: string;
+    requestId: string;
+  }): Promise<number>;
   revokeSessions(id: string): Promise<SessionRevocationResult>;
 }

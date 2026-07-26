@@ -54,6 +54,8 @@ function repository(overrides: Partial<AccountRepository> = {}): AccountReposito
     }),
     insertAudit: async () => undefined,
     listAccountAudit: async () => ({ items: [], page: 1, pageSize: 25, total: 0 }),
+    countOperationalAudit: async () => 0,
+    clearOperationalAudit: async () => 0,
     revokeSessions: async () => ({ status: "unsupported", code: "SESSION_REVOCATION_UNSUPPORTED" }),
     replaceAuthIdentity: async () => undefined,
     ...overrides,
@@ -80,6 +82,37 @@ describe("account-management", () => {
     expect(() => assertManagedTarget("actor", { ...target, role: "SUPER_ADMIN" })).toThrow(
       "TARGET_PROTECTED",
     );
+  });
+
+  it("validates and delegates operational audit clearing", async () => {
+    let clearInput: Parameters<AccountRepository["clearOperationalAudit"]>[0] | null = null;
+    const service = createAccountService(
+      repository({
+        countOperationalAudit: async () => 4,
+        clearOperationalAudit: async (input) => {
+          clearInput = input;
+          return 3;
+        },
+      }),
+    );
+
+    await expect(service.getOperationalAuditCount()).resolves.toBe(4);
+    await expect(
+      service.clearOperationalAudit({ id: "actor", fullName: "Super Admin" }, "SALAH"),
+    ).rejects.toThrow("VALIDATION");
+    await expect(
+      service.clearOperationalAudit(
+        { id: "actor", fullName: "Super Admin" },
+        "HAPUS SEMUA RIWAYAT OPERASIONAL",
+      ),
+    ).resolves.toBe(3);
+    expect(clearInput).toMatchObject({
+      actorId: "actor",
+      confirmation: "HAPUS SEMUA RIWAYAT OPERASIONAL",
+      requestId: expect.stringMatching(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      ),
+    });
   });
 
   it("compensates the Auth user when profile creation fails", async () => {

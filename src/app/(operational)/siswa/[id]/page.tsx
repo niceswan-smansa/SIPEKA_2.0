@@ -203,34 +203,33 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
       ) : null}
 
       <Card className="mt-5">
-        <h2 className="mb-4 text-lg font-bold">Histori perubahan</h2>
+        <h2 className="text-lg font-bold">Histori perubahan</h2>
+        <p className="mb-4 mt-1 text-sm text-slate-600">
+          Perubahan presensi ditampilkan sebagai ringkasan, tanpa data teknis mentah.
+        </p>
         {attendance.revisions.length ? (
-          <Table>
-            <thead>
-              <tr>
-                <th>Waktu</th>
-                <th>Tindakan</th>
-                <th>Admin</th>
-                <th>Sebelum</th>
-                <th>Sesudah</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendance.revisions.map((item) => (
-                <tr key={String(item.id)}>
-                  <td>{formatJakartaDateTime(String(item.created_at))}</td>
-                  <td>{String(item.operation)}</td>
-                  <td>{String(item.actor_name)}</td>
-                  <td>
-                    <code>{JSON.stringify(item.before ?? {})}</code>
-                  </td>
-                  <td>
-                    <code>{JSON.stringify(item.after ?? {})}</code>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <div className="grid gap-3 md:grid-cols-2">
+            {attendance.revisions.map((item) => {
+              const summary = summarizeAttendanceRevision(item);
+              return (
+                <article key={String(item.id)} className="rounded-xl border border-slate-200 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Badge tone={summary.tone}>{summary.action}</Badge>
+                    <time className="text-xs text-slate-500">
+                      {formatJakartaDateTime(String(item.created_at))}
+                    </time>
+                  </div>
+                  <p className="mt-3 font-semibold text-slate-900">{summary.description}</p>
+                  <p className="mt-1 text-sm text-slate-600">Oleh {String(item.actor_name)}</p>
+                  {summary.note ? (
+                    <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                      Catatan: {summary.note}
+                    </p>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
         ) : (
           <p className="text-sm text-slate-600">Belum ada perubahan presensi.</p>
         )}
@@ -267,6 +266,81 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
       </Card>
     </>
   );
+}
+
+type RevisionTone = "neutral" | "success" | "warning" | "danger";
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function revisionValue(snapshot: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    if (snapshot[key] !== undefined && snapshot[key] !== null) return snapshot[key];
+  }
+  return null;
+}
+
+function revisionStatus(value: unknown) {
+  if (value === "IZIN") return "Izin";
+  if (value === "SAKIT") return "Sakit";
+  if (value === "TANPA_KETERANGAN") return "Tanpa Keterangan";
+  return "Hadir";
+}
+
+function summarizeAttendanceRevision(item: unknown): {
+  action: string;
+  description: string;
+  note: string | null;
+  tone: RevisionTone;
+} {
+  const revision = asRecord(item);
+  const before = asRecord(revision.before);
+  const after = asRecord(revision.after);
+  const operation = String(revision.operation ?? "");
+  const period = Number(
+    revisionValue(after, "period_number", "periodNumber") ??
+      revisionValue(before, "period_number", "periodNumber") ??
+      0,
+  );
+  const beforeStatus = revisionStatus(revisionValue(before, "status"));
+  const afterStatus = revisionStatus(revisionValue(after, "status"));
+  const noteValue = revisionValue(after, "note") ?? revisionValue(before, "note");
+  const note = typeof noteValue === "string" && noteValue.trim() ? noteValue : null;
+  const periodLabel = period > 0 ? `Jam ${period}` : "Jam tidak diketahui";
+
+  if (operation === "CREATE") {
+    return {
+      action: "Ditambahkan",
+      description: `${periodLabel} ditandai ${afterStatus}.`,
+      note,
+      tone: "success",
+    };
+  }
+  if (operation === "UPDATE") {
+    return {
+      action: "Diperbarui",
+      description: `${periodLabel}: ${beforeStatus} → ${afterStatus}.`,
+      note,
+      tone: "warning",
+    };
+  }
+  if (operation === "DELETE") {
+    return {
+      action: "Dikembalikan ke Hadir",
+      description: `${periodLabel}: ${beforeStatus} → Hadir.`,
+      note,
+      tone: "neutral",
+    };
+  }
+  return {
+    action: "Perubahan",
+    description: `${periodLabel} mengalami perubahan presensi.`,
+    note,
+    tone: "neutral",
+  };
 }
 
 function Detail({ label, value }: { label: string; value: string }) {

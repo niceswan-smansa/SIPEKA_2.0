@@ -907,6 +907,14 @@ export type Database = {
         Args: { p_attendance_date: string; p_student_id: string };
         Returns: string;
       };
+      phase12_clear_operational_audit: {
+        Args: {
+          p_actor_id: string;
+          p_confirmation: string;
+          p_request_id?: string;
+        };
+        Returns: number;
+      };
       phase12_get_grade_attendance_export: {
         Args: {
           p_end_date: string;

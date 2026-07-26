@@ -1,10 +1,14 @@
 import {
+  clearOperationalAuditAction,
   createAccountService,
   createSupabaseAccountRepository,
+  OperationalAuditClearControl,
 } from "@/modules/account-management";
 import { requirePageAccess } from "@/modules/authorization";
 import { formatJakartaDateTime } from "@/shared/domain/dates";
 import {
+  Alert,
+  Badge,
   Card,
   EmptyState,
   FormField,
@@ -12,21 +16,33 @@ import {
   PageHeader,
   Pagination,
   Select,
-  Table,
 } from "@/shared/ui";
 
-type Props = { searchParams: Promise<{ page?: string; action?: string; search?: string }> };
+type Props = {
+  searchParams: Promise<{
+    page?: string;
+    action?: string;
+    search?: string;
+    success?: string;
+    error?: string;
+    count?: string;
+  }>;
+};
 
 export default async function AccountAuditPage({ searchParams }: Props) {
   await requirePageAccess("SUPER_ADMIN");
 
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
-  const result = await createAccountService(createSupabaseAccountRepository()).listAccountAudit({
-    page,
-    ...(params.action ? { action: params.action } : {}),
-    ...(params.search ? { search: params.search } : {}),
-  });
+  const service = createAccountService(createSupabaseAccountRepository());
+  const [result, operationalAuditCount] = await Promise.all([
+    service.listAccountAudit({
+      page,
+      ...(params.action ? { action: params.action } : {}),
+      ...(params.search ? { search: params.search } : {}),
+    }),
+    service.getOperationalAuditCount(),
+  ]);
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
 
   const makeHref = (nextPage: number) => {
@@ -40,12 +56,45 @@ export default async function AccountAuditPage({ searchParams }: Props) {
     <>
       <PageHeader
         title="Riwayat Akun"
-        description="Audit ACCOUNT bersifat append-only dan hanya terlihat oleh SUPER_ADMIN."
+        description="Riwayat akun tetap terpisah dari aktivitas operasional."
       />
+
+      {params.success === "operational-cleared" ? (
+        <div className="mb-4">
+          <Alert tone="success">
+            {Number(params.count ?? 0)} riwayat operasional berhasil dihapus.
+          </Alert>
+        </div>
+      ) : null}
+
+      {params.error === "operational-clear" ? (
+        <div className="mb-4">
+          <Alert tone="error">
+            Riwayat operasional belum dapat dihapus. Pastikan konfirmasi diketik tepat.
+          </Alert>
+        </div>
+      ) : null}
+
+      <Card className="mb-5 border-red-200 bg-red-50/40">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-bold text-slate-900">Pembersihan riwayat operasional</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              SUPER_ADMIN hanya melihat jumlah catatan, bukan isi aktivitas operasional.
+            </p>
+            <p className="mt-2 text-2xl font-bold">{operationalAuditCount}</p>
+            <p className="text-xs uppercase text-slate-500">catatan operasional tersimpan</p>
+          </div>
+          <OperationalAuditClearControl
+            action={clearOperationalAuditAction}
+            count={operationalAuditCount}
+          />
+        </div>
+      </Card>
 
       <Card className="mb-5">
         <form className="grid gap-4 md:grid-cols-[1fr_220px_auto] md:items-end" method="get">
-          <FormField id="audit-search" label="Cari actor atau target">
+          <FormField id="audit-search" label="Cari pelaku atau target">
             <Input id="audit-search" name="search" defaultValue={params.search} />
           </FormField>
 
@@ -64,9 +113,10 @@ export default async function AccountAuditPage({ searchParams }: Props) {
                 "FORCE_LOGOUT_FAILED",
                 "DELETE",
                 "DELETE_FAILED",
+                "OPERATIONAL_AUDIT_CLEAR",
               ].map((action) => (
                 <option key={action} value={action}>
-                  {action}
+                  {accountActionLabel(action)}
                 </option>
               ))}
             </Select>
@@ -84,44 +134,62 @@ export default async function AccountAuditPage({ searchParams }: Props) {
       {result.items.length === 0 ? (
         <EmptyState>Belum ada riwayat akun.</EmptyState>
       ) : (
-        <Card>
-          <Table>
-            <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase text-slate-500">
-                <th className="p-3">Waktu</th>
-                <th className="p-3">Actor</th>
-                <th className="p-3">Tindakan</th>
-                <th className="p-3">Target</th>
-                <th className="p-3">Role target</th>
-                <th className="p-3">Hasil</th>
-                <th className="p-3">Sebelum / sesudah</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.items.map((entry) => (
-                <tr key={entry.id} className="border-b border-slate-100">
-                  <td className="p-3">{formatJakartaDateTime(entry.createdAt)}</td>
-                  <td className="p-3">{entry.actorName}</td>
-                  <td className="p-3 font-semibold">{entry.action}</td>
-                  <td className="p-3 font-mono text-xs">{entry.entityId ?? "—"}</td>
-                  <td className="p-3">{String(entry.after?.role ?? entry.before?.role ?? "—")}</td>
-                  <td className="p-3">{String(entry.metadata.status ?? "SUCCESS")}</td>
-                  <td className="max-w-xs p-3 text-xs text-slate-600">
-                    <details>
-                      <summary className="cursor-pointer font-semibold text-[var(--brand)]">
-                        Lihat snapshot
-                      </summary>
-                      <pre className="mt-2 max-w-sm whitespace-pre-wrap break-words">
-                        {JSON.stringify({ before: entry.before, after: entry.after }, null, 2)}
-                      </pre>
-                    </details>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+        <div className="grid gap-3">
+          {result.items.map((entry) => {
+            const changes = accountChanges(entry.before, entry.after);
+            return (
+              <Card key={entry.id}>
+                <article>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <Badge tone={entry.metadata.status === "FAILED" ? "danger" : "success"}>
+                        {accountActionLabel(entry.action)}
+                      </Badge>
+                      <p className="mt-2 font-semibold">{entry.actorName}</p>
+                    </div>
+                    <time className="text-xs text-slate-500" dateTime={entry.createdAt}>
+                      {formatJakartaDateTime(entry.createdAt)}
+                    </time>
+                  </div>
 
-          <div className="mt-5">
+                  {changes.length ? (
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {changes.map((change) => (
+                        <div
+                          key={change.label}
+                          className="rounded-lg bg-slate-50 px-3 py-2 text-sm"
+                        >
+                          <p className="text-xs font-semibold uppercase text-slate-500">
+                            {change.label}
+                          </p>
+                          <p className="mt-1">
+                            {change.before} <span aria-hidden="true">→</span> {change.after}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-slate-600">
+                      {entry.action === "OPERATIONAL_AUDIT_CLEAR"
+                        ? `${Number(entry.metadata.deleted_count ?? 0)} riwayat operasional dihapus.`
+                        : "Tidak ada perubahan identitas yang perlu ditampilkan."}
+                    </p>
+                  )}
+
+                  {entry.entityId ? (
+                    <p className="mt-3 text-xs text-slate-400">
+                      Referensi:{" "}
+                      {entry.entityId.length > 16
+                        ? `…${entry.entityId.slice(-12)}`
+                        : entry.entityId}
+                    </p>
+                  ) : null}
+                </article>
+              </Card>
+            );
+          })}
+
+          <div className="mt-2">
             <Pagination
               page={result.page}
               totalPages={totalPages}
@@ -129,8 +197,57 @@ export default async function AccountAuditPage({ searchParams }: Props) {
               {...(result.page < totalPages ? { nextHref: makeHref(result.page + 1) } : {})}
             />
           </div>
-        </Card>
+        </div>
       )}
     </>
   );
+}
+
+const ACCOUNT_FIELD_LABELS: Record<string, string> = {
+  full_name: "Nama",
+  username: "Username",
+  role: "Role",
+  is_active: "Status akun",
+  must_change_password: "Wajib ganti password",
+};
+
+function accountValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (value === true) return "Ya";
+  if (value === false) return "Tidak";
+  return String(value);
+}
+
+function accountChanges(
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null,
+) {
+  const left = before ?? {};
+  const right = after ?? {};
+  return Object.keys(ACCOUNT_FIELD_LABELS)
+    .filter((key) => JSON.stringify(left[key]) !== JSON.stringify(right[key]))
+    .map((key) => ({
+      label: ACCOUNT_FIELD_LABELS[key] ?? key,
+      before: accountValue(left[key]),
+      after: accountValue(right[key]),
+    }));
+}
+
+const ACCOUNT_ACTION_LABELS: Record<string, string> = {
+  CREATE: "Membuat akun",
+  UPDATE: "Mengubah akun",
+  ROLE_CHANGE: "Mengubah role",
+  RESET_PASSWORD: "Reset password",
+  RESET_PASSWORD_FAILED: "Reset password gagal",
+  ACTIVATE: "Mengaktifkan akun",
+  DEACTIVATE: "Menonaktifkan akun",
+  FORCE_LOGOUT: "Mengeluarkan sesi",
+  FORCE_LOGOUT_FAILED: "Pengeluaran sesi gagal",
+  DELETE: "Menghapus akses",
+  DELETE_FAILED: "Penghapusan akses gagal",
+  OPERATIONAL_AUDIT_CLEAR: "Menghapus riwayat operasional",
+};
+
+function accountActionLabel(action: string) {
+  return ACCOUNT_ACTION_LABELS[action] ?? action.replaceAll("_", " ");
 }

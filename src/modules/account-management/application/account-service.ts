@@ -5,6 +5,7 @@ import {
   accountSnapshot,
   accountUpdateSchema,
   assertManagedTarget,
+  operationalAuditClearSchema,
   passwordResetSchema,
   type AccountInput,
   type AccountOperationResult,
@@ -52,6 +53,17 @@ export function createAccountService(repository: AccountRepository) {
     listAccountAudit: (query: Parameters<AccountRepository["listAccountAudit"]>[0]) =>
       repository.listAccountAudit(query),
     getAccount: (id: string) => repository.getAccount(id),
+    getOperationalAuditCount: () => repository.countOperationalAudit(),
+
+    async clearOperationalAudit(actor: { id: string; fullName: string }, confirmation: string) {
+      const parsed = operationalAuditClearSchema.safeParse(confirmation);
+      if (!parsed.success) throw new Error("VALIDATION");
+      return repository.clearOperationalAudit({
+        actorId: actor.id,
+        confirmation: parsed.data,
+        requestId: randomUUID(),
+      });
+    },
 
     async createAccount(
       actor: { id: string; fullName: string },

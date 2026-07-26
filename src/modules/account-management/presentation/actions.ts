@@ -174,6 +174,21 @@ export async function forceLogoutAction(formData: FormData) {
   redirect(`/super-admin/accounts/${id}?success=logout`);
 }
 
+export async function clearOperationalAuditAction(formData: FormData) {
+  const actor = await requirePageAccess("SUPER_ADMIN");
+  const confirmation = text(formData.get("confirmation"));
+
+  let deleted: number;
+  try {
+    deleted = await service().clearOperationalAudit(actor, confirmation);
+  } catch {
+    logFailure("OPERATIONAL_AUDIT_CLEAR");
+    genericError("/super-admin/account-audit", "operational-clear");
+  }
+
+  redirect(`/super-admin/account-audit?success=operational-cleared&count=${deleted}`);
+}
+
 export async function deleteAccountAction(formData: FormData) {
   const actor = await requirePageAccess("SUPER_ADMIN");
   const id = text(formData.get("id"));
