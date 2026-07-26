@@ -42,7 +42,13 @@ for (const [command, args] of [
 
 execFileSync(
   "npx",
-  ["playwright", "test", "e2e/realistic-three-year-school-cycle.spec.ts", "--project=chromium"],
+  [
+    "playwright",
+    "test",
+    "e2e/realistic-three-year-school-cycle.spec.ts",
+    "--project=chromium",
+    "--retries=0",
+  ],
   {
     stdio: "inherit",
     env: {

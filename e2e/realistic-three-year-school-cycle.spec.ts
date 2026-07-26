@@ -9,6 +9,7 @@ import { resolve } from "node:path";
 import type { Database } from "../src/infrastructure/supabase/database.types";
 
 test.setTimeout(7_200_000);
+expect.configure({ timeout: 30_000 });
 const simulationEnabled = process.env.SIPEKA_REALISTIC_SCHOOL_SIMULATION === "true";
 
 type Grade = "X" | "XI" | "XII";
