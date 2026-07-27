@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select no_plan();
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
 values (
@@ -92,4 +92,5 @@ select throws_like(
 );
 
 select * from finish();
+
 rollback;

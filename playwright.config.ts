@@ -43,6 +43,6 @@ export default defineConfig({
     command: process.env.PLAYWRIGHT_WEBSERVER_COMMAND ?? "npm run dev:local",
     url: process.env.PLAYWRIGHT_WEBSERVER_URL ?? "http://127.0.0.1:3000",
     ignoreHTTPSErrors: true,
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === "true",
   },
 });

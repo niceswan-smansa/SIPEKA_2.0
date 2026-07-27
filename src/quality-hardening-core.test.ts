@@ -10,7 +10,6 @@ import { createAcademicYearService } from "@/modules/academic-years";
 import { createAttendanceService } from "@/modules/attendance";
 import { createClassService } from "@/modules/classes";
 import { createDashboardService } from "@/modules/dashboard";
-import { createOperationalAuditService } from "@/modules/operational-audit";
 import { createStudentAttendanceService } from "@/modules/student-attendance";
 import { createStudentLifecycleService } from "@/modules/student-lifecycle";
 import { createStudentSearchService } from "@/modules/student-search";
@@ -147,16 +146,6 @@ describe("quality hardening core coverage", () => {
     await createDashboardService(dashboardRepository as never).get("2026-07-25");
     expect(dashboardRepository.get).toHaveBeenCalledWith("2026-07-25");
 
-    const auditRepository = {
-      list: vi.fn().mockResolvedValue({ items: [], total: 0 }),
-    };
-    await createOperationalAuditService(auditRepository as never).list({ action: "  LOGIN  " });
-    expect(auditRepository.list).toHaveBeenCalledWith({
-      page: 1,
-      pageSize: 20,
-      action: "LOGIN",
-    });
-
     const lifecycleRepository = {
       importStudents: vi.fn(),
       previewPromotion: vi.fn().mockResolvedValue({}),
@@ -177,12 +166,10 @@ describe("quality hardening core coverage", () => {
     const studentAttendanceRepository = {
       get: vi.fn(),
       getReport: vi.fn(),
-      recordExport: vi.fn(),
     };
     const studentAttendance = createStudentAttendanceService(studentAttendanceRepository as never);
     expect(studentAttendance.get).toBe(studentAttendanceRepository.get);
     expect(studentAttendance.getReport).toBe(studentAttendanceRepository.getReport);
-    expect(studentAttendance.recordExport).toBe(studentAttendanceRepository.recordExport);
 
     const searchRepository = {
       search: vi.fn().mockResolvedValue({ items: [], total: 0 }),

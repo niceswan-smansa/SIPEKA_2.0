@@ -145,7 +145,7 @@ export function AccountMutationControls({
         onCancel={() => setDialog(null)}
         onConfirm={() => submit(deleteAction, {})}
       >
-        Akses {fullName} akan dihapus melalui tombstone. Riwayat audit tetap dipertahankan.
+        Akses {fullName} akan dihapus melalui tombstone.
       </ConfirmDialog>
     </div>
   );

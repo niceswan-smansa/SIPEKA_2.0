@@ -70,7 +70,6 @@ function summariesFor(data: GradeAttendanceExportData) {
 export function createGradeAttendanceExportService(repository: GradeAttendanceExportRepository) {
   return {
     get: repository.get,
-    recordExport: repository.recordExport,
   };
 }
 

@@ -16,7 +16,7 @@ import { Alert, Button, FormField, Input, Select } from "@/shared/ui";
 
 import type { StudentPeriodAttendance } from "../domain/student-attendance";
 
-type Draft = Record<number, { status: AttendanceStatus; note: string } | null>;
+type Draft = Record<number, AttendanceStatus | null>;
 type Message = { tone: "success" | "error" | "info"; text: string };
 const labels: Record<AttendanceStatus, string> = {
   IZIN: "Izin",
@@ -37,13 +37,13 @@ export function StudentAttendanceEditor({
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft>(() =>
-    Object.fromEntries(
-      periods.map((item) => [item.periodNumber, { status: item.status, note: item.note ?? "" }]),
-    ),
+    Object.fromEntries(periods.map((item) => [item.periodNumber, item.status])),
   );
+  const [note, setNote] = useState(periods.find((item) => item.note)?.note ?? "");
   const [preview, setPreview] = useState<AttendancePreview | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
   const [pending, startTransition] = useTransition();
+
   const existing = useMemo(
     () =>
       periods.map((item) => ({
@@ -55,15 +55,23 @@ export function StudentAttendanceEditor({
       })),
     [periods],
   );
-  const operations = useMemo(
-    () => buildOperations(studentId, draft, existing),
-    [draft, existing, studentId],
-  );
+
+  const operations = useMemo(() => {
+    const normalized = Object.fromEntries(
+      Object.entries(draft).map(([period, status]) => [
+        Number(period),
+        status ? { status, note } : null,
+      ]),
+    );
+    return buildOperations(studentId, normalized, existing);
+  }, [draft, existing, note, studentId]);
+
   const payload = () => ({
     classId,
     attendanceDate,
     operations,
   });
+
   const previewNow = () => {
     setMessage(null);
     if (operations.length === 0) {
@@ -71,6 +79,7 @@ export function StudentAttendanceEditor({
       setMessage({ tone: "info", text: "Tidak ada perubahan presensi yang perlu dipreview." });
       return;
     }
+
     startTransition(async () => {
       const response = await previewAttendanceAction(payload());
       if (!response.ok) {
@@ -81,8 +90,10 @@ export function StudentAttendanceEditor({
       setPreview(response.data);
     });
   };
+
   const applyNow = () => {
     if (!preview) return;
+
     startTransition(async () => {
       const response = await applyAttendanceAction(payload(), preview.token);
       if (!response.ok) {
@@ -90,6 +101,7 @@ export function StudentAttendanceEditor({
         setMessage(attendanceFailureMessage(response.code, response.referenceId));
         return;
       }
+
       setPreview(null);
       setMessage({
         tone: "success",
@@ -98,34 +110,36 @@ export function StudentAttendanceEditor({
       router.refresh();
     });
   };
+
+  const hasAbsence = Object.values(draft).some(Boolean);
+
   return (
     <div className="grid gap-3">
       {message ? <Alert tone={message.tone}>{message.text}</Alert> : null}
+
       <div className="grid gap-3 sm:grid-cols-2">
         {Array.from({ length: 10 }, (_, index) => {
           const period = index + 1;
           const value = draft[period] ?? null;
+
           return (
             <div key={period} className="rounded-lg border border-slate-200 p-3">
               <strong>Jam {period}</strong>
               <FormField id={`student-period-${period}`} label="Status" className="mt-2">
                 <Select
                   id={`student-period-${period}`}
-                  value={value?.status ?? ""}
+                  value={value ?? ""}
                   onChange={(event) => {
                     setPreview(null);
                     setDraft((current) => ({
                       ...current,
                       [period]: event.target.value
-                        ? {
-                            status: event.target.value as AttendanceStatus,
-                            note: value?.note ?? "",
-                          }
+                        ? (event.target.value as AttendanceStatus)
                         : null,
                     }));
                   }}
                 >
-                  <option value="">Hadir (tanpa record)</option>
+                  <option value="">Hadir</option>
                   {ATTENDANCE_STATUSES.map((status) => (
                     <option key={status} value={status}>
                       {labels[status]}
@@ -133,29 +147,29 @@ export function StudentAttendanceEditor({
                   ))}
                 </Select>
               </FormField>
-              {value ? (
-                <FormField id={`student-note-${period}`} label="Catatan" className="mt-2">
-                  <Input
-                    id={`student-note-${period}`}
-                    maxLength={500}
-                    value={value.note}
-                    onChange={(event) => {
-                      setPreview(null);
-                      setDraft((current) => ({
-                        ...current,
-                        [period]: { ...value, note: event.target.value },
-                      }));
-                    }}
-                  />
-                </FormField>
-              ) : null}
             </div>
           );
         })}
       </div>
+
+      <FormField id="student-daily-note" label="Catatan harian">
+        <Input
+          id="student-daily-note"
+          maxLength={500}
+          disabled={!hasAbsence}
+          value={hasAbsence ? note : ""}
+          onChange={(event) => {
+            setPreview(null);
+            setNote(event.target.value);
+          }}
+          placeholder="Satu catatan berlaku untuk semua jam tidak hadir pada tanggal ini"
+        />
+      </FormField>
+
       <Button type="button" disabled={pending || operations.length === 0} onClick={previewNow}>
         Preview koreksi
       </Button>
+
       {preview ? (
         <div className="rounded-lg border border-slate-200 p-3 text-sm">
           Baru {preview.summary.new} · Diperbarui {preview.summary.update} · Dihapus{" "}

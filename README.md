@@ -14,7 +14,7 @@
 ### Sistem Presensi SMANSA Pamekasan
 
 Platform operasional sekolah untuk pengelolaan siswa, presensi per jam pelajaran,<br />
-laporan, import data, kenaikan tingkat, alumni, akun, dan audit.
+laporan, import data, kenaikan tingkat, alumni, dan akun.
 
 [![CI](https://github.com/niceswan-smansa/SIPEKA_2.0/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/niceswan-smansa/SIPEKA_2.0/actions/workflows/ci.yml)
 [![Production](https://img.shields.io/badge/Production-Live-00C853?style=flat-square&logo=vercel&logoColor=white)](https://www.sipekasmansa.online/)
@@ -33,7 +33,7 @@ laporan, import data, kenaikan tingkat, alumni, akun, dan audit.
 
 ## Gambaran Umum
 
-**SIPEKA** adalah aplikasi web internal SMAN 1 Pamekasan yang menyatukan alur data siswa dan presensi dalam satu sistem yang terkontrol. Aplikasi dirancang untuk operasi harian sekolah dengan pembagian akses yang tegas, mutation transaksional, audit terpisah, dan pengujian berlapis.
+**SIPEKA** adalah aplikasi web internal SMAN 1 Pamekasan yang menyatukan alur data siswa dan presensi dalam satu sistem yang terkontrol. Aplikasi dirancang untuk operasi harian sekolah dengan pembagian akses yang tegas, mutation transaksional, penyimpanan presensi padat, dan pengujian berlapis.
 
 > [!IMPORTANT]
 > SIPEKA bersifat **online-only**. Halaman operasional, data siswa, dan API terproteksi tidak disimpan untuk penggunaan offline.
@@ -74,7 +74,8 @@ laporan, import data, kenaikan tingkat, alumni, akun, dan audit.
 <li>Status per siswa dan per jam</li>
 <li>Operasi bulk dan bulk Hadir</li>
 <li>Preview perubahan sebelum diterapkan</li>
-<li>Koreksi dengan histori revisi dan audit</li>
+<li>Koreksi stale-safe tanpa riwayat permanen</li>
+<li>Satu baris per siswa per tanggal</li>
 </ul>
 </td>
 </tr>
@@ -112,11 +113,11 @@ laporan, import data, kenaikan tingkat, alumni, akun, dan audit.
 </ul>
 </td>
 <td width="50%" valign="top">
-<h3>🧾 Audit &amp; Keamanan</h3>
+<h3>🛡️ Keamanan</h3>
 <ul>
-<li>Audit akun dan audit operasional terpisah</li>
 <li>Actor selalu berasal dari session server</li>
 <li>Mutation bisnis melalui RPC transaksional</li>
+<li>Preview token dan stale check sebelum apply</li>
 <li>RLS, grant, validasi database, dan bundle scan</li>
 <li>Service-role key tidak boleh masuk client bundle</li>
 </ul>
@@ -137,11 +138,10 @@ laporan, import data, kenaikan tingkat, alumni, akun, dan audit.
 | Import, promotion, alumni  |  —   |  Ya   |      —      |
 | Laporan individual         | Baca | Baca  |      —      |
 | Export Excel               |  —   |  Ya   |      —      |
-| Portal akun dan audit akun |  —   |   —   |     Ya      |
-| Audit operasional          |  —   |  Ya   |      —      |
+| Portal akun                |  —   |   —   |     Ya      |
 
 > [!NOTE]
-> `SUPER_ADMIN` mengelola akun, bukan data akademik. Pemisahan ini disengaja untuk menjaga batas kewenangan dan audit.
+> `SUPER_ADMIN` mengelola akun, bukan data akademik. Pemisahan ini disengaja untuk menjaga batas kewenangan.
 
 ---
 
@@ -158,7 +158,7 @@ flowchart LR
     Infra --> Auth["Supabase Auth"]
     Infra --> RPC["PostgreSQL RPC"]
     RPC --> RLS["RLS & Grants"]
-    RPC --> Audit["Audit & Revision"]
+    RPC --> Attendance["Compact attendance_days"]
     App --> Excel["ExcelJS Export"]
     Vercel["Vercel"] --> App
 ```
@@ -177,7 +177,7 @@ Prinsip utamanya:
 - Server Actions dan route handler tetap tipis;
 - direct business write melalui Data API ditutup;
 - mutation penting menggunakan RPC PostgreSQL dalam satu transaksi;
-- authorization, RLS, grant, revision, dan audit saling melengkapi;
+- authorization, RLS, grant, preview token, dan stale check saling melengkapi;
 - data terproteksi tetap `network-only` dan `no-store`.
 
 Rincian arsitektur tersedia di [`docs/architecture.md`](docs/architecture.md).

@@ -281,7 +281,6 @@ Akun Pengguna dikelola sepenuhnya oleh Super Admin.
 /super-admin/accounts
 /super-admin/accounts/new
 /super-admin/accounts/[id]
-/super-admin/account-audit
 ```
 
 ## 5.3 Aplikasi Operasional
@@ -297,7 +296,6 @@ Akun Pengguna dikelola sepenuhnya oleh Super Admin.
 /grade
 /alumni
 /laporan
-/riwayat-aktivitas
 /profil
 ```
 
@@ -1791,7 +1789,6 @@ src/
 │   │   ├── grade/page.tsx
 │   │   ├── alumni/page.tsx
 │   │   ├── laporan/page.tsx
-│   │   └── riwayat-aktivitas/page.tsx
 │   ├── (super-admin)/
 │   │   ├── layout.tsx
 │   │   └── super-admin/

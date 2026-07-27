@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { passwordSchema } from "@/shared/security/password-policy";
 
 export const MANAGED_ROLES = ["ADMIN", "USER"] as const;
@@ -22,21 +23,12 @@ export type AccountListQuery = {
   role?: ManagedRole;
   active?: boolean;
 };
+
 export type AccountListResult = {
   items: AccountRecord[];
   page: number;
   pageSize: number;
   total: number;
-};
-export type AccountAuditEntry = {
-  id: string;
-  createdAt: string;
-  action: string;
-  actorName: string;
-  entityId: string | null;
-  before: Record<string, unknown> | null;
-  after: Record<string, unknown> | null;
-  metadata: Record<string, unknown>;
 };
 
 export const accountInputSchema = z
@@ -67,7 +59,6 @@ export const accountUpdateSchema = z.object({
   role: z.enum(MANAGED_ROLES),
   isActive: z.boolean(),
 });
-export const operationalAuditClearSchema = z.literal("HAPUS SEMUA RIWAYAT OPERASIONAL");
 
 export const passwordResetSchema = z
   .object({
@@ -102,7 +93,6 @@ export type AccountOperationResult =
       code:
         | "AUTH_PROVIDER_FAILURE"
         | "DATABASE_FAILURE"
-        | "AUDIT_FAILURE"
         | "PARTIAL_OPERATION"
         | "PASSWORD_RESET_AUTH_FAILED"
         | "ACCOUNT_AUTH_CLEANUP_PENDING";
@@ -117,23 +107,7 @@ export type SessionRevocationResult =
 export function normalizeUsername(value: string) {
   return value.trim().toLowerCase();
 }
-export function accountSnapshot(
-  account:
-    | AccountRecord
-    | Pick<
-        AccountRecord,
-        "id" | "username" | "fullName" | "role" | "isActive" | "mustChangePassword"
-      >,
-) {
-  return {
-    id: account.id,
-    username: account.username,
-    full_name: account.fullName,
-    role: account.role,
-    is_active: account.isActive,
-    must_change_password: account.mustChangePassword,
-  };
-}
+
 export function assertManagedTarget(actorId: string, target: AccountRecord) {
   if (target.id === actorId) throw new Error("TARGET_SELF");
   if (target.role === "SUPER_ADMIN") throw new Error("TARGET_PROTECTED");
@@ -146,7 +120,7 @@ export interface AccountRepository {
   deleteAuthUser(id: string): Promise<void>;
   updateAuthUser(id: string, input: { password?: string }): Promise<void>;
   replaceAuthIdentity(id: string, identity: string): Promise<void>;
-  insertProfileWithAudit(input: {
+  insertProfile(input: {
     id: string;
     username: string;
     fullName: string;
@@ -156,7 +130,7 @@ export interface AccountRepository {
     createdBy: string;
     requestId: string;
   }): Promise<AccountRecord>;
-  updateProfileWithAudit(input: {
+  updateProfile(input: {
     actorId: string;
     targetId: string;
     fullName: string;
@@ -166,36 +140,16 @@ export interface AccountRepository {
     action: "UPDATE" | "ROLE_CHANGE" | "ACTIVATE" | "DEACTIVATE";
     requestId: string;
   }): Promise<AccountRecord>;
-  markPasswordResetWithAudit(input: {
+  markPasswordReset(input: {
     actorId: string;
     targetId: string;
     requestId: string;
   }): Promise<AccountRecord>;
-  tombstoneProfileWithAudit(input: {
+  tombstoneProfile(input: {
     actorId: string;
     targetId: string;
     tombstoneUsername: string;
     requestId: string;
   }): Promise<AccountRecord>;
-  insertAudit(input: {
-    actorId: string;
-    actorName: string;
-    action: string;
-    entityId: string;
-    before?: Record<string, unknown> | null;
-    after?: Record<string, unknown> | null;
-    metadata?: Record<string, unknown>;
-  }): Promise<void>;
-  listAccountAudit(query: {
-    page: number;
-    action?: string;
-    search?: string;
-  }): Promise<{ items: AccountAuditEntry[]; page: number; pageSize: number; total: number }>;
-  countOperationalAudit(): Promise<number>;
-  clearOperationalAudit(input: {
-    actorId: string;
-    confirmation: string;
-    requestId: string;
-  }): Promise<number>;
   revokeSessions(id: string): Promise<SessionRevocationResult>;
 }

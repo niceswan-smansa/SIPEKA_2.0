@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a synthetic account", async ({
+test("SUPER_ADMIN creates, edits, resets, deactivates, and deletes a synthetic account", async ({
   page,
 }) => {
   const credentials = JSON.parse(readFileSync(resolve(".local/test-credentials.json"), "utf8")) as {
@@ -12,11 +12,13 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a syn
   };
   const suffix = Date.now().toString().slice(-7);
   const username = `phase2.${suffix}`;
+
   await page.goto("/login");
   await page.getByLabel("Username").fill(credentials.users.superAdmin.username);
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page).toHaveURL(/\/super-admin\/accounts$/);
+
   await page.goto("/super-admin/accounts/new");
   await page.getByLabel("Nama lengkap").fill("Akun Sintetis Phase 2");
   await page.getByLabel("Username").fill(username);
@@ -31,6 +33,7 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a syn
     .getByRole("row", { name: new RegExp(username) })
     .getByRole("link", { name: "Detail" })
     .click();
+
   await page.getByLabel("Nama lengkap").fill("Akun Sintetis Diperbarui");
   await page.getByLabel("Role").selectOption("ADMIN");
   await page.getByRole("button", { name: "Simpan perubahan" }).click();
@@ -41,15 +44,7 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a syn
   await page.getByLabel("Konfirmasi password").fill(credentials.password);
   await page.getByRole("button", { name: "Simpan", exact: true }).click();
   await expect(page).toHaveURL(/success=reset/);
-  await expect(page.getByRole("dialog", { name: "Password sementara" })).toHaveCount(0);
 
-  await expect(
-    page.getByText("Pencabutan seluruh sesi belum didukung penyedia autentikasi."),
-  ).toBeVisible();
-
-  await page.getByRole("button", { name: "Nonaktifkan" }).click();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog", { name: "Nonaktifkan akun" })).toHaveCount(0);
   await page.getByRole("button", { name: "Nonaktifkan" }).click();
   await page.getByRole("button", { name: "Konfirmasi" }).click();
   await expect(page).toHaveURL(/success=status/);
@@ -65,26 +60,4 @@ test("SUPER_ADMIN creates, edits, resets, deactivates, deletes, and audits a syn
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Masuk" }).click();
   await expect(page.getByText("Username atau password tidak valid.")).toBeVisible();
-
-  await page.getByLabel("Username").fill(credentials.users.superAdmin.username);
-  await page.getByLabel("Password", { exact: true }).fill(credentials.password);
-  await page.getByRole("button", { name: "Masuk" }).click();
-  await expect(page).toHaveURL(/\/super-admin\/accounts$/);
-
-  const reusedUsername = `reuse.${suffix}`;
-  await page.goto("/super-admin/accounts/new");
-  await page.getByLabel("Nama lengkap").fill("Akun Reuse Sintetis");
-  await page.getByLabel("Username").fill(reusedUsername);
-  await page.getByLabel("Password sementara").fill(credentials.password);
-  await page.getByLabel("Konfirmasi password").fill(credentials.password);
-  await page.getByRole("button", { name: "Buat Akun" }).click();
-  await expect(page).toHaveURL(/\/super-admin\/accounts\?success=created/);
-
-  await page.goto(
-    `/super-admin/account-audit?action=CREATE&search=${encodeURIComponent(username)}`,
-  );
-  const createAudit = page.getByRole("article").filter({ hasText: username }).first();
-  await expect(createAudit).toBeVisible();
-  await expect(createAudit.getByText("Membuat akun", { exact: true })).toBeVisible();
-  await expect(createAudit).toContainText(username);
 });

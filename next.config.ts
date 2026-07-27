@@ -41,7 +41,7 @@ const nextConfig: NextConfig = {
       },
       {
         source:
-          "/(dashboard|manajemen-kelas|manajemen-siswa|pencarian|pengaturan-awal|presensi/:path*|siswa/:path*|import-siswa|naik-turun-grade|alumni|riwayat-aktivitas)(.*)",
+          "/(dashboard|manajemen-kelas|manajemen-siswa|pencarian|pengaturan-awal|presensi/:path*|siswa/:path*|import-siswa|naik-turun-grade|alumni)(.*)",
         headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
       },
       {

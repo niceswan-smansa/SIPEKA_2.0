@@ -62,8 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       "NISN",
       "Nama",
       "Status",
-      "Catatan",
-      "Pencatat",
+      "Catatan Harian",
       "Dibuat",
       "Diubah",
     ]);
@@ -77,7 +76,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         formulaSafe(student.fullName),
         row.status,
         formulaSafe(row.note),
-        formulaSafe(row.recordedBy),
         row.createdAt,
         row.updatedAt,
       ]);
@@ -89,8 +87,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     const output = await workbook.xlsx.writeBuffer();
-
-    await attendanceService.recordExport(id, range.startDate, range.endDate, rows.length);
 
     return new NextResponse(output, {
       headers: {

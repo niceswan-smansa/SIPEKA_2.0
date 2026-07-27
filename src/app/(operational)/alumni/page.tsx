@@ -10,7 +10,7 @@ import { Card, EmptyState, PageHeader, Pagination } from "@/shared/ui";
 
 const successMessages: Record<string, string> = {
   archived: "Alumni berhasil diarsipkan.",
-  tombstoned: "Identitas alumni berhasil ditombstone. Histori tetap dipertahankan.",
+  tombstoned: "Identitas alumni berhasil ditombstone. Data presensi tetap dipertahankan.",
 };
 
 const errorMessages: Record<string, string> = {

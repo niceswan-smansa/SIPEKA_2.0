@@ -24,7 +24,6 @@ const OPERATIONAL: NavigationItem[] = [
   { label: "Naik/Turun Grade", href: "/naik-turun-grade", available: true, icon: "promotion" },
   { label: "Alumni", href: "/alumni", available: true, icon: "alumni" },
   { label: "Laporan", href: "/reports", available: true, icon: "report" },
-  { label: "Riwayat Aktivitas", href: "/riwayat-aktivitas", available: true, icon: "audit" },
   { label: "Profil", href: "/profile", available: false, icon: "profile" },
 ];
 
@@ -36,12 +35,6 @@ export function getNavigationForRole(role: AppRole): NavigationItem[] {
         href: "/super-admin/accounts",
         available: true,
         icon: "accounts",
-      },
-      {
-        label: "Riwayat Akun",
-        href: "/super-admin/account-audit",
-        available: true,
-        icon: "audit",
       },
     ];
   }

@@ -170,8 +170,7 @@ export default async function StudentReportPage({ params, searchParams }: Props)
               <th>Tanggal</th>
               <th>Jam</th>
               <th>Status</th>
-              <th>Catatan</th>
-              <th>Pencatat</th>
+              <th>Catatan harian</th>
             </tr>
           </thead>
           <tbody>
@@ -181,7 +180,6 @@ export default async function StudentReportPage({ params, searchParams }: Props)
                 <td>{row.periodNumber}</td>
                 <td>{statusLabel(row.status)}</td>
                 <td>{row.note ?? "—"}</td>
-                <td>{row.recordedBy}</td>
               </tr>
             ))}
           </tbody>

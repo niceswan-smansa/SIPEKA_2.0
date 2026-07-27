@@ -47,7 +47,7 @@
     "test:coverage": "vitest run --coverage",
     "test:dependency-policy": "node tools/assert-dependency-policy.mjs",
     "test:migration-policy": "node tools/test-student-migration-policy.mjs",
-    "test:e2e:cross-browser": "playwright test --project=firefox-smoke --project=webkit-smoke",
+    "test:e2e:cross-browser": "node tools/run-cross-browser-production.mjs",
     "test:performance": "playwright test --project=performance",
     "patch:brace-expansion": "node tools/patch-brace-expansion-legacy.mjs",
     "postinstall": "npm run patch:brace-expansion",

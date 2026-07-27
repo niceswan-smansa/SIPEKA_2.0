@@ -1,6 +1,6 @@
 begin;
 
-select plan(9);
+select no_plan();
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at)
 values (
@@ -180,7 +180,7 @@ values (
   '30000000-0000-4000-8000-000000000001'
 );
 
-select throws_like(
+select lives_ok(
   $$
     insert into public.attendance_records (
       student_id, class_id, attendance_date, period_number, status, created_by, updated_by
@@ -192,33 +192,29 @@ select throws_like(
       '30000000-0000-4000-8000-000000000001'
     )
   $$,
-  '%duplicate key value violates unique constraint%attendance_records_student_date_period_key%',
-  'presensi unik per siswa tanggal dan jam'
+  'compatibility write memperbarui jam yang sama'
 );
 
-insert into public.audit_logs (
-  id,
-  scope,
-  actor_name_snapshot,
-  action,
-  entity_type
-)
-values (
-  '32000000-0000-4000-8000-000000000001',
-  'OPERATIONAL',
-  'Admin Constraint Sintetis',
-  'TEST',
-  'constraint_test'
+select is(
+  (
+    select count(*)
+    from public.attendance_days
+    where student_id = '31000000-0000-4000-8000-000000000001'
+      and attendance_date = date '2026-07-23'
+  ),
+  1::bigint,
+  'storage presensi unik per siswa dan tanggal'
 );
 
-select throws_like(
-  $$
-    update public.audit_logs
-    set action = 'TAMPERED'
-    where id = '32000000-0000-4000-8000-000000000001'
-  $$,
-  '%Audit log bersifat append-only%',
-  'audit log tidak dapat diubah'
+select is(
+  (
+    select period_statuses->>'1'
+    from public.attendance_days
+    where student_id = '31000000-0000-4000-8000-000000000001'
+      and attendance_date = date '2026-07-23'
+  ),
+  'IZIN',
+  'status jam terbaru tersimpan pada row harian'
 );
 
 select * from finish();

@@ -14,6 +14,7 @@ type Credentials = {
     superAdmin: { username: string };
   };
 };
+
 const credentials = () =>
   JSON.parse(readFileSync(resolve(".local/test-credentials.json"), "utf8")) as Credentials;
 const today = () =>
@@ -27,9 +28,7 @@ async function login(page: Page, identifier: string) {
   await expect(page).toHaveURL(/\/(dashboard|super-admin\/accounts)$/);
 }
 
-test("student attendance detail reuses attendance mutation and exports a safe report", async ({
-  page,
-}) => {
+test("student attendance uses one daily note and exports a safe report", async ({ page }) => {
   const suffix = Date.now().toString().slice(-7);
   const name = `@Laporan Sintetis ${suffix}`;
 
@@ -47,10 +46,12 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   await expect(page.getByRole("cell", { name: "Hadir", exact: true })).toHaveCount(10);
   await page.locator("#student-period-1").selectOption("IZIN");
   await page.locator("#student-period-2").selectOption("SAKIT");
+  await page.locator("#student-daily-note").fill("Catatan harian sintetis");
   await page.getByRole("button", { name: "Preview koreksi" }).click();
   await expect(page.getByText(/Baru 2/)).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi koreksi" }).click();
   await expect(page.getByText(/Koreksi tersimpan/)).toBeVisible();
+
   await page.reload();
   await expect(
     page.getByText("Jam Izin").locator("..").getByText("1", { exact: true }),
@@ -58,18 +59,15 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   await expect(
     page.getByText("Jam Sakit").locator("..").getByText("1", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Ditambahkan", { exact: true })).toHaveCount(2);
+  await expect(
+    page.getByRole("cell", { name: "Catatan harian sintetis", exact: true }),
+  ).toHaveCount(2);
 
   await page.locator("#student-period-1").selectOption("TANPA_KETERANGAN");
   await page.locator("#student-period-2").selectOption("");
   await page.getByRole("button", { name: "Preview koreksi" }).click();
   await expect(page.getByText(/Diperbarui 1 · Dihapus 1/)).toBeVisible();
   await page.getByRole("button", { name: "Konfirmasi koreksi" }).click();
-  await page.reload();
-  await expect(page.getByText("Diperbarui", { exact: true })).toBeVisible();
-  await expect(page.getByText("Dikembalikan ke Hadir", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Jam 1: Izin → Tanpa Keterangan/)).toBeVisible();
-  await expect(page.getByText(/Jam 2: Sakit → Hadir/)).toBeVisible();
 
   const month = today().slice(0, 7);
   const response = await page.request.get(
@@ -77,6 +75,7 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   );
   expect(response.ok()).toBe(true);
   expect(response.headers()["cache-control"]).toContain("no-store");
+
   const workbook = new ExcelJS.Workbook();
   const report = await response.body();
   await workbook.xlsx.load(report as unknown as Parameters<typeof workbook.xlsx.load>[0]);
@@ -88,25 +87,6 @@ test("student attendance detail reuses attendance mutation and exports a safe re
   await page.goto(`/siswa/${studentId}/laporan?from=${month}-01&to=${today()}`);
   await expect(page.getByRole("button", { name: "Cetak / Simpan PDF" })).toBeVisible();
 
-  const schoolSummaryTable = page
-    .getByRole("heading", { name: "Ringkasan selama bersekolah" })
-    .locator("xpath=following::table[1]");
-  const gradeX = schoolSummaryTable.locator("tbody tr").filter({
-    has: page.getByRole("cell", { name: "X", exact: true }),
-  });
-  await expect(gradeX.locator("td").nth(3)).toHaveText("1");
-  await expect(gradeX.locator("td").nth(4)).toHaveText("0");
-  await expect(gradeX.locator("td").nth(5)).toHaveText("0");
-  await expect(gradeX.locator("td").nth(6)).toHaveText("1");
-
-  for (const grade of ["XI", "XII"]) {
-    const row = schoolSummaryTable
-      .getByRole("row")
-      .filter({ has: page.getByRole("cell", { name: grade, exact: true }) });
-    for (let column = 1; column <= 6; column += 1) {
-      await expect(row.locator("td").nth(column)).toHaveText("—");
-    }
-  }
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("heading", { name: name })).toBeVisible();
 

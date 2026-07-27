@@ -97,9 +97,7 @@ export default async function StudentManagementPage({ searchParams }: Props) {
           {errors[params.error] ?? "Operasi siswa tidak dapat diselesaikan."}
         </Alert>
       ) : null}
-      {params.success ? (
-        <Alert tone="success">Perubahan siswa berhasil disimpan dan diaudit.</Alert>
-      ) : null}
+      {params.success ? <Alert tone="success">Perubahan siswa berhasil disimpan.</Alert> : null}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[390px_1fr]">
         <div className="grid content-start gap-5">

@@ -7,91 +7,66 @@ Presentation -> Application -> Domain <- Repository interface
                                       <- Infrastructure implementation
 ```
 
-- `src/app`: route, layout, dan komposisi presentation.
-- `src/modules/<feature>/domain`: entity, value object, rule, dan repository interface tanpa React,
-  Next.js, Supabase, atau browser API.
-- `src/modules/<feature>/application`: use case yang mengorkestrasi domain dan repository interface.
-- `src/modules/<feature>/infrastructure`: implementasi database dan layanan eksternal.
-- `src/modules/<feature>/presentation`: komponen, hook, action tipis, dan schema UI.
-- `src/shared`: kode lintas fitur tanpa business rule spesifik fitur.
+- `src/app`: route, layout, API, dan komposisi presentation.
+- `src/modules/<feature>/domain`: kontrak dan aturan bisnis tanpa React, Next.js, Supabase, atau browser API.
+- `src/modules/<feature>/application`: use case yang mengorkestrasi domain dan repository.
+- `src/modules/<feature>/infrastructure`: implementasi Supabase dan layanan eksternal.
+- `src/modules/<feature>/presentation`: komponen, hook, dan Server Action tipis.
+- `src/shared`: UI, keamanan, constants, dan utilitas lintas fitur.
 - `src/infrastructure`: adapter teknis lintas fitur.
 
-Setiap modul harus mempunyai `index.ts` sebagai public API. Impor lintas modul tidak boleh memakai
-deep import. `eslint.config.mjs` menegakkan aturan ini serta isolasi domain dan presentation.
+Setiap modul mempunyai `index.ts` sebagai public API. Direct business write melalui Data API tetap
+ditutup; mutation memakai RPC PostgreSQL dengan validasi database dan transaksi.
 
-`authentication` dan `authorization` adalah modul Phase 1. Domain-nya tidak mengimpor React,
-Next.js, Supabase, atau browser API. Gateway Supabase berada di infrastructure; server action dan
-route guard tetap tipis. Route placeholder hanya membuktikan guard, bukan UI produk.
+## Batas autentikasi dan otorisasi
 
-Client Supabase dipisah menjadi browser, server cookie, middleware/request boundary, dan admin
-server-only. Admin client tidak pernah diimpor `src/app` atau Client Component. `proxy.ts` hanya
-me-refresh session; keputusan akses dibuat server-side oleh `requirePageAccess`/`authorizeRequest`.
-Direct database access tetap dibatasi RLS.
+Client Supabase dipisahkan untuk browser, server cookie, middleware, dan admin server-only.
+`proxy.ts` hanya menyegarkan session. Keputusan role selalu dibuat server-side melalui
+`requirePageAccess` atau `authorizeRequest`, dan PostgreSQL tetap menegakkan RLS/grant.
 
-Phase 2 menambahkan landing page, shared UI primitives, dua application shell yang terpisah, dan
-`account-management` dengan batas `domain -> application -> infrastructure`. `profiles` menjadi
-sumber daftar akun yang efisien; Supabase Auth Admin hanya dipakai untuk operasi credential.
-Mutasi profile memakai RPC server-only agar profile dan audit ACCOUNT atomik; operasi Auth
-diorkestrasi dengan compensation. Server Actions tetap tipis dan actor selalu berasal dari session
-server. Route yang belum masuk fase
-tidak dibuat sebagai halaman palsu; menu roadmap ditampilkan disabled “Segera”.
+`SUPER_ADMIN` hanya mengelola akun. `ADMIN` menjalankan mutation operasional. `USER` hanya membaca
+data operasional yang diizinkan.
 
-## Phase 3 boundaries
+## Presensi padat
 
-Phase 3 menambahkan modul `academic-years`, `classes`, `students`, dan `student-search`, masing-masing
-dengan `domain`, `application`, `infrastructure`, `presentation`, `tests`, dan `index.ts`. Read model
-siswa dipakai bersama oleh manajemen dan pencarian; pagination, filter, dan sort terjadi di server.
-Client Component hanya mengelola filter atau konfirmasi UI dan tidak mengimpor repository server.
+Frontend tetap menampilkan Jam 1–10, tetapi PostgreSQL menyimpan maksimal satu
+`attendance_days` untuk setiap kombinasi siswa dan tanggal.
 
-Semua mutation tahun ajaran, kelas, siswa, dan enrollment melewati RPC `phase3_*` `SECURITY DEFINER`
-yang memanggil helper ADMIN aktif, mengambil actor dari `auth.uid()`, memvalidasi invariant, serta
-menulis audit OPERATIONAL sebelum transaction commit. Policy direct write tetap tertutup. USER hanya
-mendapat read model melalui session/RLS; SUPER_ADMIN tetap terisolasi dari data operasional.
+```text
+Browser: perubahan per jam
+        -> preview RPC
+        -> token + snapshot kelas/tanggal
+        -> apply RPC
+        -> satu row harian dengan period_statuses
+```
 
-## Phase 4 attendance boundary
+`period_statuses` adalah object JSON yang memetakan nomor jam ke `IZIN`, `SAKIT`, atau
+`TANPA_KETERANGAN`. Jam yang tidak ada di object disimpulkan sebagai `Hadir`. `note` disimpan satu
+kali untuk seluruh ketidakhadiran siswa pada tanggal tersebut.
 
-`attendance` memakai satu read model kelas/tanggal tanpa N+1 dan dua mutation RPC. Preview mengikat
-token pada actor, kelas, tanggal, payload canonical, snapshot database, expiry, dan status penggunaan.
-Apply mengunci scope kelas/tanggal, membaca ulang snapshot, lalu menulis attendance, revision, batch,
-dan audit dalam satu transaction. React hanya mengelola draft; diff serta summary authoritative tetap
-berasal dari PostgreSQL.
+Compatibility view `attendance_records` mengembangkan row harian menjadi bentuk per jam untuk
+read model dashboard, laporan, export, dan fixture lama. View bukan storage utama.
 
-## Phase 5 dashboard read model
+Preview tetap diikat pada actor, kelas, tanggal, payload, expiry, dan snapshot. Apply memakai
+advisory lock serta stale check sebelum mengubah data. Token yang sudah dipakai dihapus.
 
-Dashboard memakai satu RPC `SECURITY INVOKER` untuk menghasilkan summary serta seri harian,
-mingguan, dan bulanan berdasarkan tanggal terpilih. RPC menggunakan session/RLS operasional dan
-agregasi `count(distinct student_id)`; komponen grafik hanya menerima read model dan menyediakan
-tabel alternatif yang dapat dibaca tanpa visualisasi.
+## Tanpa riwayat aplikasi
 
-## Phase 6 student attendance and reports
+SIPEKA hanya menyimpan keadaan terbaru. Tidak ada tabel audit, revision timeline, attendance batch
+history, account audit, operational audit, atau export history. Metadata teknis `version`,
+`created_at`, dan `updated_at` tetap tersedia untuk konsistensi dan sinkronisasi.
 
-Modul `student-attendance` menyediakan read model detail siswa, kalender, statistik hari/jam, tren,
-revision timeline, dan laporan. Read repository berada di infrastructure server-only. Client
-Component mengimpor kontrak dan Server Action melalui `attendance/client.ts`, bukan barrel attendance
-yang juga mengekspor repository server-only.
+Promotion batch dan item tetap dipertahankan karena merupakan state workflow yang diperlukan untuk
+rollback promotion, bukan catatan aktivitas umum.
 
-Editor detail siswa mengubah satu siswa pada satu tanggal melalui preview/apply Phase 4. PostgreSQL
-tetap menjadi sumber diff, stale check, idempotency, revision, batch, dan audit. Laporan print memakai
-read model yang sama; endpoint Excel menjalankan authorization ADMIN, menghasilkan workbook in-memory,
-mencatat audit summary, dan mengirim response `private, no-store`.
+## Detail siswa dan laporan
 
-## Phase 7 lifecycle boundary
+Modul `student-attendance` menghasilkan kalender, statistik hari/jam, tren, rincian Jam 1–10, dan
+laporan dari storage harian. Laporan individual dan workbook grade dibuat in-memory, tidak dicache,
+dan tidak membuat record riwayat export.
 
-`student-lifecycle` memisahkan parser CSV, application service, repository RPC, dan presentation.
-`phase7_import_students` memvalidasi seluruh payload sebelum insert siswa/enrollment dan audit dalam
-satu transaksi. Promotion menyimpan snapshot di `promotion_batches`/`promotion_batch_items`;
-rollback hanya mengembalikan snapshot bila state saat ini masih cocok. Alumni diarsipkan atau
-ditombstone tanpa menghapus attendance/enrollment history. Tidak ada direct Data API write.
+## Lifecycle akademik
 
-## Phase 8 audit dan online-only shell
-
-`operational-audit` adalah read repository session/RLS terpisah dari account audit. PWA worker hanya
-cache manifest, logo, dan offline fallback; seluruh navigation serta protected/API response tetap
-network-only. Headers aplikasi dideklarasikan terpusat di `next.config.ts`.
-
-# Account identity boundary
-
-Username adalah identity aplikasi. Resolver server-only memetakan username ke
-synthetic Supabase Auth identity dan langsung melakukan password sign-in.
-React, browser, shared barrel, audit, serta read model account tidak menerima
-synthetic identity. Perubahan username hanya menyentuh profile/audit.
+Import memvalidasi seluruh payload sebelum insert. Promotion menyimpan snapshot fungsional pada
+`promotion_batches` dan `promotion_batch_items` agar rollback deterministik. Alumni dapat
+diarsipkan atau ditombstone tanpa menghapus data presensi.

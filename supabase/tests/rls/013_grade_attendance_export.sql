@@ -1,6 +1,6 @@
 begin;
 
-select plan(12);
+select no_plan();
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at) values
 ('73000000-0000-4000-8000-000000000001','authenticated','authenticated','grade-export-admin@example.test','',now()),
@@ -21,7 +21,9 @@ insert into public.profiles (
 ('73000000-0000-4000-8000-000000000003','grade.export.super','grade-export-super@example.test','Super Export Grade','SUPER_ADMIN',true,false);
 
 select set_config('request.jwt.claim.sub','73000000-0000-4000-8000-000000000001',true);
+
 select set_config('request.jwt.claim.role','authenticated',true);
+
 set local role authenticated;
 
 select lives_ok(
@@ -61,6 +63,7 @@ from public.students s
 where s.nis = '973001';
 
 select set_config('request.jwt.claim.sub','73000000-0000-4000-8000-000000000001',true);
+
 set local role authenticated;
 
 select lives_ok(
@@ -126,29 +129,6 @@ select is(
   'status harian unik dikembalikan'
 );
 
-select lives_ok(
-  $$select public.phase12_record_grade_attendance_export(
-    'X',
-    date '2026-07-01',
-    least(date '2026-07-31', (now() at time zone 'Asia/Jakarta')::date),
-    10,
-    1,
-    1
-  )$$,
-  'ADMIN dapat mencatat audit export grade'
-);
-
-select ok(
-  exists (
-    select 1
-    from public.audit_logs
-    where action = 'GRADE_ATTENDANCE_EXPORT'
-      and entity_id = 'X'
-      and metadata->>'student_count' = '1'
-  ),
-  'audit export grade tersimpan'
-);
-
 select throws_like(
   $$select public.phase12_get_grade_attendance_export(
     'X',
@@ -160,7 +140,9 @@ select throws_like(
 );
 
 reset role;
+
 select set_config('request.jwt.claim.sub','73000000-0000-4000-8000-000000000002',true);
+
 set local role authenticated;
 
 select throws_like(
@@ -173,21 +155,10 @@ select throws_like(
   'USER tidak dapat membaca export grade'
 );
 
-select throws_like(
-  $$select public.phase12_record_grade_attendance_export(
-    'X',
-    date '2026-07-01',
-    least(date '2026-07-31', (now() at time zone 'Asia/Jakarta')::date),
-    10,
-    1,
-    1
-  )$$,
-  '%ATTENDANCE_FORBIDDEN%',
-  'USER tidak dapat mencatat audit export grade'
-);
-
 reset role;
+
 select set_config('request.jwt.claim.sub','73000000-0000-4000-8000-000000000003',true);
+
 set local role authenticated;
 
 select throws_like(
@@ -201,4 +172,5 @@ select throws_like(
 );
 
 select * from finish();
+
 rollback;

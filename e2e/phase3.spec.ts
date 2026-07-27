@@ -56,7 +56,7 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
     .locator("xpath=ancestor::form")
     .getByRole("button", { name: "Simpan metadata" })
     .click();
-  await expect(page.getByText("Perubahan berhasil disimpan dan diaudit.")).toBeVisible();
+  await expect(page.getByText("Perubahan berhasil disimpan.")).toBeVisible();
 
   await page.goto("/manajemen-siswa");
   await page.locator("#create-full-name").fill(name);
@@ -72,12 +72,12 @@ test("ADMIN manages fixed classes and a synthetic student; USER remains read-onl
   if (!studentId) throw new Error("Student id was not returned after creation.");
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByRole("definition").filter({ hasText: "X-1" })).toBeVisible();
-  await expect(page.getByText("Current", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saat ini", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Edit siswa" }).click();
   await page.locator("#edit-class").selectOption({ label: destinationClass });
   await page.getByRole("button", { name: "Simpan grade / kelas" }).click();
-  await expect(page.getByText("Perubahan siswa berhasil disimpan dan diaudit.")).toBeVisible();
+  await expect(page.getByText("Perubahan siswa berhasil disimpan.")).toBeVisible();
 
   await page.getByRole("button", { name: "Nonaktifkan siswa" }).click();
   await page.keyboard.press("Escape");

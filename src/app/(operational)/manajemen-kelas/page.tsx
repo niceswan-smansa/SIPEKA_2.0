@@ -80,9 +80,7 @@ export default async function ClassManagementPage({ searchParams }: Props) {
       {params.error ? (
         <Alert tone="error">{errors[params.error] ?? "Operasi tidak dapat diselesaikan."}</Alert>
       ) : null}
-      {params.success ? (
-        <Alert tone="success">Perubahan berhasil disimpan dan diaudit.</Alert>
-      ) : null}
+      {params.success ? <Alert tone="success">Perubahan berhasil disimpan.</Alert> : null}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[380px_1fr]">
         <div className="grid content-start gap-5">

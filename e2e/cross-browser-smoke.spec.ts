@@ -113,7 +113,6 @@ test("ADMIN read-only page rendering and native controls work across browsers", 
     "/reports",
     "/naik-turun-grade",
     "/alumni",
-    "/riwayat-aktivitas",
   ])
     await expectHealthyPage(page, route);
 

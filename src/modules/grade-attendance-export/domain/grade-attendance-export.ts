@@ -70,12 +70,6 @@ export interface GradeAttendanceExportRepository {
     startDate: string,
     endDate: string,
   ): Promise<GradeAttendanceExportData>;
-  recordExport(input: {
-    grade: GradeAttendanceExportGrade;
-    startDate: string;
-    endDate: string;
-    metrics: GradeAttendanceExportMetrics;
-  }): Promise<void>;
 }
 
 export type StudentAttendanceSummary = {

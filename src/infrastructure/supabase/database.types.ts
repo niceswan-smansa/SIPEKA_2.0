@@ -58,50 +58,53 @@ export type Database = {
         };
         Relationships: [];
       };
-      attendance_batches: {
+      attendance_days: {
         Row: {
           attendance_date: string;
           class_id: string;
           created_at: string;
-          created_by: string | null;
           id: string;
-          request_id: string;
-          status: Database["public"]["Enums"]["batch_status"];
-          summary: Json;
+          note: string | null;
+          period_statuses: Json;
+          student_id: string;
+          updated_at: string;
+          version: number;
         };
         Insert: {
           attendance_date: string;
           class_id: string;
           created_at?: string;
-          created_by?: string | null;
           id?: string;
-          request_id: string;
-          status?: Database["public"]["Enums"]["batch_status"];
-          summary?: Json;
+          note?: string | null;
+          period_statuses: Json;
+          student_id: string;
+          updated_at?: string;
+          version?: number;
         };
         Update: {
           attendance_date?: string;
           class_id?: string;
           created_at?: string;
-          created_by?: string | null;
           id?: string;
-          request_id?: string;
-          status?: Database["public"]["Enums"]["batch_status"];
-          summary?: Json;
+          note?: string | null;
+          period_statuses?: Json;
+          student_id?: string;
+          updated_at?: string;
+          version?: number;
         };
         Relationships: [
           {
-            foreignKeyName: "attendance_batches_class_id_fkey";
+            foreignKeyName: "attendance_days_class_id_fkey";
             columns: ["class_id"];
             isOneToOne: false;
             referencedRelation: "classes";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "attendance_batches_created_by_fkey";
-            columns: ["created_by"];
+            foreignKeyName: "attendance_days_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: "profiles";
+            referencedRelation: "students";
             referencedColumns: ["id"];
           },
         ];
@@ -156,198 +159,6 @@ export type Database = {
             columns: ["class_id"];
             isOneToOne: false;
             referencedRelation: "classes";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      attendance_records: {
-        Row: {
-          attendance_date: string;
-          class_id: string;
-          created_at: string;
-          created_by: string | null;
-          id: string;
-          note: string | null;
-          period_number: number;
-          status: Database["public"]["Enums"]["attendance_status"];
-          student_id: string;
-          updated_at: string;
-          updated_by: string | null;
-          version: number;
-        };
-        Insert: {
-          attendance_date: string;
-          class_id: string;
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          note?: string | null;
-          period_number: number;
-          status: Database["public"]["Enums"]["attendance_status"];
-          student_id: string;
-          updated_at?: string;
-          updated_by?: string | null;
-          version?: number;
-        };
-        Update: {
-          attendance_date?: string;
-          class_id?: string;
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          note?: string | null;
-          period_number?: number;
-          status?: Database["public"]["Enums"]["attendance_status"];
-          student_id?: string;
-          updated_at?: string;
-          updated_by?: string | null;
-          version?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "attendance_records_class_id_fkey";
-            columns: ["class_id"];
-            isOneToOne: false;
-            referencedRelation: "classes";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "attendance_records_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "attendance_records_period_number_fkey";
-            columns: ["period_number"];
-            isOneToOne: false;
-            referencedRelation: "periods";
-            referencedColumns: ["number"];
-          },
-          {
-            foreignKeyName: "attendance_records_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "students";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "attendance_records_updated_by_fkey";
-            columns: ["updated_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      attendance_revisions: {
-        Row: {
-          actor_id: string | null;
-          after_data: Json | null;
-          attendance_id: string | null;
-          before_data: Json | null;
-          created_at: string;
-          id: string;
-          operation: Database["public"]["Enums"]["revision_operation"];
-          request_id: string;
-          student_id: string;
-        };
-        Insert: {
-          actor_id?: string | null;
-          after_data?: Json | null;
-          attendance_id?: string | null;
-          before_data?: Json | null;
-          created_at?: string;
-          id?: string;
-          operation: Database["public"]["Enums"]["revision_operation"];
-          request_id: string;
-          student_id: string;
-        };
-        Update: {
-          actor_id?: string | null;
-          after_data?: Json | null;
-          attendance_id?: string | null;
-          before_data?: Json | null;
-          created_at?: string;
-          id?: string;
-          operation?: Database["public"]["Enums"]["revision_operation"];
-          request_id?: string;
-          student_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "attendance_revisions_actor_id_fkey";
-            columns: ["actor_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "attendance_revisions_attendance_id_fkey";
-            columns: ["attendance_id"];
-            isOneToOne: false;
-            referencedRelation: "attendance_records";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "attendance_revisions_student_id_fkey";
-            columns: ["student_id"];
-            isOneToOne: false;
-            referencedRelation: "students";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      audit_logs: {
-        Row: {
-          action: string;
-          actor_id: string | null;
-          actor_name_snapshot: string;
-          after_data: Json | null;
-          before_data: Json | null;
-          created_at: string;
-          entity_id: string | null;
-          entity_type: string;
-          id: string;
-          metadata: Json;
-          request_id: string;
-          scope: Database["public"]["Enums"]["audit_scope"];
-        };
-        Insert: {
-          action: string;
-          actor_id?: string | null;
-          actor_name_snapshot: string;
-          after_data?: Json | null;
-          before_data?: Json | null;
-          created_at?: string;
-          entity_id?: string | null;
-          entity_type: string;
-          id?: string;
-          metadata?: Json;
-          request_id?: string;
-          scope: Database["public"]["Enums"]["audit_scope"];
-        };
-        Update: {
-          action?: string;
-          actor_id?: string | null;
-          actor_name_snapshot?: string;
-          after_data?: Json | null;
-          before_data?: Json | null;
-          created_at?: string;
-          entity_id?: string | null;
-          entity_type?: string;
-          id?: string;
-          metadata?: Json;
-          request_id?: string;
-          scope?: Database["public"]["Enums"]["audit_scope"];
-        };
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_actor_id_fkey";
-            columns: ["actor_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -823,7 +634,38 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      attendance_records: {
+        Row: {
+          attendance_date: string | null;
+          class_id: string | null;
+          created_at: string | null;
+          created_by: string | null;
+          id: string | null;
+          note: string | null;
+          period_number: number | null;
+          status: Database["public"]["Enums"]["attendance_status"] | null;
+          student_id: string | null;
+          updated_at: string | null;
+          updated_by: string | null;
+          version: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_days_class_id_fkey";
+            columns: ["class_id"];
+            isOneToOne: false;
+            referencedRelation: "classes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendance_days_student_id_fkey";
+            columns: ["student_id"];
+            isOneToOne: false;
+            referencedRelation: "students";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       admin_create_account_profile: {
@@ -907,14 +749,6 @@ export type Database = {
         Args: { p_attendance_date: string; p_student_id: string };
         Returns: string;
       };
-      phase12_clear_operational_audit: {
-        Args: {
-          p_actor_id: string;
-          p_confirmation: string;
-          p_request_id?: string;
-        };
-        Returns: number;
-      };
       phase12_get_grade_attendance_export: {
         Args: {
           p_end_date: string;
@@ -922,18 +756,6 @@ export type Database = {
           p_start_date: string;
         };
         Returns: Json;
-      };
-      phase12_record_grade_attendance_export: {
-        Args: {
-          p_class_count: number;
-          p_end_date: string;
-          p_grade: Database["public"]["Enums"]["grade_level"];
-          p_impacted_student_count: number;
-          p_request_id?: string;
-          p_start_date: string;
-          p_student_count: number;
-        };
-        Returns: undefined;
       };
       phase13_get_class_dashboard: {
         Args: { p_class_id: string; p_selected_date: string };
@@ -1061,16 +883,6 @@ export type Database = {
         Args: { p_end_date: string; p_start_date: string; p_student_id: string };
         Returns: Json;
       };
-      phase6_record_student_export: {
-        Args: {
-          p_end_date: string;
-          p_request_id?: string;
-          p_row_count: number;
-          p_start_date: string;
-          p_student_id: string;
-        };
-        Returns: undefined;
-      };
       phase7_archive_alumni: {
         Args: { p_request_id?: string; p_student_id: string };
         Returns: Json;
@@ -1105,11 +917,9 @@ export type Database = {
     Enums: {
       app_role: "SUPER_ADMIN" | "ADMIN" | "USER";
       attendance_status: "IZIN" | "SAKIT" | "TANPA_KETERANGAN";
-      audit_scope: "OPERATIONAL" | "ACCOUNT";
       batch_status: "PREVIEWED" | "COMPLETED" | "REVERTED" | "FAILED";
       gender: "L" | "P";
       grade_level: "X" | "XI" | "XII" | "ALUMNI";
-      revision_operation: "CREATE" | "UPDATE" | "DELETE";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1236,11 +1046,9 @@ export const Constants = {
     Enums: {
       app_role: ["SUPER_ADMIN", "ADMIN", "USER"],
       attendance_status: ["IZIN", "SAKIT", "TANPA_KETERANGAN"],
-      audit_scope: ["OPERATIONAL", "ACCOUNT"],
       batch_status: ["PREVIEWED", "COMPLETED", "REVERTED", "FAILED"],
       gender: ["L", "P"],
       grade_level: ["X", "XI", "XII", "ALUMNI"],
-      revision_operation: ["CREATE", "UPDATE", "DELETE"],
     },
   },
 } as const;

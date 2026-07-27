@@ -15,23 +15,27 @@ export type StudentPeriodAttendance = {
   classId: string;
   createdAt: string;
   updatedAt: string;
-  createdByName: string;
-  updatedByName: string;
 };
+
 export type StudentAttendanceData = {
   selectedClassId: string | null;
   periods: StudentPeriodAttendance[];
   calendar: Array<{ date: string; statuses: AttendanceStatus[] }>;
   stats: Record<string, number>;
-  trend: Array<{ date: string; day: number; izin: number; sakit: number; tanpaKeterangan: number }>;
-  revisions: Array<Record<string, unknown>>;
+  trend: Array<{
+    date: string;
+    day: number;
+    izin: number;
+    sakit: number;
+    tanpaKeterangan: number;
+  }>;
 };
+
 export type StudentReportRow = {
   date: string;
   periodNumber: number;
   status: AttendanceStatus;
   note: string | null;
-  recordedBy: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -53,10 +57,4 @@ export function moveMonth(value: string, delta: number) {
 export interface StudentAttendanceRepository {
   get(studentId: string, selectedDate: string, month: string): Promise<StudentAttendanceData>;
   getReport(studentId: string, startDate: string, endDate: string): Promise<StudentReportRow[]>;
-  recordExport(
-    studentId: string,
-    startDate: string,
-    endDate: string,
-    rowCount: number,
-  ): Promise<void>;
 }

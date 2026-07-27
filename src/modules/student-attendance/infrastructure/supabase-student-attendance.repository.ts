@@ -24,10 +24,12 @@ export function createSupabaseStudentAttendanceRepository(): StudentAttendanceRe
           p_attendance_date: selectedDate,
         }),
       ]);
+
       if (attendanceResponse.error || !attendanceResponse.data) {
         throw attendanceResponse.error ?? new Error("STUDENT_ATTENDANCE_READ_FAILED");
       }
       if (classResponse.error) throw classResponse.error;
+
       const value = attendanceResponse.data as unknown as Record<string, unknown>;
       return {
         selectedClassId: classResponse.data ? String(classResponse.data) : null,
@@ -39,8 +41,6 @@ export function createSupabaseStudentAttendanceRepository(): StudentAttendanceRe
           classId: String(item.class_id),
           createdAt: String(item.created_at),
           updatedAt: String(item.updated_at),
-          createdByName: String(item.created_by_name),
-          updatedByName: String(item.updated_by_name),
         })),
         calendar: ((value.calendar as Record<string, unknown>[]) ?? []).map((item) => ({
           date: String(item.date),
@@ -59,9 +59,9 @@ export function createSupabaseStudentAttendanceRepository(): StudentAttendanceRe
           sakit: Number(item.sakit),
           tanpaKeterangan: Number(item.tanpa_keterangan),
         })),
-        revisions: (value.revisions as Array<Record<string, unknown>>) ?? [],
       } satisfies StudentAttendanceData;
     },
+
     async getReport(studentId, startDate, endDate) {
       const client = await createServerSupabaseClient();
       const { data, error } = await client.rpc("phase10_get_student_report", {
@@ -69,26 +69,17 @@ export function createSupabaseStudentAttendanceRepository(): StudentAttendanceRe
         p_start_date: startDate,
         p_end_date: endDate,
       });
+
       if (error || !data) throw error ?? new Error("STUDENT_REPORT_READ_FAILED");
+
       return ((data as unknown as Record<string, unknown>[]) ?? []).map((item) => ({
         date: String(item.date),
         periodNumber: Number(item.period_number),
         status: item.status as StudentReportRow["status"],
         note: item.note ? String(item.note) : null,
-        recordedBy: String(item.recorded_by),
         createdAt: String(item.created_at),
         updatedAt: String(item.updated_at),
       }));
-    },
-    async recordExport(studentId, startDate, endDate, rowCount) {
-      const client = await createServerSupabaseClient();
-      const { error } = await client.rpc("phase6_record_student_export", {
-        p_student_id: studentId,
-        p_start_date: startDate,
-        p_end_date: endDate,
-        p_row_count: rowCount,
-      });
-      if (error) throw error;
     },
   };
 }

@@ -1,6 +1,6 @@
 begin;
 
-select plan(10);
+select no_plan();
 
 select is(
   (select count(*) from public.periods where number between 1 and 10),
@@ -26,8 +26,8 @@ select ok(
 select ok(
   exists (
     select 1 from pg_constraint
-    where conrelid = 'public.attendance_records'::regclass
-      and conname = 'attendance_records_note_length'
+    where conrelid = 'public.attendance_days'::regclass
+      and conname = 'attendance_days_note_length'
   ),
   'constraint panjang catatan tersedia'
 );
@@ -59,7 +59,9 @@ select set_config(
   '6f000000-0000-4000-8000-000000000001',
   true
 );
+
 select set_config('request.jwt.claim.role', 'authenticated', true);
+
 set local role authenticated;
 
 select throws_like(
@@ -149,7 +151,9 @@ select is(
 );
 
 reset role;
+
 update public.periods set is_active = false where number = 10;
+
 set local role authenticated;
 
 select throws_like(
@@ -168,4 +172,5 @@ select throws_like(
 );
 
 select * from finish();
+
 rollback;

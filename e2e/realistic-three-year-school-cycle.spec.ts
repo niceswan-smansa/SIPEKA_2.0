@@ -13,7 +13,17 @@ const simulationEnabled = process.env.SIPEKA_REALISTIC_SCHOOL_SIMULATION === "tr
 
 type Grade = "X" | "XI" | "XII";
 type DbClient = SupabaseClient<Database>;
-type AttendanceInsert = Database["public"]["Tables"]["attendance_records"]["Insert"];
+type AttendanceInsert = {
+  student_id: string;
+  class_id: string;
+  attendance_date: string;
+  period_number: number;
+  status: "IZIN" | "SAKIT" | "TANPA_KETERANGAN";
+  note?: string | null;
+  version?: number;
+  created_by?: string | null;
+  updated_by?: string | null;
+};
 type PublicTableName = keyof Database["public"]["Tables"];
 type ClassRow = {
   id: string;
@@ -437,7 +447,9 @@ async function seedAttendanceDates(
 
   for (const [index, date] of dates.entries()) {
     const rows = absenceRows(date, classes, rosters, adminId);
-    const insert = await service.from("attendance_records").insert(rows);
+    const insert = await (service as unknown as SupabaseClient)
+      .from("attendance_records")
+      .insert(rows);
     if (insert.error) throw new Error(`Fixture presensi ${date}: ${insert.error.message}`);
 
     if ((index + 1) % 15 === 0 || index + 1 === dates.length) {
@@ -785,9 +797,17 @@ async function promoteThroughUi(page: Page, targetYearName: string, expectedCoun
 
 async function exactCount(
   service: DbClient,
-  table: PublicTableName,
+  table: PublicTableName | "attendance_records",
   filters: Array<[string, string | boolean]> = [],
 ) {
+  if (table === "attendance_records") {
+    let query = service.from("attendance_records").select("*", { count: "exact", head: true });
+    for (const [column, value] of filters) query = query.eq(column, value);
+    const result = await query;
+    if (result.error) throw new Error(`Count ${table}: ${result.error.message}`);
+    return result.count ?? 0;
+  }
+
   let query = service.from(table).select("*", { count: "exact", head: true });
   for (const [column, value] of filters) query = query.eq(column, value);
   const result = await query;
@@ -1022,14 +1042,6 @@ test("ADMIN menjalankan simulasi realistis tiga tahun melalui UI dan data harian
     "Ringkasan",
     ...Array.from({ length: 10 }, (_, index) => `X-${index + 1}`),
   ]);
-
-  await page.goto("/riwayat-aktivitas");
-  await page.getByLabel("Jenis aktivitas").fill("STUDENT_PROMOTION_APPLY");
-  await page.getByRole("button", { name: "Terapkan" }).click();
-  await expect(page).toHaveURL(/action=STUDENT_PROMOTION_APPLY/);
-  await expect(
-    page.getByRole("article").filter({ hasText: "Menjalankan kenaikan grade" }).first(),
-  ).toBeVisible();
 
   await attachMilestone(page, testInfo, "simulasi-final");
 

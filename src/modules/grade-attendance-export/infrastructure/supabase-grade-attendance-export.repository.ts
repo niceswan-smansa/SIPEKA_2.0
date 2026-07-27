@@ -84,19 +84,5 @@ export function createSupabaseGradeAttendanceExportRepository(): GradeAttendance
         })),
       } satisfies GradeAttendanceExportData;
     },
-
-    async recordExport(input) {
-      const client = await createServerSupabaseClient();
-      const { error } = await client.rpc("phase12_record_grade_attendance_export", {
-        p_grade: input.grade,
-        p_start_date: input.startDate,
-        p_end_date: input.endDate,
-        p_class_count: input.metrics.classCount,
-        p_student_count: input.metrics.studentCount,
-        p_impacted_student_count: input.metrics.impactedStudentCount,
-      });
-
-      if (error) throw error;
-    },
   };
 }

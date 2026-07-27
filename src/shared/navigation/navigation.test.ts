@@ -3,10 +3,9 @@ import { describe, expect, it } from "vitest";
 import { getNavigationForRole } from ".";
 
 describe("role-aware navigation", () => {
-  it("keeps Super Admin portal isolated", () => {
+  it("keeps Super Admin portal isolated without an audit route", () => {
     expect(getNavigationForRole("SUPER_ADMIN").map((item) => item.href)).toEqual([
       "/super-admin/accounts",
-      "/super-admin/account-audit",
     ]);
   });
 
@@ -33,7 +32,6 @@ describe("role-aware navigation", () => {
       "/naik-turun-grade",
       "/alumni",
       "/reports",
-      "/riwayat-aktivitas",
     ]);
   });
 

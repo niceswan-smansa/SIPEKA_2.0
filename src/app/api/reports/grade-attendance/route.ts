@@ -61,13 +61,6 @@ export async function GET(request: NextRequest) {
     const data = await service.get(parsed.data.grade, range.startDate, range.endDate);
     const workbook = await buildGradeAttendanceWorkbook(data, context.profile?.fullName ?? "Admin");
 
-    await service.recordExport({
-      grade: parsed.data.grade,
-      startDate: range.startDate,
-      endDate: range.endDate,
-      metrics: workbook.metrics,
-    });
-
     const periodToken =
       parsed.data.mode === "monthly"
         ? parsed.data.month

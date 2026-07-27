@@ -62,16 +62,13 @@ const exportData: GradeAttendanceExportData = {
 describe("grade attendance workbook service", () => {
   it("preserves repository operations without wrapping their identity", () => {
     const get = vi.fn();
-    const recordExport = vi.fn();
     const repository = {
       get,
-      recordExport,
     } as unknown as GradeAttendanceExportRepository;
 
     const service = createGradeAttendanceExportService(repository);
 
     expect(service.get).toBe(get);
-    expect(service.recordExport).toBe(recordExport);
   });
 
   it("builds a safe and readable workbook with accurate metrics", async () => {

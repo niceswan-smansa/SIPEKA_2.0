@@ -14,7 +14,7 @@ import {
   StudentAttendanceTrend,
 } from "@/modules/student-attendance";
 import { createStudentService, createSupabaseStudentRepository } from "@/modules/students";
-import { formatJakartaDateTime, isIsoDate, isMonthStart } from "@/shared/domain/dates";
+import { isIsoDate, isMonthStart } from "@/shared/domain/dates";
 import { Badge, Card, PageHeader, Table } from "@/shared/ui";
 
 type Props = {
@@ -61,7 +61,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
     <>
       <PageHeader
         title={student.fullName}
-        description="Detail identitas, presensi, dan histori perubahan."
+        description="Detail identitas dan presensi siswa."
         action={
           <div className="flex gap-3">
             <Link
@@ -134,9 +134,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
               <tr>
                 <th>Jam</th>
                 <th>Status</th>
-                <th>Catatan</th>
-                <th>Pencatat</th>
-                <th>Diubah</th>
+                <th>Catatan harian</th>
               </tr>
             </thead>
             <tbody>
@@ -155,8 +153,6 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                         : "Hadir"}
                     </td>
                     <td>{period?.note ?? "—"}</td>
-                    <td>{period?.updatedByName ?? "—"}</td>
-                    <td>{period?.updatedAt ? formatJakartaDateTime(period.updatedAt) : "—"}</td>
                   </tr>
                 );
               })}
@@ -197,46 +193,13 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
       ) : profile.role === "ADMIN" ? (
         <Card className="mt-5">
           <p className="text-sm text-slate-600">
-            Koreksi hanya tersedia ketika tanggal memakai kelas aktif siswa saat ini.
+            Koreksi hanya tersedia ketika tanggal memiliki kelas yang sesuai untuk siswa.
           </p>
         </Card>
       ) : null}
 
       <Card className="mt-5">
-        <h2 className="text-lg font-bold">Histori perubahan</h2>
-        <p className="mb-4 mt-1 text-sm text-slate-600">
-          Perubahan presensi ditampilkan sebagai ringkasan, tanpa data teknis mentah.
-        </p>
-        {attendance.revisions.length ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            {attendance.revisions.map((item) => {
-              const summary = summarizeAttendanceRevision(item);
-              return (
-                <article key={String(item.id)} className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Badge tone={summary.tone}>{summary.action}</Badge>
-                    <time className="text-xs text-slate-500">
-                      {formatJakartaDateTime(String(item.created_at))}
-                    </time>
-                  </div>
-                  <p className="mt-3 font-semibold text-slate-900">{summary.description}</p>
-                  <p className="mt-1 text-sm text-slate-600">Oleh {String(item.actor_name)}</p>
-                  {summary.note ? (
-                    <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                      Catatan: {summary.note}
-                    </p>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-600">Belum ada perubahan presensi.</p>
-        )}
-      </Card>
-
-      <Card className="mt-5">
-        <h2 className="mb-4 text-lg font-bold">Histori enrollment</h2>
+        <h2 className="mb-4 text-lg font-bold">Data kelas per tahun ajaran</h2>
         <Table>
           <thead>
             <tr>
@@ -258,7 +221,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                 <td>
                   {item.startedOn} – {item.endedOn ?? "sekarang"}
                 </td>
-                <td>{item.isCurrent ? "Current" : "Selesai"}</td>
+                <td>{item.isCurrent ? "Saat ini" : "Selesai"}</td>
               </tr>
             ))}
           </tbody>
@@ -266,81 +229,6 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
       </Card>
     </>
   );
-}
-
-type RevisionTone = "neutral" | "success" | "warning" | "danger";
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function revisionValue(snapshot: Record<string, unknown>, ...keys: string[]) {
-  for (const key of keys) {
-    if (snapshot[key] !== undefined && snapshot[key] !== null) return snapshot[key];
-  }
-  return null;
-}
-
-function revisionStatus(value: unknown) {
-  if (value === "IZIN") return "Izin";
-  if (value === "SAKIT") return "Sakit";
-  if (value === "TANPA_KETERANGAN") return "Tanpa Keterangan";
-  return "Hadir";
-}
-
-function summarizeAttendanceRevision(item: unknown): {
-  action: string;
-  description: string;
-  note: string | null;
-  tone: RevisionTone;
-} {
-  const revision = asRecord(item);
-  const before = asRecord(revision.before);
-  const after = asRecord(revision.after);
-  const operation = String(revision.operation ?? "");
-  const period = Number(
-    revisionValue(after, "period_number", "periodNumber") ??
-      revisionValue(before, "period_number", "periodNumber") ??
-      0,
-  );
-  const beforeStatus = revisionStatus(revisionValue(before, "status"));
-  const afterStatus = revisionStatus(revisionValue(after, "status"));
-  const noteValue = revisionValue(after, "note") ?? revisionValue(before, "note");
-  const note = typeof noteValue === "string" && noteValue.trim() ? noteValue : null;
-  const periodLabel = period > 0 ? `Jam ${period}` : "Jam tidak diketahui";
-
-  if (operation === "CREATE") {
-    return {
-      action: "Ditambahkan",
-      description: `${periodLabel} ditandai ${afterStatus}.`,
-      note,
-      tone: "success",
-    };
-  }
-  if (operation === "UPDATE") {
-    return {
-      action: "Diperbarui",
-      description: `${periodLabel}: ${beforeStatus} → ${afterStatus}.`,
-      note,
-      tone: "warning",
-    };
-  }
-  if (operation === "DELETE") {
-    return {
-      action: "Dikembalikan ke Hadir",
-      description: `${periodLabel}: ${beforeStatus} → Hadir.`,
-      note,
-      tone: "neutral",
-    };
-  }
-  return {
-    action: "Perubahan",
-    description: `${periodLabel} mengalami perubahan presensi.`,
-    note,
-    tone: "neutral",
-  };
 }
 
 function Detail({ label, value }: { label: string; value: string }) {

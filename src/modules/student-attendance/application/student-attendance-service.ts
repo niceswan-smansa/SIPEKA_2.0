@@ -4,6 +4,5 @@ export function createStudentAttendanceService(repository: StudentAttendanceRepo
   return {
     get: repository.get,
     getReport: repository.getReport,
-    recordExport: repository.recordExport,
   };
 }
