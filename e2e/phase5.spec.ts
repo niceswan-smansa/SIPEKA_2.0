@@ -26,4 +26,31 @@ test("USER uses the date-driven dashboard and monthly calendar", async ({ page }
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByLabel("Kalender dashboard")).toBeVisible();
+
+  const chartScroll = page.locator(".chart-scroll").first();
+  await expect(chartScroll).toBeVisible();
+
+  const chartMetrics = await chartScroll.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    overflowX: getComputedStyle(element).overflowX,
+  }));
+
+  expect(chartMetrics.overflowX).toBe("auto");
+  expect(chartMetrics.scrollWidth).toBeGreaterThan(chartMetrics.clientWidth);
+
+  await chartScroll.evaluate((element) => {
+    element.scrollLeft = 160;
+  });
+
+  await expect.poll(() => chartScroll.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+
+  const pageMetrics = await page.evaluate(() => ({
+    viewportWidth: document.documentElement.clientWidth,
+    documentScrollWidth: document.documentElement.scrollWidth,
+    bodyScrollWidth: document.body.scrollWidth,
+  }));
+
+  expect(pageMetrics.documentScrollWidth).toBeLessThanOrEqual(pageMetrics.viewportWidth + 1);
+  expect(pageMetrics.bodyScrollWidth).toBeLessThanOrEqual(pageMetrics.viewportWidth + 1);
 });

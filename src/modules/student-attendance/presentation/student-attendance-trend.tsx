@@ -19,19 +19,21 @@ export function StudentAttendanceTrend({ data }: { data: StudentAttendanceData["
   return (
     <section>
       <h2 className="mb-3 text-lg font-bold">Tren bulanan per jam</h2>
-      <div className="h-72" aria-hidden="true">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="izin" name="Izin" fill="#2563eb" />
-            <Bar dataKey="sakit" name="Sakit" fill="#d97706" />
-            <Bar dataKey="tanpaKeterangan" name="Tanpa Keterangan" fill="#b91c1c" />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="chart-scroll h-72" aria-hidden="true">
+        <div className="chart-scroll__canvas">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="izin" name="Izin" fill="#2563eb" />
+              <Bar dataKey="sakit" name="Sakit" fill="#d97706" />
+              <Bar dataKey="tanpaKeterangan" name="Tanpa Keterangan" fill="#b91c1c" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
       <details className="mt-3">
         <summary className="cursor-pointer font-semibold">Tabel alternatif tren</summary>

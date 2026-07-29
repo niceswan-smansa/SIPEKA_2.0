@@ -203,24 +203,25 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
-/* SIPEKA_HORIZONTAL_CHART_SCROLL_START
+/* SIPEKA_LOCAL_CHART_SCROLL_START
  *
- * Pertahankan bentuk dan konfigurasi grafik Recharts yang sudah ada.
- * Grafik Cartesian memperoleh kanvas minimum setara tampilan desktop,
- * lalu container lokal menjadi scrollable bila viewport lebih sempit.
- * Pie/radial chart tidak terkena aturan ini.
+ * Hanya area grafik yang menjadi scroll container. Inline-size containment
+ * mencegah kanvas 60rem memengaruhi intrinsic width kartu atau halaman.
  */
-@supports selector(div:has(> .recharts-responsive-container)) {
-  div:has(> .recharts-responsive-container .recharts-cartesian-axis) {
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  div:has(> .recharts-responsive-container .recharts-cartesian-axis)
-    > .recharts-responsive-container {
-    min-width: max(100%, 60rem) !important;
-  }
+.chart-scroll {
+  contain: inline-size;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
-/* SIPEKA_HORIZONTAL_CHART_SCROLL_END */
+
+.chart-scroll__canvas {
+  width: 100%;
+  min-width: 60rem;
+  height: 100%;
+}
+/* SIPEKA_LOCAL_CHART_SCROLL_END */
