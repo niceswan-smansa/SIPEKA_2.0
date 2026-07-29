@@ -221,7 +221,6 @@ textarea:focus-visible {
 
 .chart-scroll__canvas {
   width: 100%;
-  min-width: 60rem;
   height: 100%;
 }
 /* SIPEKA_LOCAL_CHART_SCROLL_END */

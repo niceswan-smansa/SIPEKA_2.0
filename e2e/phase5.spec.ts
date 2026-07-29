@@ -23,11 +23,33 @@ test("USER uses the date-driven dashboard and monthly calendar", async ({ page }
   await expect(page).toHaveURL(/month=\d{4}-\d{2}-01/);
   await page.getByText("Tabel data grafik", { exact: true }).first().click();
   await expect(page.getByRole("columnheader", { name: "Tanpa Keterangan" })).toBeVisible();
+  await page.getByText("Tabel data grafik", { exact: true }).first().click();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByLabel("Kalender dashboard")).toBeVisible();
 
-  const chartScroll = page.locator(".chart-scroll").first();
+  const renderedCharts = page.locator(".chart-scroll[data-chart-label-count]");
+  await expect(renderedCharts.first()).toBeVisible();
+
+  const renderedChartCount = await renderedCharts.count();
+  expect(renderedChartCount).toBeGreaterThan(0);
+
+  for (let index = 0; index < renderedChartCount; index += 1) {
+    const chart = renderedCharts.nth(index);
+    const expectedTickCount = Number(await chart.getAttribute("data-chart-label-count"));
+
+    expect(expectedTickCount).toBeGreaterThan(0);
+
+    // Recharts 3.x merender label X-axis pada z-index tick-label layer,
+    // bukan sebagai descendant langsung dari .recharts-xAxis.
+    await expect
+      .poll(() =>
+        chart.locator(".recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-label").count(),
+      )
+      .toBe(expectedTickCount);
+  }
+
+  const chartScroll = page.locator('.chart-scroll[data-chart-title="Ketidakhadiran per kelas"]');
   await expect(chartScroll).toBeVisible();
 
   const chartMetrics = await chartScroll.evaluate((element) => ({

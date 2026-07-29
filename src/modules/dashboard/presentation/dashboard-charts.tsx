@@ -44,18 +44,25 @@ function CategoryTable({ data }: { data: CategoryPoint[] }) {
 
 export function CategoryChart({ title, data }: { title: string; data: CategoryPoint[] }) {
   const hasData = data.some((item) => item.izin + item.sakit + item.tanpaKeterangan > 0);
+  const pixelsPerItem = data.length <= 7 ? 96 : 56;
+  const chartMinimumWidth = Math.max(640, data.length * pixelsPerItem + 96);
   return (
     <Card>
       <h2 className="mb-4 text-lg font-bold">{title}</h2>
       {!hasData ? (
         <EmptyState>Tidak ada ketidakhadiran pada periode ini.</EmptyState>
       ) : (
-        <div className="chart-scroll h-80" aria-hidden="true">
-          <div className="chart-scroll__canvas">
+        <div
+          className="chart-scroll h-80"
+          data-chart-label-count={data.length}
+          data-chart-title={title}
+          aria-hidden="true"
+        >
+          <div className="chart-scroll__canvas" style={{ minWidth: chartMinimumWidth }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
+                <XAxis dataKey="label" interval={0} minTickGap={0} />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Legend />
@@ -81,18 +88,24 @@ export function CategoryChart({ title, data }: { title: string; data: CategoryPo
 
 export function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
   const hasData = data.some((item) => item.total > 0);
+  const chartMinimumWidth = Math.max(640, data.length * 46 + 96);
   return (
     <Card>
       <h2 className="mb-4 text-lg font-bold">Ketidakhadiran bulanan</h2>
       {!hasData ? (
         <EmptyState>Tidak ada ketidakhadiran pada bulan ini.</EmptyState>
       ) : (
-        <div className="chart-scroll h-80" aria-hidden="true">
-          <div className="chart-scroll__canvas">
+        <div
+          className="chart-scroll h-80"
+          data-chart-label-count={data.length}
+          data-chart-title="Ketidakhadiran bulanan"
+          aria-hidden="true"
+        >
+          <div className="chart-scroll__canvas" style={{ minWidth: chartMinimumWidth }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
+                <XAxis dataKey="label" interval={0} minTickGap={0} />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Legend />
