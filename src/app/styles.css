@@ -223,4 +223,24 @@ textarea:focus-visible {
   width: 100%;
   height: 100%;
 }
+/* SIPEKA_CHART_TAP_FOCUS_RESET_START
+ *
+ * Grafik-grafik ini aria-hidden dan selalu disertai tabel HTML alternatif.
+ * Recharts 3 menyalakan accessibilityLayer secara default; pada browser sentuh
+ * fokus SVG-nya dapat digambar sebagai outline hitam tebal. Matikan tap
+ * highlight dan outline hanya di dalam area grafik, bukan pada kontrol UI.
+ */
+.chart-scroll,
+.chart-scroll * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chart-scroll:focus,
+.chart-scroll:focus-visible,
+.chart-scroll :focus,
+.chart-scroll :focus-visible {
+  outline: none !important;
+}
+/* SIPEKA_CHART_TAP_FOCUS_RESET_END */
+
 /* SIPEKA_LOCAL_CHART_SCROLL_END */

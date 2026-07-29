@@ -49,6 +49,61 @@ test("USER uses the date-driven dashboard and monthly calendar", async ({ page }
       .toBe(expectedTickCount);
   }
 
+  for (let index = 0; index < renderedChartCount; index += 1) {
+    const chart = renderedCharts.nth(index);
+
+    // Grafik sudah aria-hidden dan memiliki tabel alternatif, sehingga Recharts
+    // tidak boleh menambahkan application role atau tab stop pada SVG-nya.
+    await expect(chart.locator('[role="application"]')).toHaveCount(0);
+    await expect(chart.locator('[tabindex="0"]')).toHaveCount(0);
+
+    const focusVisuals = await chart.evaluate((element) => {
+      const selectors = [
+        ".recharts-wrapper",
+        "svg.recharts-surface",
+        ".recharts-layer",
+        ".recharts-rectangle",
+      ];
+
+      return selectors.flatMap((selector) => {
+        const target = element.querySelector(selector);
+        if (!(target instanceof SVGElement || target instanceof HTMLElement)) {
+          return [];
+        }
+
+        const previousTabIndex = target.getAttribute("tabindex");
+        target.setAttribute("tabindex", "0");
+        target.focus();
+
+        const style = getComputedStyle(target);
+        const result = {
+          selector,
+          outlineStyle: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+          outlineColor: style.outlineColor,
+        };
+
+        if (previousTabIndex === null) {
+          target.removeAttribute("tabindex");
+        } else {
+          target.setAttribute("tabindex", previousTabIndex);
+        }
+
+        return [result];
+      });
+    });
+
+    expect(focusVisuals.length).toBeGreaterThan(0);
+
+    for (const visual of focusVisuals) {
+      expect(
+        visual.outlineStyle === "none" ||
+          visual.outlineWidth === "0px" ||
+          visual.outlineColor === "rgba(0, 0, 0, 0)",
+      ).toBe(true);
+    }
+  }
+
   const chartScroll = page.locator('.chart-scroll[data-chart-title="Ketidakhadiran per kelas"]');
   await expect(chartScroll).toBeVisible();
 
@@ -60,6 +115,24 @@ test("USER uses the date-driven dashboard and monthly calendar", async ({ page }
 
   expect(chartMetrics.overflowX).toBe("auto");
   expect(chartMetrics.scrollWidth).toBeGreaterThan(chartMetrics.clientWidth);
+
+  const chartBox = await chartScroll.boundingBox();
+  expect(chartBox).not.toBeNull();
+
+  if (chartBox) {
+    await page.mouse.click(chartBox.x + chartBox.width / 2, chartBox.y + chartBox.height / 2);
+  }
+
+  await expect(chartScroll.locator('[role="application"]')).toHaveCount(0);
+  await expect(chartScroll.locator('[tabindex="0"]')).toHaveCount(0);
+
+  const focusedRechartsElements = await chartScroll.evaluate(
+    (element) =>
+      Array.from(element.querySelectorAll(":focus")).filter((focused) =>
+        (focused.getAttribute("class") ?? "").includes("recharts"),
+      ).length,
+  );
+  expect(focusedRechartsElements).toBe(0);
 
   await chartScroll.evaluate((element) => {
     element.scrollLeft = 160;

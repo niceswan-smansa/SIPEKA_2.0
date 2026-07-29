@@ -60,7 +60,7 @@ export function CategoryChart({ title, data }: { title: string; data: CategoryPo
         >
           <div className="chart-scroll__canvas" style={{ minWidth: chartMinimumWidth }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
+              <BarChart data={data} accessibilityLayer={false}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="label" interval={0} minTickGap={0} />
                 <YAxis allowDecimals={false} />
@@ -103,7 +103,7 @@ export function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
         >
           <div className="chart-scroll__canvas" style={{ minWidth: chartMinimumWidth }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
+              <BarChart data={data} accessibilityLayer={false}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="label" interval={0} minTickGap={0} />
                 <YAxis allowDecimals={false} />
